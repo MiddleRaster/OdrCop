@@ -351,8 +351,7 @@ static bool udtEqual(const UdtInfo& a, const UdtInfo& b)
 static void printUdt(const UdtInfo& u)
 {
     std::wcout << L"  [" << u.pdbPath << L"]\n";
-    std::wcout << L"    kind=" << udtKindName(u.udtKind)
-        << L"  size=" << u.size << L'\n';
+    std::wcout << L"    kind=" << udtKindName(u.udtKind) << L"  size=" << u.size << L'\n';
 
     if (!u.baseNames.empty()) {
         std::wcout << L"    bases:";
@@ -377,8 +376,8 @@ static void printUdt(const UdtInfo& u)
 int wmain(int argc, wchar_t** argv)
 {
     if (argc < 3) {
-        std::wcout << L"Usage: odrcop <a.pdb> <b.pdb> [c.pdb ...] where each .obj is compiled with /Z7 and you have run the makePDBs.bat file on them\n";
-        return 1;
+        std::wcout << L"Usage: odrcop <a.pdb> <b.pdb> [c.pdb ...] where each .cpp file/TU is built with /Zi and /Fd\"x64\\Debug\\%(Filename).pdb\"\n";
+        return -1;
     }
 
     CoInitialize(nullptr);
@@ -438,5 +437,5 @@ int wmain(int argc, wchar_t** argv)
         std::wcout << violationCount << L" ODR violation(s) found.\n";
 
     CoUninitialize();
-    return violationCount > 0 ? 2 : 0;
+    return violationCount > 0 ? 1 : 0;
 }
