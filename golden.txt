@@ -52,4 +52,14 @@ ODR VIOLATION: DifferentTypeOfDataMembers
     kind=struct  size=4
     +0  uint32_t  a
 
-6 ODR violation(s) found.
+ODR VIOLATION: SameMemberTypesDifferentOrder
+  [tests\x64\Release\TU1.pdb]
+    kind=struct  size=8
+    +0  int32_t  a
+    +4  char  b
+  [tests\x64\Release\TU2.pdb]
+    kind=struct  size=8
+    +0  char  b
+    +4  int32_t  a
+
+7 ODR violation(s) found.

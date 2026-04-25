@@ -54,16 +54,17 @@ struct DifferentDataMemberType
 #endif
 };
 
-#ifdef ALL_ODR_VIOLATIONS
-    5. Same class but different member order
-    Order affects layout → ODR violation.
+//5. Same class but different member order
+struct SameMemberTypesDifferentOrder
+{
+#ifdef ONE
+    int a; char b;
+#else
+    char b; int a;
+#endif
+};
 
-    TU1.cpp
-    cpp
-    struct S { int a; char b; };
-    TU2.cpp
-    cpp
-    struct S { char b; int a; };   // ODR violation
+#ifdef ALL_ODR_VIOLATIONS
     6. Same class but different base classes
     TU1.cpp
     cpp
