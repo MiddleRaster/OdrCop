@@ -52,6 +52,7 @@ jobs:
       run: msbuild /restore /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:PlatformToolset=v143 ${{env.SOLUTION_FILE_PATH}}
 
     - name: Run tests (console test EXE)
+      shell: cmd
       run: |
         x64\Release\OdrCop.exe tests\x64\Release\TU1.pdb tests\x64\Release\TU2.pdb > output.txt
         type output.txt
