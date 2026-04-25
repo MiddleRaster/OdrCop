@@ -1,3 +1,28 @@
+// Some things are not recorded in the PDB debug info, making some ODR violations undetecable by DIA.
+// Here are some known undetectable ODR violations:
+//   - Access specifier differences (public/private/protected)
+// 
+// below here is untested (as yet)
+//   - constexpr / inline differences on member functions
+//   - noexcept differences
+//   - Attribute differences (__declspec etc.)
+//   - Default argument differences
+
+#ifdef KNOWN_LIMITATIONS_OF_PDB_DIA
+//  7. Same class but different access specifiers
+struct SameClassDifferentAccessSpecifier
+{
+#ifdef ONE
+public:
+#else
+private:
+#endif
+    int a;
+};
+#endif
+
+
+
 struct DifferentSizedMember
 {
 #ifdef ONE
@@ -72,16 +97,8 @@ struct DifferentBaseClass
 #endif
 {};
 
-#ifdef ALL_ODR_VIOLATIONS
-    7. Same class but different access specifiers
-    Yes, even this is an ODR violation.
 
-    TU1.cpp
-    cpp
-    struct S { public: int a; };
-    TU2.cpp
-    cpp
-    struct S { private: int a; };   // ODR violation
+#ifdef ALL_ODR_VIOLATIONS
     8. Same class but different default member initializers
     TU1.cpp
     cpp
