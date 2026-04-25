@@ -1,0 +1,56 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: MSBuild
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: .
+
+  # Configuration type to build.
+  # You can convert this to a build matrix if you need coverage of multiple configuration types.
+  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  BUILD_CONFIGURATION: Release
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v5
+    
+    - name: Register REAL DIA SDK
+      shell: pwsh
+      run: |
+        $dll = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\DIA SDK\bin\amd64\msdia140.dll"
+        Write-Host "Registering: $dll"
+        & regsvr32 /s $dll
+
+    - name: Verify DIA registration
+      shell: cmd
+      run: |
+        reg query HKCR\CLSID\{e6756135-1e65-4d17-8576-610761398c3c} /s
+    
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.3
+    
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      # Add additional options to the MSBuild command line here (like platform or verbosity level).
+      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
+      run: msbuild /restore /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:PlatformToolset=v143 ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Run tests (console test EXE)
+      run: |
+        x64\Release\OdrCop.exe tests\x64\Release\TU1.pdb tests\x64\Release\TU2.pdb
