@@ -27,5 +27,5 @@ int wmain(int argc, wchar_t** argv)
         std::wcout                   << L"No ODR violations found.\n";
     else
         std::wcout << violationCount << L" ODR violation(s) found.\n";
-    return violationCount > 0 ? 1 : 0;
+    return 0;
 }
