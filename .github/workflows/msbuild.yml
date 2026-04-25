@@ -36,7 +36,7 @@ jobs:
         regsvr32 /s "$dll"
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v1.3
     
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -46,4 +46,4 @@ jobs:
 
     - name: Run tests (console test EXE)
       run: |
-        x64\Release\OdrCop.exe tests\x64\Debug\TU1.pdb tests\x64\Debug\TU2.pdb
+        x64/Release/OdrCop.exe tests/x64/Debug/TU1.pdb tests/x64/Debug/TU2.pdb
