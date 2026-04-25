@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 #include <iostream>
 #include <atlbase.h>
 
@@ -36,11 +37,11 @@ namespace {
     {
         class MemberInfo
         {
-            std::wstring name;
-            std::wstring typeName;   // resolved recursively
-            DWORD        offset;     // byte offset within UDT
-            ULONGLONG    bitSize;    // 0 means "not a bitfield"
-            DWORD        bitPos;     // valid only when bitSize != 0
+            const std::wstring name;
+            const std::wstring typeName;   // resolved recursively
+            const DWORD        offset;     // byte offset within UDT
+            const ULONGLONG    bitSize;    // 0 means "not a bitfield"
+            const DWORD        bitPos;     // valid only when bitSize != 0
         public:
             MemberInfo(const std::wstring& name, IDiaSymbol* pType, DWORD offset, ULONGLONG bits, DWORD bitPos) : name(name), typeName(resolveTypeName(pType)), offset(offset), bitSize(bits), bitPos(bitPos) {}
             void Print() const
@@ -65,7 +66,18 @@ namespace {
                     bitPos  != other.bitPos )   return false;
                 return true;
             }
-            static void Sort(std::vector<MemberInfo>& members) { std::sort(members.begin(), members.end(), [](const MemberInfo& a, const MemberInfo& b) { return a.offset < b.offset; }); }
+            static std::vector<MemberInfo> MakeSortedCopy(std::vector<MemberInfo>& members)
+            {
+                std::vector<size_t> idx(members.size());
+                std::iota(idx.begin(), idx.end(), 0);
+                std::sort(idx.begin(), idx.end(), [&](size_t a, size_t b) { return members[a].offset < members[b].offset; });
+
+                std::vector<MemberInfo> sorted;
+                sorted.reserve(members.size());
+                for (size_t i : idx)
+                    sorted.push_back(members[i]);
+                return sorted;
+            }
             
             friend bool operator==(const MemberInfo& a, const MemberInfo& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const MemberInfo& a, const MemberInfo& b) { return !a.IsEqualTo(b); }
@@ -226,7 +238,7 @@ namespace {
 
     private:
         bool IsEqualTo(const UdtInfo& other) const
-        {   // Returns true if two UdtInfo records are identical for ODR purposes.
+        {
             if (size           != other.size)           return false;
             if (udtKind        != other.udtKind)        return false;
             if (baseNames      != other.baseNames)      return false;
@@ -272,8 +284,7 @@ namespace {
                     }
                 }
             }
-            MemberInfo::Sort(members); // sort by offset, in case we got them out of order
-            return members;
+            return MemberInfo::MakeSortedCopy(members);
         }
 
         static std::vector<std::wstring> GetBaseNames(IDiaSymbol* sym)
@@ -335,7 +346,7 @@ public:
                             {   // Skip anonymous/unnamed UDTs
                                 CComBSTR name;
                                 if (SUCCEEDED(udt->get_name(&name)) && name && name[0] != L'\0') {
-                                    std::wstring key(name, SysStringLen(name));
+                                    std::wstring key(name);
                                     // Skip compiler-generated internal types
                                     if (key.find(L'<') == std::wstring::npos && key.find(L"lambda") == std::wstring::npos)
                                         map[key].push_back(UdtInfo(udt, path));
