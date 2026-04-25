@@ -29,33 +29,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
-
-    - name: Locate DIA DLL
-      id: find_dia
-      shell: pwsh
-      run: |
-        $dll = Get-ChildItem -Recurse -Filter msdia140.dll "C:\Program Files*" 2>$null |
-               Where-Object { $_.FullName -match "DIA" } |
-               Select-Object -First 1 -ExpandProperty FullName
-
-        if (-not $dll) {
-          Write-Error "msdia140.dll not found on this runner."
-        }
-
-        "dll=$dll" >> $env:GITHUB_OUTPUT
-
+    
     - name: Register DIA COM server
       shell: pwsh
       run: |
-        $dll = '${{ steps.find_dia.outputs.dll }}'
+        $dll = 'C:\Program Files\dotnet\sdk\10.0.105\TestHostNetFramework\x64\msdia140.dll'
         Write-Host "Registering: $dll"
         & regsvr32 /s $dll
-
-    - name: Verify DIA registration
-      shell: pwsh
-      run: |
-        reg query HKCR\CLSID\{e6756135-1e65-4d17-8576-610761398c3c} /s
-
+    
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.3
     
