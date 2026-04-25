@@ -8,3 +8,4 @@ DifferentTypeOfDataMembers    g_2_DifferentTypeOfDataMembers;
 DifferentBases                g_2_DifferentBases;
 DifferentDataMemberType       g_2_DifferentDataMemberType;
 SameMemberTypesDifferentOrder g_2_SameMemberTypesDifferentOrder;
+DifferentBaseClass            g_2_DifferentBaseClass;

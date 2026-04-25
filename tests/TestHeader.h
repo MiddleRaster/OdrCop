@@ -64,15 +64,15 @@ struct SameMemberTypesDifferentOrder
 #endif
 };
 
+//6. Same class but different base classes
+#ifdef ONE
+struct DifferentBaseClass : Base1
+#else
+struct DifferentBaseClass
+#endif
+{};
+
 #ifdef ALL_ODR_VIOLATIONS
-    6. Same class but different base classes
-    TU1.cpp
-    cpp
-    struct B {};
-    struct S : B {};
-    TU2.cpp
-    cpp
-    struct S {};   // ODR violation
     7. Same class but different access specifiers
     Yes, even this is an ODR violation.
 
