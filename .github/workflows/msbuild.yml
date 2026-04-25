@@ -29,6 +29,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
+
+    - name: Search for msdia140.dll
+      shell: cmd
+      run: |
+        dir /s /b C:\msdia140.dll
     
     - name: Register DIA COM server
       shell: pwsh
