@@ -13,16 +13,17 @@ namespace {
 
     inline std::wstring BstrToWstr(BSTR b) { return b ? std::wstring(b) : std::wstring(L"<unnamed>"); }
 
-    struct MemberInfo
-    {
-        std::wstring name;
-        std::wstring typeName;   // resolved recursively
-        DWORD        offset;     // byte offset within UDT
-        ULONGLONG    bitSize;    // 0 means "not a bitfield"
-        DWORD        bitPos;     // valid only when bitSize != 0
-    };
     struct UdtInfo
     {
+        struct MemberInfo
+        {
+            std::wstring name;
+            std::wstring typeName;   // resolved recursively
+            DWORD        offset;     // byte offset within UDT
+            ULONGLONG    bitSize;    // 0 means "not a bitfield"
+            DWORD        bitPos;     // valid only when bitSize != 0
+        };
+
         std::wstring              pdbPath;
         std::wstring              name;
         ULONGLONG                 size;         // total size in bytes
