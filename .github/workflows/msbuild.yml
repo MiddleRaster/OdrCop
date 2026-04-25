@@ -55,4 +55,4 @@ jobs:
       run: |
         x64\Release\OdrCop.exe tests\x64\Release\TU1.pdb tests\x64\Release\TU2.pdb > output.txt
         type output.txt
-        fc /n output.txt tests\golden_output.txt        
+        fc output.txt golden.txt        
