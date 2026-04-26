@@ -13,3 +13,5 @@ DifferentBaseClass                    g_1_DifferentBaseClass;
 //DifferentDefaultMemberInitializer   g_1_DifferentDefaultMemberInitializer;
 //DifferentConstexprValue             g_1_DifferentConstexprValue;
 //DifferentConstInit                  g_1_DifferentConstInit;
+DifferentConstDataMember              g_1_DifferentConstDataMember;
+DifferentVolatileDataMember           g_1_DifferentVolatileDataMember;

@@ -16,6 +16,14 @@ ODR VIOLATION: DifferentBases
     kind=struct  size=1
     bases: Base2
 
+ODR VIOLATION: DifferentConstDataMember
+  [tests\x64\Release\TU1.pdb]
+    kind=struct  size=4
+    +0 const  int32_t  a
+  [tests\x64\Release\TU2.pdb]
+    kind=struct  size=4
+    +0  int32_t  a
+
 ODR VIOLATION: DifferentDataMemberType
   [tests\x64\Release\TU1.pdb]
     kind=struct  size=1
@@ -59,6 +67,14 @@ ODR VIOLATION: DifferentTypeOfDataMembers
     kind=struct  size=4
     +0  uint32_t  a
 
+ODR VIOLATION: DifferentVolatileDataMember
+  [tests\x64\Release\TU1.pdb]
+    kind=struct  size=4
+    +0 volatile  int32_t  a
+  [tests\x64\Release\TU2.pdb]
+    kind=struct  size=4
+    +0  int32_t  a
+
 ODR VIOLATION: SameMemberTypesDifferentOrder
   [tests\x64\Release\TU1.pdb]
     kind=struct  size=8
@@ -69,4 +85,4 @@ ODR VIOLATION: SameMemberTypesDifferentOrder
     +0  char  b
     +4  int32_t  a
 
-8 ODR violation(s) found.
+10 ODR violation(s) found.

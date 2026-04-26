@@ -10,7 +10,7 @@ int wmain(int argc, wchar_t** argv)
         return -1;
     }
 
-    OdrCop odrCop;
+    Odr::Cop odrCop;
 
     for (int i=1; i<argc; ++i)
     {

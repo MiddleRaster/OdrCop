@@ -132,6 +132,23 @@ struct DifferentBaseClass
 #endif
 {};
 
+// let's try two of our own
+struct DifferentConstDataMember
+{
+#ifdef ONE
+    const int a{};
+#else
+          int a{};
+#endif
+};
+struct DifferentVolatileDataMember
+{
+#ifdef ONE
+    volatile int a{};
+#else
+             int a{};
+#endif
+};
 
 
 #ifdef ALL_ODR_VIOLATIONS
