@@ -1,15 +1,17 @@
 // Some things are not recorded in the PDB debug info, making some ODR violations undetecable by DIA.
 // Here are some known undetectable ODR violations:
 //   - Access specifier differences (public/private/protected)
+//   - Default argument differences
+//   - static constexpr / static const member value differences
 // 
 // below here is untested (as yet)
 //   - constexpr / inline differences on member functions
 //   - noexcept differences
 //   - Attribute differences (__declspec etc.)
-//   - Default argument differences
 
 #ifdef KNOWN_LIMITATIONS_OF_PDB_DIA
-//  7. Same class but different access specifiers
+
+// Same class but different access specifiers
 struct SameClassDifferentAccessSpecifier
 {
 #ifdef ONE
@@ -19,6 +21,27 @@ private:
 #endif
     int a;
 };
+
+// Same class but different default member initializers
+struct DifferentDefaultMemberInitializer
+{
+#ifdef ONE
+    int a = 1;
+#else
+    int a = 2;
+#endif
+};
+
+// Same class but different constexpr values
+struct DifferentConstexprValue
+{
+#ifdef ONE
+    static constexpr int v = 1;
+#else
+    static constexpr int v = 2;
+#endif
+};
+
 #endif
 
 
@@ -33,8 +56,8 @@ struct DifferentSizedMember
 };
 
 
-//3. Multiple definitions of the same class / struct / union with different layout
-//   Different member lists, order, types, or base classes.
+// Multiple definitions of the same class / struct / union with different layout
+// Different member lists, order, types, or base classes.
 struct DifferentDataMembers
 {
     int a;
@@ -69,7 +92,7 @@ struct DifferentBases :
 #endif
 {};
 
-//4. Same class but different member types
+// Same class but different member types
 struct DifferentDataMemberType
 {
 #ifdef ONE
@@ -79,7 +102,7 @@ struct DifferentDataMemberType
 #endif
 };
 
-//5. Same class but different member order
+// Same class but different member order
 struct SameMemberTypesDifferentOrder
 {
 #ifdef ONE
@@ -89,7 +112,7 @@ struct SameMemberTypesDifferentOrder
 #endif
 };
 
-//6. Same class but different base classes
+// Same class but different base classes
 #ifdef ONE
 struct DifferentBaseClass : Base1
 #else
@@ -97,22 +120,7 @@ struct DifferentBaseClass
 #endif
 {};
 
-
 #ifdef ALL_ODR_VIOLATIONS
-    8. Same class but different default member initializers
-    TU1.cpp
-    cpp
-    struct S { int a = 1; };
-    TU2.cpp
-    cpp
-    struct S { int a = 2; };   // ODR violation
-    9. Same class but different constexpr values
-    TU1.cpp
-    cpp
-    struct S { static constexpr int v = 1; };
-    TU2.cpp
-    cpp
-    struct S { static constexpr int v = 2; };   // ODR violation
     10. Same inline function but different bodies
     Inline functions must be bit‑for‑bit identical across TUs.
 

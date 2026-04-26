@@ -32,55 +32,34 @@ namespace {
         (sym->*m)(&value);
         return value;
     }
+    template <typename R> std::wstring Get(IDiaSymbol* sym, R(IDiaSymbol::* m)(VARIANT*))
+    {
+        CComVariant value{};
+        HRESULT hr = (sym->*m)(&value);
+        if ((hr != S_OK && hr != S_FALSE) || FAILED(value.ChangeType(VT_BSTR)) || !value.bstrVal)
+            return L"?";
+        return std::wstring(value.bstrVal);
+    }
 
     class UdtInfo
     {
-        class MemberInfo
+        template <typename Derived>
+        class MemberInfoBase
         {
+        protected:
             const std::wstring name;
-            const std::wstring typeName;   // resolved recursively
-            const DWORD        offset;     // byte offset within UDT
-            const ULONGLONG    bitSize;    // 0 means "not a bitfield"
-            const DWORD        bitPos;     // valid only when bitSize != 0
+            const std::wstring typeName;
         public:
-            MemberInfo(const std::wstring& name, IDiaSymbol* pType, DWORD offset, ULONGLONG bits, DWORD bitPos) : name(name), typeName(resolveTypeName(pType)), offset(offset), bitSize(bits), bitPos(bitPos) {}
-            void Print() const
+            MemberInfoBase(const std::wstring& name, IDiaSymbol* sym) : name(name), typeName(resolveTypeName(Get(sym, &IDiaSymbol::get_type))) {}
+            bool IsEqualTo(const Derived& other) const
             {
-                std::wcout << L"    +" << offset << L"  " << typeName << L"  " << name;
-                if (bitSize)
-                    std::wcout << L"  :" << bitSize << L"@bit" << bitPos;
-                std::wcout << L'\n';
+                if (    name != other.name    ) return false;
+                if (typeName != other.typeName) return false;
+                return static_cast<const Derived*>(this)->IsEqualToImpl(other);
             }
-            bool IsEqualTo(const MemberInfo& other) const
-            {
-                if (name     != other.name)   return false;
-                if (typeName != other.typeName)
-                {
-                    if (isAnonymous(typeName) && isAnonymous(other.typeName))
-                        return true; // treat as equal
-                    return false;
-                }
-                if (offset  != other.offset )   return false;
-                if (bitSize != other.bitSize)   return false;
-                if (bitSize && 
-                    bitPos  != other.bitPos )   return false;
-                return true;
-            }
-            static std::vector<MemberInfo> MakeSortedCopy(std::vector<MemberInfo>& members)
-            {
-                std::vector<size_t> idx(members.size());
-                std::iota(idx.begin(), idx.end(), 0);
-                std::sort(idx.begin(), idx.end(), [&](size_t a, size_t b) { return members[a].offset < members[b].offset; });
-
-                std::vector<MemberInfo> sorted;
-                sorted.reserve(members.size());
-                for (size_t i : idx)
-                    sorted.push_back(members[i]);
-                return sorted;
-            }
-            
-            friend bool operator==(const MemberInfo& a, const MemberInfo& b) { return  a.IsEqualTo(b); }
-            friend bool operator!=(const MemberInfo& a, const MemberInfo& b) { return !a.IsEqualTo(b); }
+            void Print() const { static_cast<const Derived*>(this)->PrintImpl(); }
+            friend bool operator==(const Derived& a, const Derived& b) { return  a.IsEqualTo(b); }
+            friend bool operator!=(const Derived& a, const Derived& b) { return !a.IsEqualTo(b); }
 
         private:
             static bool isAnonymous(const std::wstring& name)
@@ -202,18 +181,218 @@ namespace {
             }
         };
 
-        const std::wstring              pdbPath;
-        const std::wstring              name;
-        const ULONGLONG                 size;         // total size in bytes
-        const UdtKind                   udtKind;      // UdtStruct / UdtClass / UdtUnion
-        const std::vector<MemberInfo>   members;      // data members in offset order
-        const std::vector<std::wstring> baseNames;    // base class names in order
+        class InstanceMember : public MemberInfoBase<InstanceMember>
+        {
+            const DWORD     offset;  // byte offset within UDT
+            const ULONGLONG bitSize; // 0 means "not a bitfield"
+            const DWORD     bitPos;  // valid only when bitSize != 0
+        public:
+            InstanceMember(const std::wstring& name, IDiaSymbol* child, DWORD offset, ULONGLONG bits, DWORD bitPos/*, IDiaSymbol* child*/ ) : MemberInfoBase(name, child /* Get(child, &IDiaSymbol::get_type)*/ ), offset(offset), bitSize(bits), bitPos(bitPos)
+            { /*
+                auto lt = Get(child, &IDiaSymbol::get_locationType);
+                switch(lt)
+                {
+                case LocationType::LocIsNull            : std::wcout << L"locationType is " << L"LocIsNull            " << L"\n"; break;
+                case LocationType::LocIsStatic          : std::wcout << L"locationType is " << L"LocIsStatic          " << L"\n"; break;
+                case LocationType::LocIsTLS             : std::wcout << L"locationType is " << L"LocIsTLS             " << L"\n"; break;
+                case LocationType::LocIsRegRel          : std::wcout << L"locationType is " << L"LocIsRegRel          " << L"\n"; break;
+                case LocationType::LocIsThisRel         : std::wcout << L"locationType is " << L"LocIsThisRel         " << L"\n"; break;
+                case LocationType::LocIsEnregistered    : std::wcout << L"locationType is " << L"LocIsEnregistered    " << L"\n"; break;
+                case LocationType::LocIsBitField        : std::wcout << L"locationType is " << L"LocIsBitField        " << L"\n"; break;
+                case LocationType::LocIsSlot            : std::wcout << L"locationType is " << L"LocIsSlot            " << L"\n"; break;
+                case LocationType::LocIsIlRel           : std::wcout << L"locationType is " << L"LocIsIlRel           " << L"\n"; break;
+                case LocationType::LocInMetaData        : std::wcout << L"locationType is " << L"LocInMetaData        " << L"\n"; break;
+                case LocationType::LocIsConstant        : std::wcout << L"locationType is " << L"LocIsConstant        " << L"\n"; break;
+                case LocationType::LocIsRegRelAliasIndir: std::wcout << L"locationType is " << L"LocIsRegRelAliasIndir" << L"\n"; break;
+                case LocationType::LocTypeMax           : std::wcout << L"locationType is " << L"LocTypeMax           " << L"\n"; break;
+                }; */
+            }
+            static std::vector<InstanceMember> MakeSortedCopy(std::vector<InstanceMember>& members)
+            {
+                std::vector<size_t> idx(members.size());
+                std::iota(idx.begin(), idx.end(), 0);
+                std::sort(idx.begin(), idx.end(), [&](size_t a, size_t b) { return members[a].offset < members[b].offset; });
+
+                std::vector<InstanceMember> sorted;
+                sorted.reserve(members.size());
+                for (size_t i : idx)
+                    sorted.push_back(members[i]);
+                return sorted;
+            }
+
+        private:
+            friend MemberInfoBase<InstanceMember>;
+            void PrintImpl() const
+            {
+                std::wcout << L"    +" << offset << L"  " << typeName << L"  " << name;
+                if (bitSize)
+                    std::wcout << L"  :" << bitSize << L"@bit" << bitPos;
+                std::wcout << L'\n';
+            }
+            bool IsEqualToImpl(const InstanceMember& other) const
+            {
+                if (name     != other.name    ) return false;
+                if (typeName != other.typeName)
+                {
+                    if (isAnonymous(typeName) && isAnonymous(other.typeName))
+                        return true; // treat as equal
+                    return false;
+                }
+                if (offset  != other.offset )   return false;
+                if (bitSize != other.bitSize)   return false;
+                if (bitSize && 
+                    bitPos  != other.bitPos )   return false;
+                return true;
+            }
+            static bool isAnonymous(const std::wstring& name)
+            {
+                // Extract tail after last "::"
+                size_t pos = name.rfind(L"::");
+                std::wstring tail = (pos == std::wstring::npos) ? name : name.substr(pos + 2);
+
+                // Strict rules:
+                // Anonymous ONLY if tail begins with "<unnamed"
+                // Examples:
+                //   <unnamed>
+                //   <unnamed-tag>
+                //   <unnamed-type-u>
+                //   <unnamed-type-$S1>
+                //   <unnamed-type-$T1>
+                //
+                // NOT anonymous:
+                //   <anonymous>
+                //   Foo<unnamed-type-u>
+                //   MyStruct_unnamed_type
+
+                if (tail.rfind(L"<unnamed", 0) == 0)
+                    return true;
+
+                return false;
+            }
+            static std::wstring resolveTypeName(IDiaSymbol* type)
+            {
+                if (!type) return L"<null>";
+
+                DWORD tag = 0;
+                type->get_symTag(&tag);
+
+                switch (tag)
+                {
+                case SymTagBaseType: 
+                {
+                    DWORD baseType = 0;
+                    ULONGLONG len = 0;
+                    type->get_baseType(&baseType);
+                    type->get_length(&len);
+                    switch (baseType) 
+                    {
+                    case btVoid:    return L"void";
+                    case btChar:    return L"char";
+                    case btWChar:   return L"wchar_t";
+                    case btInt:
+                        switch (len) 
+                        {
+                        case 1:  return L"int8_t";
+                        case 2:  return L"int16_t";
+                        case 4:  return L"int32_t";
+                        case 8:  return L"int64_t";
+                        default: return L"int";
+                        }
+                    case btUInt:
+                        switch (len) 
+                        {
+                        case 1:  return L"uint8_t";
+                        case 2:  return L"uint16_t";
+                        case 4:  return L"uint32_t";
+                        case 8:  return L"uint64_t";
+                        default: return L"unsigned";
+                        }
+                    case btFloat:   return len == 4 ? L"float" : L"double";
+                    case btBool:    return L"bool";
+                    case btLong:    return L"long";
+                    case btULong:   return L"unsigned long";
+                    default:        return L"<basetype:" + std::to_wstring(baseType) + L">";
+                    }
+                }
+                case SymTagPointerType:
+                {
+                    CComPtr<IDiaSymbol> inner;
+                    BOOL isRef = FALSE;
+                    type->get_type(&inner);
+                    type->get_reference(&isRef);
+                    std::wstring inner_name = resolveTypeName(inner);
+                    return isRef ? inner_name + L"&" : inner_name + L"*";
+                }
+                case SymTagArrayType:
+                {
+                    CComPtr<IDiaSymbol> elem;
+                    DWORD               count = 0;
+                    type->get_type (&elem);
+                    type->get_count(&count);
+                    return resolveTypeName(elem) + L"[" + std::to_wstring(count) + L"]";
+                }
+                case SymTagFunctionType:
+                {
+                    CComPtr<IDiaSymbol> ret;
+                    type->get_type(&ret);
+                    return resolveTypeName(ret) + L"(*)()";  // simplified
+                }
+                case SymTagUDT:
+                case SymTagEnum:
+                case SymTagTypedef:
+                {
+                    CComBSTR n;
+                    type->get_name(&n);
+                    return BstrToWstr(n);
+                }
+                //case SymTagConstType:
+                //{
+                //    CComPtr<IDiaSymbol> inner;
+                //    type->get_type(&inner);
+                //    return L"const " + resolveTypeName(inner);
+                //}
+                //case SymTagVolatileType:
+                //{
+                //    CComPtr<IDiaSymbol> inner;
+                //    type->get_type(&inner);
+                //    return L"volatile " + resolveTypeName(inner);
+                //}
+                default:
+                    return L"<tag:" + std::to_wstring(tag) + L">";
+                }
+            }
+        };
+
+        class ConstantMember : public MemberInfoBase<ConstantMember>
+        {
+            std::wstring constValue;
+        public:
+            ConstantMember(std::wstring name, IDiaSymbol* pType, std::wstring constValue) : MemberInfoBase(name,pType), constValue(constValue) {}
+        private:
+            friend MemberInfoBase<ConstantMember>;
+
+            bool IsEqualToImpl(const ConstantMember& other) const { return constValue == other.constValue; }
+            void PrintImpl() const
+            {
+                std::wcout << L"    constexpr/const static value" << L"  " << typeName << L"  " << name << constValue;
+                std::wcout << L'\n';
+            }
+        };
+
+        const std::wstring                pdbPath;
+        const std::wstring                name;
+        const ULONGLONG                   size;      // total size in bytes
+        const UdtKind                     udtKind;   // UdtStruct / UdtClass / UdtUnion
+        const std::vector<InstanceMember> members;   // data members in offset order
+        const std::vector<ConstantMember> constants; // constexpr/const static values
+        const std::vector<std::wstring>   baseNames; // base class names in order
     public:
         UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath) : pdbPath  (pdbPath)
                                                               , name(             BstrToWstr(Get(sym, &IDiaSymbol::get_name)))
                                                               , size(                        Get(sym, &IDiaSymbol::get_length))
                                                               , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
-                                                              , members  (GetMembers  (sym))
+                                                              , members  (GetInstanceMembers(sym))
+                                                              , constants(GetConstantMembers(sym))
                                                               , baseNames(GetBaseNames(sym))
         {}
         void Print() const
@@ -256,9 +435,9 @@ namespace {
             default:             return L"unknown";
             }
         }
-        static std::vector<MemberInfo> GetMembers(IDiaSymbol* sym)
+        static std::vector<InstanceMember> GetInstanceMembers(IDiaSymbol* sym)
         {
-            std::vector<MemberInfo> members;
+            std::vector<InstanceMember> members;
 
             CComPtr<IDiaEnumSymbols> children;
             if (SUCCEEDED(sym->findChildren(SymTagData, NULL, nsNone, &children)))
@@ -274,17 +453,240 @@ namespace {
                     // Only instance data members (not statics) for now
                     DWORD dataKind = 0;
                     child->get_dataKind(&dataKind);
-                    if (dataKind == DataIsMember)
+                    if (DataIsMember == static_cast<DataKind>(dataKind))
                     {
-                        members.push_back(MemberInfo(BstrToWstr(Get(child, &IDiaSymbol::get_name)),
-                                                                Get(child, &IDiaSymbol::get_type),
-                                                                Get(child, &IDiaSymbol::get_offset),
-                                                                Get(child, &IDiaSymbol::get_length),
-                                                                Get(child, &IDiaSymbol::get_bitPosition)));
+                        members.push_back(InstanceMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)),
+                                                                        child, // let ctor do the IDiaSymbol::get_type call
+                                                                    Get(child, &IDiaSymbol::get_offset),
+                                                                    Get(child, &IDiaSymbol::get_length),
+                                                                    Get(child, &IDiaSymbol::get_bitPosition)));
+                    } else {
+                        continue; // here only so I can put a breakpoint on it
+                        //std::wcout << L"in GetInstanceMembers, not a DataIsMember type, but rather " << dataKind << L"\n";
+
+                        //CComVariant val;
+                        //HRESULT hr = child->get_value(&val);
+                        //std::wcout << L"get_value hr=0x" << std::hex << hr << std::dec << L"  vt=" << val.vt << L'\n';
+
+                        //auto s = Get(child, &IDiaSymbol::get_value);
+                        //std::wcout << L"converted get_value to " << s << L'\n';
+                        /*
+                        auto lt = Get(child, &IDiaSymbol::get_locationType);
+                        switch(lt)
+                        {
+                        case LocationType::LocIsNull            : std::wcout << L"locationType is " << L"LocIsNull            " << L"\n"; break;
+                        case LocationType::LocIsStatic          : std::wcout << L"locationType is " << L"LocIsStatic          " << L"\n"; break;
+                        case LocationType::LocIsTLS             : std::wcout << L"locationType is " << L"LocIsTLS             " << L"\n"; break;
+                        case LocationType::LocIsRegRel          : std::wcout << L"locationType is " << L"LocIsRegRel          " << L"\n"; break;
+                        case LocationType::LocIsThisRel         : std::wcout << L"locationType is " << L"LocIsThisRel         " << L"\n"; break;
+                        case LocationType::LocIsEnregistered    : std::wcout << L"locationType is " << L"LocIsEnregistered    " << L"\n"; break;
+                        case LocationType::LocIsBitField        : std::wcout << L"locationType is " << L"LocIsBitField        " << L"\n"; break;
+                        case LocationType::LocIsSlot            : std::wcout << L"locationType is " << L"LocIsSlot            " << L"\n"; break;
+                        case LocationType::LocIsIlRel           : std::wcout << L"locationType is " << L"LocIsIlRel           " << L"\n"; break;
+                        case LocationType::LocInMetaData        : std::wcout << L"locationType is " << L"LocInMetaData        " << L"\n"; break;
+                        case LocationType::LocIsConstant        : std::wcout << L"locationType is " << L"LocIsConstant        " << L"\n"; break;
+                        case LocationType::LocIsRegRelAliasIndir: std::wcout << L"locationType is " << L"LocIsRegRelAliasIndir" << L"\n"; break;
+                        case LocationType::LocTypeMax           : std::wcout << L"locationType is " << L"LocTypeMax           " << L"\n"; break;
+                        };
+                        */
+#ifdef KEEP
+                            std::wcout << L"get_symIndexId:                        " << Get(child, &IDiaSymbol::get_symIndexId) << L'\n';
+                            std::wcout << L"get_symTag:                            " << Get(child, &IDiaSymbol::get_symTag) << L'\n';
+                            std::wcout << L"get_name:                              " << Get(child, &IDiaSymbol::get_name) << L'\n';
+                            std::wcout << L"get_lexicalParentId:                   " << Get(child, &IDiaSymbol::get_lexicalParentId) << L'\n';
+                            std::wcout << L"get_classParentId:                     " << Get(child, &IDiaSymbol::get_classParentId) << L'\n';
+                            std::wcout << L"get_typeId:                            " << Get(child, &IDiaSymbol::get_typeId) << L'\n';
+                            std::wcout << L"get_dataKind:                          " << Get(child, &IDiaSymbol::get_dataKind) << L'\n';
+                            std::wcout << L"get_locationType:                      " << Get(child, &IDiaSymbol::get_locationType) << L'\n';
+                            std::wcout << L"get_addressSection:                    " << Get(child, &IDiaSymbol::get_addressSection) << L'\n';
+                            std::wcout << L"get_addressOffset:                     " << Get(child, &IDiaSymbol::get_addressOffset) << L'\n';
+                            std::wcout << L"get_relativeVirtualAddress:            " << Get(child, &IDiaSymbol::get_relativeVirtualAddress) << L'\n';
+                            std::wcout << L"get_virtualAddress:                    " << Get(child, &IDiaSymbol::get_virtualAddress) << L'\n';
+                            std::wcout << L"get_registerId:                        " << Get(child, &IDiaSymbol::get_registerId) << L'\n';
+                            std::wcout << L"get_offset:                            " << Get(child, &IDiaSymbol::get_offset) << L'\n';
+                            std::wcout << L"get_length:                            " << Get(child, &IDiaSymbol::get_length) << L'\n';
+                            std::wcout << L"get_slot:                              " << Get(child, &IDiaSymbol::get_slot) << L'\n';
+                            std::wcout << L"get_volatileType:                      " << Get(child, &IDiaSymbol::get_volatileType) << L'\n';
+                            std::wcout << L"get_constType:                         " << Get(child, &IDiaSymbol::get_constType) << L'\n';
+                            std::wcout << L"get_unalignedType:                     " << Get(child, &IDiaSymbol::get_unalignedType) << L'\n';
+                            std::wcout << L"get_access:                            " << Get(child, &IDiaSymbol::get_access) << L'\n';
+                            std::wcout << L"get_libraryName:                       " << Get(child, &IDiaSymbol::get_libraryName) << L'\n';
+                            std::wcout << L"get_platform:                          " << Get(child, &IDiaSymbol::get_platform) << L'\n';
+                            std::wcout << L"get_language:                          " << Get(child, &IDiaSymbol::get_language) << L'\n';
+                            std::wcout << L"get_editAndContinueEnabled:            " << Get(child, &IDiaSymbol::get_editAndContinueEnabled) << L'\n';
+                            std::wcout << L"get_frontEndMajor:                     " << Get(child, &IDiaSymbol::get_frontEndMajor) << L'\n';
+                            std::wcout << L"get_frontEndMinor:                     " << Get(child, &IDiaSymbol::get_frontEndMinor) << L'\n';
+                            std::wcout << L"get_frontEndBuild:                     " << Get(child, &IDiaSymbol::get_frontEndBuild) << L'\n';
+                            std::wcout << L"get_backEndMajor:                      " << Get(child, &IDiaSymbol::get_backEndMajor) << L'\n';
+                            std::wcout << L"get_backEndMinor:                      " << Get(child, &IDiaSymbol::get_backEndMinor) << L'\n';
+                            std::wcout << L"get_backEndBuild:                      " << Get(child, &IDiaSymbol::get_backEndBuild) << L'\n';
+                            std::wcout << L"get_sourceFileName:                    " << Get(child, &IDiaSymbol::get_sourceFileName) << L'\n';
+                            std::wcout << L"get_unused:                            " << Get(child, &IDiaSymbol::get_unused) << L'\n';
+                            std::wcout << L"get_thunkOrdinal:                      " << Get(child, &IDiaSymbol::get_thunkOrdinal) << L'\n';
+                            std::wcout << L"get_thisAdjust:                        " << Get(child, &IDiaSymbol::get_thisAdjust) << L'\n';
+                            std::wcout << L"get_virtualBaseOffset:                 " << Get(child, &IDiaSymbol::get_virtualBaseOffset) << L'\n';
+                            std::wcout << L"get_virtual:                           " << Get(child, &IDiaSymbol::get_virtual) << L'\n';
+                            std::wcout << L"get_intro:                             " << Get(child, &IDiaSymbol::get_intro) << L'\n';
+                            std::wcout << L"get_pure:                              " << Get(child, &IDiaSymbol::get_pure) << L'\n';
+                            std::wcout << L"get_callingConvention:                 " << Get(child, &IDiaSymbol::get_callingConvention) << L'\n';
+                            std::wcout << L"get_value:                             " << Get(child, &IDiaSymbol::get_value) << L'\n';
+                            std::wcout << L"get_baseType:                          " << Get(child, &IDiaSymbol::get_baseType) << L'\n';
+                            std::wcout << L"get_token:                             " << Get(child, &IDiaSymbol::get_token) << L'\n';
+                            std::wcout << L"get_timeStamp:                         " << Get(child, &IDiaSymbol::get_timeStamp) << L'\n';
+                            std::wcout << L"get_symbolsFileName:                   " << Get(child, &IDiaSymbol::get_symbolsFileName) << L'\n';
+                            std::wcout << L"get_reference:                         " << Get(child, &IDiaSymbol::get_reference) << L'\n';
+                            std::wcout << L"get_count:                             " << Get(child, &IDiaSymbol::get_count) << L'\n';
+                            std::wcout << L"get_bitPosition:                       " << Get(child, &IDiaSymbol::get_bitPosition) << L'\n';
+                            std::wcout << L"get_arrayIndexTypeId:                  " << Get(child, &IDiaSymbol::get_arrayIndexTypeId) << L'\n';
+                            std::wcout << L"get_packed:                            " << Get(child, &IDiaSymbol::get_packed) << L'\n';
+                            std::wcout << L"get_constructor:                       " << Get(child, &IDiaSymbol::get_constructor) << L'\n';
+                            std::wcout << L"get_overloadedOperator:                " << Get(child, &IDiaSymbol::get_overloadedOperator) << L'\n';
+                            std::wcout << L"get_nested:                            " << Get(child, &IDiaSymbol::get_nested) << L'\n';
+                            std::wcout << L"get_hasNestedTypes:                    " << Get(child, &IDiaSymbol::get_hasNestedTypes) << L'\n';
+                            std::wcout << L"get_hasAssignmentOperator:             " << Get(child, &IDiaSymbol::get_hasAssignmentOperator) << L'\n';
+                            std::wcout << L"get_hasCastOperator:                   " << Get(child, &IDiaSymbol::get_hasCastOperator) << L'\n';
+                            std::wcout << L"get_scoped:                            " << Get(child, &IDiaSymbol::get_scoped) << L'\n';
+                            std::wcout << L"get_virtualBaseClass:                  " << Get(child, &IDiaSymbol::get_virtualBaseClass) << L'\n';
+                            std::wcout << L"get_indirectVirtualBaseClass:          " << Get(child, &IDiaSymbol::get_indirectVirtualBaseClass) << L'\n';
+                            std::wcout << L"get_virtualBasePointerOffset:          " << Get(child, &IDiaSymbol::get_virtualBasePointerOffset) << L'\n';
+                            std::wcout << L"get_virtualTableShapeId:               " << Get(child, &IDiaSymbol::get_virtualTableShapeId) << L'\n';
+                            std::wcout << L"get_code:                              " << Get(child, &IDiaSymbol::get_code) << L'\n';
+                            std::wcout << L"get_function:                          " << Get(child, &IDiaSymbol::get_function) << L'\n';
+                            std::wcout << L"get_managed:                           " << Get(child, &IDiaSymbol::get_managed) << L'\n';
+                            std::wcout << L"get_msil:                              " << Get(child, &IDiaSymbol::get_msil) << L'\n';
+                            std::wcout << L"get_virtualBaseDispIndex:              " << Get(child, &IDiaSymbol::get_virtualBaseDispIndex) << L'\n';
+                            std::wcout << L"get_undecoratedName:                   " << Get(child, &IDiaSymbol::get_undecoratedName) << L'\n';
+                            std::wcout << L"get_age:                               " << Get(child, &IDiaSymbol::get_age) << L'\n';
+                            std::wcout << L"get_signature:                         " << Get(child, &IDiaSymbol::get_signature) << L'\n';
+                            std::wcout << L"get_compilerGenerated:                 " << Get(child, &IDiaSymbol::get_compilerGenerated) << L'\n';
+                            std::wcout << L"get_addressTaken:                      " << Get(child, &IDiaSymbol::get_addressTaken) << L'\n';
+                            std::wcout << L"get_rank:                              " << Get(child, &IDiaSymbol::get_rank) << L'\n';
+                            std::wcout << L"get_lowerBoundId:                      " << Get(child, &IDiaSymbol::get_lowerBoundId) << L'\n';
+                            std::wcout << L"get_upperBoundId:                      " << Get(child, &IDiaSymbol::get_upperBoundId) << L'\n';
+                            std::wcout << L"get_offsetInUdt:                       " << Get(child, &IDiaSymbol::get_offsetInUdt) << L'\n';
+                            std::wcout << L"get_paramBasePointerRegisterId:        " << Get(child, &IDiaSymbol::get_paramBasePointerRegisterId) << L'\n';
+                            std::wcout << L"get_localBasePointerRegisterId:        " << Get(child, &IDiaSymbol::get_localBasePointerRegisterId) << L'\n';
+                            std::wcout << L"get_isLocationControlFlowDependent:    " << Get(child, &IDiaSymbol::get_isLocationControlFlowDependent) << L'\n';
+                            std::wcout << L"get_stride:                            " << Get(child, &IDiaSymbol::get_stride) << L'\n';
+                            std::wcout << L"get_numberOfRows:                      " << Get(child, &IDiaSymbol::get_numberOfRows) << L'\n';
+                            std::wcout << L"get_numberOfColumns:                   " << Get(child, &IDiaSymbol::get_numberOfColumns) << L'\n';
+                            std::wcout << L"get_isMatrixRowMajor:                  " << Get(child, &IDiaSymbol::get_isMatrixRowMajor) << L'\n';
+                            std::wcout << L"get_isReturnValue:                     " << Get(child, &IDiaSymbol::get_isReturnValue) << L'\n';
+                            std::wcout << L"get_isOptimizedAway:                   " << Get(child, &IDiaSymbol::get_isOptimizedAway) << L'\n';
+                            std::wcout << L"get_builtInKind:                       " << Get(child, &IDiaSymbol::get_builtInKind) << L'\n';
+                            std::wcout << L"get_registerType:                      " << Get(child, &IDiaSymbol::get_registerType) << L'\n';
+                            std::wcout << L"get_baseDataSlot:                      " << Get(child, &IDiaSymbol::get_baseDataSlot) << L'\n';
+                            std::wcout << L"get_baseDataOffset:                    " << Get(child, &IDiaSymbol::get_baseDataOffset) << L'\n';
+                            std::wcout << L"get_textureSlot:                       " << Get(child, &IDiaSymbol::get_textureSlot) << L'\n';
+                            std::wcout << L"get_samplerSlot:                       " << Get(child, &IDiaSymbol::get_samplerSlot) << L'\n';
+                            std::wcout << L"get_uavSlot:                           " << Get(child, &IDiaSymbol::get_uavSlot) << L'\n';
+                            std::wcout << L"get_sizeInUdt:                         " << Get(child, &IDiaSymbol::get_sizeInUdt) << L'\n';
+                            std::wcout << L"get_memorySpaceKind:                   " << Get(child, &IDiaSymbol::get_memorySpaceKind) << L'\n';
+                            std::wcout << L"get_unmodifiedTypeId:                  " << Get(child, &IDiaSymbol::get_unmodifiedTypeId) << L'\n';
+                            std::wcout << L"get_subTypeId:                         " << Get(child, &IDiaSymbol::get_subTypeId) << L'\n';
+                            std::wcout << L"get_numberOfModifiers:                 " << Get(child, &IDiaSymbol::get_numberOfModifiers) << L'\n';
+                            std::wcout << L"get_numberOfRegisterIndices:           " << Get(child, &IDiaSymbol::get_numberOfRegisterIndices) << L'\n';
+                            std::wcout << L"get_isHLSLData:                        " << Get(child, &IDiaSymbol::get_isHLSLData) << L'\n';
+                            std::wcout << L"get_isPointerToDataMember:             " << Get(child, &IDiaSymbol::get_isPointerToDataMember) << L'\n';
+                            std::wcout << L"get_isPointerToMemberFunction:         " << Get(child, &IDiaSymbol::get_isPointerToMemberFunction) << L'\n';
+                            std::wcout << L"get_isSingleInheritance:               " << Get(child, &IDiaSymbol::get_isSingleInheritance) << L'\n';
+                            std::wcout << L"get_isMultipleInheritance:             " << Get(child, &IDiaSymbol::get_isMultipleInheritance) << L'\n';
+                            std::wcout << L"get_isVirtualInheritance:              " << Get(child, &IDiaSymbol::get_isVirtualInheritance) << L'\n';
+                            std::wcout << L"get_restrictedType:                    " << Get(child, &IDiaSymbol::get_restrictedType) << L'\n';
+                            std::wcout << L"get_isPointerBasedOnSymbolValue:       " << Get(child, &IDiaSymbol::get_isPointerBasedOnSymbolValue) << L'\n';
+                            std::wcout << L"get_baseSymbolId:                      " << Get(child, &IDiaSymbol::get_baseSymbolId) << L'\n';
+                            std::wcout << L"get_objectFileName:                    " << Get(child, &IDiaSymbol::get_objectFileName) << L'\n';
+                            std::wcout << L"get_isAcceleratorGroupSharedLocal:     " << Get(child, &IDiaSymbol::get_isAcceleratorGroupSharedLocal) << L'\n';
+                            std::wcout << L"get_isAcceleratorPointerTagLiveRange:  " << Get(child, &IDiaSymbol::get_isAcceleratorPointerTagLiveRange) << L'\n';
+                            std::wcout << L"get_isAcceleratorStubFunction:         " << Get(child, &IDiaSymbol::get_isAcceleratorStubFunction) << L'\n';
+                            std::wcout << L"get_numberOfAcceleratorPointerTags:    " << Get(child, &IDiaSymbol::get_numberOfAcceleratorPointerTags) << L'\n';
+                            std::wcout << L"get_isSdl:                             " << Get(child, &IDiaSymbol::get_isSdl) << L'\n';
+                            std::wcout << L"get_isWinRTPointer:                    " << Get(child, &IDiaSymbol::get_isWinRTPointer) << L'\n';
+                            std::wcout << L"get_isRefUdt:                          " << Get(child, &IDiaSymbol::get_isRefUdt) << L'\n';
+                            std::wcout << L"get_isValueUdt:                        " << Get(child, &IDiaSymbol::get_isValueUdt) << L'\n';
+                            std::wcout << L"get_isInterfaceUdt:                    " << Get(child, &IDiaSymbol::get_isInterfaceUdt) << L'\n';
+                            std::wcout << L"get_isPGO:                             " << Get(child, &IDiaSymbol::get_isPGO) << L'\n';
+                            std::wcout << L"get_hasValidPGOCounts:                 " << Get(child, &IDiaSymbol::get_hasValidPGOCounts) << L'\n';
+                            std::wcout << L"get_isOptimizedForSpeed:               " << Get(child, &IDiaSymbol::get_isOptimizedForSpeed) << L'\n';
+                            std::wcout << L"get_PGOEntryCount:                     " << Get(child, &IDiaSymbol::get_PGOEntryCount) << L'\n';
+                            std::wcout << L"get_PGOEdgeCount:                      " << Get(child, &IDiaSymbol::get_PGOEdgeCount) << L'\n';
+                            std::wcout << L"get_PGODynamicInstructionCount:        " << Get(child, &IDiaSymbol::get_PGODynamicInstructionCount) << L'\n';
+                            std::wcout << L"get_staticSize:                        " << Get(child, &IDiaSymbol::get_staticSize) << L'\n';
+                            std::wcout << L"get_finalLiveStaticSize:               " << Get(child, &IDiaSymbol::get_finalLiveStaticSize) << L'\n';
+                            std::wcout << L"get_phaseName:                         " << Get(child, &IDiaSymbol::get_phaseName) << L'\n';
+                            std::wcout << L"get_hasControlFlowCheck:               " << Get(child, &IDiaSymbol::get_hasControlFlowCheck) << L'\n';
+                            std::wcout << L"get_constantExport:                    " << Get(child, &IDiaSymbol::get_constantExport) << L'\n';
+                            std::wcout << L"get_dataExport:                        " << Get(child, &IDiaSymbol::get_dataExport) << L'\n';
+                            std::wcout << L"get_privateExport:                     " << Get(child, &IDiaSymbol::get_privateExport) << L'\n';
+                            std::wcout << L"get_noNameExport:                      " << Get(child, &IDiaSymbol::get_noNameExport) << L'\n';
+                            std::wcout << L"get_exportHasExplicitlyAssignedOrdinal:" << Get(child, &IDiaSymbol::get_exportHasExplicitlyAssignedOrdinal) << L'\n';
+                            std::wcout << L"get_exportIsForwarder:                 " << Get(child, &IDiaSymbol::get_exportIsForwarder) << L'\n';
+                            std::wcout << L"get_ordinal:                           " << Get(child, &IDiaSymbol::get_ordinal) << L'\n';
+                            std::wcout << L"get_frameSize:                         " << Get(child, &IDiaSymbol::get_frameSize) << L'\n';
+                            std::wcout << L"get_exceptionHandlerAddressSection:    " << Get(child, &IDiaSymbol::get_exceptionHandlerAddressSection) << L'\n';
+                            std::wcout << L"get_exceptionHandlerAddressOffset:     " << Get(child, &IDiaSymbol::get_exceptionHandlerAddressOffset) << L'\n';
+                            std::wcout << L"get_exceptionHandlerRelativeVirtualAddress:" << Get(child, &IDiaSymbol::get_exceptionHandlerRelativeVirtualAddress) << L'\n';
+                            std::wcout << L"get_exceptionHandlerVirtualAddress:    " << Get(child, &IDiaSymbol::get_exceptionHandlerVirtualAddress) << L'\n';
+                            std::wcout << L"get_characteristics:                   " << Get(child, &IDiaSymbol::get_characteristics) << L'\n';
+                            std::wcout << L"get_bindID:                            " << Get(child, &IDiaSymbol::get_bindID) << L'\n';
+                            std::wcout << L"get_bindSpace:                         " << Get(child, &IDiaSymbol::get_bindSpace) << L'\n';
+                            std::wcout << L"get_bindSlot:                          " << Get(child, &IDiaSymbol::get_bindSlot) << L'\n';
+
+                            // Methods skipped — require special handling:
+                            // get_guid          — returns GUID, needs custom formatting
+                            // get_lexicalParent — returns IDiaSymbol*, would recurse
+                            // get_classParent   — returns IDiaSymbol*, would recurse
+                            // get_type          — returns IDiaSymbol*, would recurse
+                            // get_arrayIndexType       — returns IDiaSymbol*, would recurse
+                            // get_virtualTableShape    — returns IDiaSymbol*, would recurse
+                            // get_lowerBound           — returns IDiaSymbol*, would recurse
+                            // get_upperBound           — returns IDiaSymbol*, would recurse
+                            // get_unmodifiedType       — returns IDiaSymbol*, would recurse
+                            // get_container            — returns IDiaSymbol*, would recurse
+                            // get_virtualBaseTableType — returns IDiaSymbol*, would recurse
+                            // get_baseSymbol           — returns IDiaSymbol*, would recurse
+                            // get_subType              — returns IDiaSymbol*, would recurse
+                            // get_coffGroup            — returns IDiaSymbol*, would recurse
+                            // get_noReturn             — BOOL, included via get_ pattern above? check compilation
+                            // get_dataBytes            — variable-length, two-call pattern
+                            // get_types                — array out-param
+                            // get_typeIds              — array out-param
+                            // get_numericProperties    — array out-param
+                            // get_modifierValues       — array out-param
+                            // get_acceleratorPointerTags — array out-param
+                            // get_undecoratedNameEx    — takes an input param
+#endif
                     }
                 }
             }
-            return MemberInfo::MakeSortedCopy(members);
+            return InstanceMember::MakeSortedCopy(members);
+        }
+        static std::vector<ConstantMember> GetConstantMembers(IDiaSymbol* sym)
+        {
+            std::vector<ConstantMember> members;
+
+            CComPtr<IDiaEnumSymbols> children;
+            if (SUCCEEDED(sym->findChildren(SymTagData, NULL, nsNone, &children)))
+            {
+                while (true)
+                {
+                    ULONG fetched{};
+                    CComPtr<IDiaSymbol> child;
+                    children->Next(1, &child, &fetched);
+                    if (fetched != 1)
+                        break;
+
+                    DWORD dataKind = 0;
+                    child->get_dataKind(&dataKind);
+                    if (DataIsConstant == static_cast<DataKind>(dataKind))
+                    {   // only constant members
+                        members.push_back(ConstantMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)),
+                                                                    Get(child, &IDiaSymbol::get_type ),
+                                                                    Get(child, &IDiaSymbol::get_value)));
+                    }
+                }
+            }
+            return members;
         }
 
         static std::vector<std::wstring> GetBaseNames(IDiaSymbol* sym)
