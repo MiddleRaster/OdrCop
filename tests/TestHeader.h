@@ -3,6 +3,7 @@
 //   - Access specifier differences (public/private/protected)
 //   - Default argument differences
 //   - static constexpr / static const member value differences
+//   - static constexpr / consteval / constinit
 // 
 // below here is untested (as yet)
 //   - constexpr / inline differences on member functions
@@ -39,6 +40,17 @@ struct DifferentConstexprValue
     static constexpr int v = 1;
 #else
     static constexpr int v = 2;
+#endif
+};
+
+// Same class but different constexpr / consteval / constinit
+// These affect linkage and initialization.
+struct DifferentConstInit
+{
+#ifdef ONE
+    static constinit int x;
+#else
+    static           int x;
 #endif
 };
 
@@ -119,6 +131,8 @@ struct DifferentBaseClass : Base1
 struct DifferentBaseClass
 #endif
 {};
+
+
 
 #ifdef ALL_ODR_VIOLATIONS
     10. Same inline function but different bodies
@@ -229,15 +243,7 @@ struct DifferentBaseClass
     TU2.cpp
     cpp
     struct S {};   // ODR violation
-    24. Same class but different constexpr / consteval / constinit
-    These affect linkage and initialization.
 
-    TU1.cpp
-    cpp
-    struct S { static constinit int x; };
-    TU2.cpp
-    cpp
-    struct S { static int x; };   // ODR violation
     25. Same class but different noexcept on member functions
     Affects type identity.
 

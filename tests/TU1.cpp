@@ -12,3 +12,4 @@ DifferentBaseClass                    g_1_DifferentBaseClass;
 //SameClassDifferentAccessSpecifier   g_1_SameClassDifferentAccessSpecifier;
 //DifferentDefaultMemberInitializer   g_1_DifferentDefaultMemberInitializer;
 //DifferentConstexprValue             g_1_DifferentConstexprValue;
+//DifferentConstInit                  g_1_DifferentConstInit;

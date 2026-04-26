@@ -53,11 +53,23 @@ namespace {
             MemberInfoBase(const std::wstring& name, IDiaSymbol* sym) : name(name), typeName(resolveTypeName(Get(sym, &IDiaSymbol::get_type))) {}
             bool IsEqualTo(const Derived& other) const
             {
-                if (    name != other.name    ) return false;
-                if (typeName != other.typeName) return false;
+                if (name     != other.name    ) return false;
+                if (typeName != other.typeName)
+                {
+                    if (!(isAnonymous(typeName) && isAnonymous(other.typeName)))
+                        return false;
+                    // else treat as equal
+                }
                 return static_cast<const Derived*>(this)->IsEqualToImpl(other);
             }
-            void Print() const { static_cast<const Derived*>(this)->PrintImpl(); }
+            void Print() const
+            {
+                static_cast<const Derived*>(this)->PrintPrefix();
+
+                std::wcout << L"  " << typeName << L"  " << name;
+
+                static_cast<const Derived*>(this)->PrintSuffix();
+            }
             friend bool operator==(const Derived& a, const Derived& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const Derived& a, const Derived& b) { return !a.IsEqualTo(b); }
 
@@ -222,144 +234,24 @@ namespace {
 
         private:
             friend MemberInfoBase<InstanceMember>;
-            void PrintImpl() const
+            void PrintPrefix() const
             {
-                std::wcout << L"    +" << offset << L"  " << typeName << L"  " << name;
+                std::wcout << L"    +" << offset;
+            }
+            void PrintSuffix() const
+            {
                 if (bitSize)
                     std::wcout << L"  :" << bitSize << L"@bit" << bitPos;
                 std::wcout << L'\n';
             }
+
             bool IsEqualToImpl(const InstanceMember& other) const
             {
-                if (name     != other.name    ) return false;
-                if (typeName != other.typeName)
-                {
-                    if (isAnonymous(typeName) && isAnonymous(other.typeName))
-                        return true; // treat as equal
-                    return false;
-                }
                 if (offset  != other.offset )   return false;
                 if (bitSize != other.bitSize)   return false;
                 if (bitSize && 
                     bitPos  != other.bitPos )   return false;
                 return true;
-            }
-            static bool isAnonymous(const std::wstring& name)
-            {
-                // Extract tail after last "::"
-                size_t pos = name.rfind(L"::");
-                std::wstring tail = (pos == std::wstring::npos) ? name : name.substr(pos + 2);
-
-                // Strict rules:
-                // Anonymous ONLY if tail begins with "<unnamed"
-                // Examples:
-                //   <unnamed>
-                //   <unnamed-tag>
-                //   <unnamed-type-u>
-                //   <unnamed-type-$S1>
-                //   <unnamed-type-$T1>
-                //
-                // NOT anonymous:
-                //   <anonymous>
-                //   Foo<unnamed-type-u>
-                //   MyStruct_unnamed_type
-
-                if (tail.rfind(L"<unnamed", 0) == 0)
-                    return true;
-
-                return false;
-            }
-            static std::wstring resolveTypeName(IDiaSymbol* type)
-            {
-                if (!type) return L"<null>";
-
-                DWORD tag = 0;
-                type->get_symTag(&tag);
-
-                switch (tag)
-                {
-                case SymTagBaseType: 
-                {
-                    DWORD baseType = 0;
-                    ULONGLONG len = 0;
-                    type->get_baseType(&baseType);
-                    type->get_length(&len);
-                    switch (baseType) 
-                    {
-                    case btVoid:    return L"void";
-                    case btChar:    return L"char";
-                    case btWChar:   return L"wchar_t";
-                    case btInt:
-                        switch (len) 
-                        {
-                        case 1:  return L"int8_t";
-                        case 2:  return L"int16_t";
-                        case 4:  return L"int32_t";
-                        case 8:  return L"int64_t";
-                        default: return L"int";
-                        }
-                    case btUInt:
-                        switch (len) 
-                        {
-                        case 1:  return L"uint8_t";
-                        case 2:  return L"uint16_t";
-                        case 4:  return L"uint32_t";
-                        case 8:  return L"uint64_t";
-                        default: return L"unsigned";
-                        }
-                    case btFloat:   return len == 4 ? L"float" : L"double";
-                    case btBool:    return L"bool";
-                    case btLong:    return L"long";
-                    case btULong:   return L"unsigned long";
-                    default:        return L"<basetype:" + std::to_wstring(baseType) + L">";
-                    }
-                }
-                case SymTagPointerType:
-                {
-                    CComPtr<IDiaSymbol> inner;
-                    BOOL isRef = FALSE;
-                    type->get_type(&inner);
-                    type->get_reference(&isRef);
-                    std::wstring inner_name = resolveTypeName(inner);
-                    return isRef ? inner_name + L"&" : inner_name + L"*";
-                }
-                case SymTagArrayType:
-                {
-                    CComPtr<IDiaSymbol> elem;
-                    DWORD               count = 0;
-                    type->get_type (&elem);
-                    type->get_count(&count);
-                    return resolveTypeName(elem) + L"[" + std::to_wstring(count) + L"]";
-                }
-                case SymTagFunctionType:
-                {
-                    CComPtr<IDiaSymbol> ret;
-                    type->get_type(&ret);
-                    return resolveTypeName(ret) + L"(*)()";  // simplified
-                }
-                case SymTagUDT:
-                case SymTagEnum:
-                case SymTagTypedef:
-                {
-                    CComBSTR n;
-                    type->get_name(&n);
-                    return BstrToWstr(n);
-                }
-                //case SymTagConstType:
-                //{
-                //    CComPtr<IDiaSymbol> inner;
-                //    type->get_type(&inner);
-                //    return L"const " + resolveTypeName(inner);
-                //}
-                //case SymTagVolatileType:
-                //{
-                //    CComPtr<IDiaSymbol> inner;
-                //    type->get_type(&inner);
-                //    return L"volatile " + resolveTypeName(inner);
-                //}
-                default:
-                    return L"<tag:" + std::to_wstring(tag) + L">";
-                }
             }
         };
 
@@ -372,9 +264,39 @@ namespace {
             friend MemberInfoBase<ConstantMember>;
 
             bool IsEqualToImpl(const ConstantMember& other) const { return constValue == other.constValue; }
-            void PrintImpl() const
+            void PrintPrefix() const { std::wcout << L"    constexpr/const static value  "; }
+            void PrintSuffix() const { std::wcout << L'\n'; }
+        };
+        class StaticMember : public MemberInfoBase<StaticMember>
+        {
+            DWORD locationType;
+            BOOL  isConstant;
+            BOOL  isVolatile;
+        public:
+            StaticMember(std::wstring name, IDiaSymbol* pType, DWORD locationType, BOOL isConstant, BOOL isVolatile)
+                : MemberInfoBase(name,pType)
+                , locationType  (locationType)
+                , isConstant    (isConstant)
+                , isVolatile    (isVolatile)
+            {}
+        private:
+            friend MemberInfoBase<StaticMember>;
+
+            bool IsEqualToImpl(const StaticMember& other) const
             {
-                std::wcout << L"    constexpr/const static value" << L"  " << typeName << L"  " << name << constValue;
+                if (locationType == other.locationType)
+                if (isConstant   == other.isConstant  )
+                if (isVolatile   == other.isVolatile  )
+                    return true;
+                return false;
+            }
+            void PrintPrefix() const
+            {
+                std::wcout << L"   " << (isConstant ? L"const" : L"") << L" " << (isVolatile ? L"volatile" : L"");
+            };
+            void PrintSuffix() const
+            {
+                std::wcout << L"   locationType: " << locationType << L", isConstant: " << (isConstant ? L"true" : L"false") << L", isVolatile: " << (isVolatile ? L"true" : L"false");
                 std::wcout << L'\n';
             }
         };
@@ -383,16 +305,18 @@ namespace {
         const std::wstring                name;
         const ULONGLONG                   size;      // total size in bytes
         const UdtKind                     udtKind;   // UdtStruct / UdtClass / UdtUnion
-        const std::vector<InstanceMember> members;   // data members in offset order
-        const std::vector<ConstantMember> constants; // constexpr/const static values
-        const std::vector<std::wstring>   baseNames; // base class names in order
+        const std::tuple<
+              std::vector<InstanceMember>, // data members in offset order
+              std::vector<ConstantMember>, // constexpr/const static values
+              std::vector<StaticMember  >  // static/constinit/consteval values
+                                        > members;
+        const std::vector<std::wstring  > baseNames; // base class names in order
     public:
         UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath) : pdbPath  (pdbPath)
                                                               , name(             BstrToWstr(Get(sym, &IDiaSymbol::get_name)))
                                                               , size(                        Get(sym, &IDiaSymbol::get_length))
                                                               , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
-                                                              , members  (GetInstanceMembers(sym))
-                                                              , constants(GetConstantMembers(sym))
+                                                              , members(GetMembers(sym))
                                                               , baseNames(GetBaseNames(sym))
         {}
         void Print() const
@@ -405,10 +329,12 @@ namespace {
                 for (auto& b : baseNames) std::wcout << L" " << b;
                 std::wcout << L'\n';
             }
-            for (auto& m : members)
-            {
-                m.Print();
-            }
+            for (auto& i : std::get<0>(members))  // instance members)
+                i.Print();
+            for (auto& c : std::get<1>(members))  // constant members)
+                c.Print();
+            for (auto& s : std::get<2>(members))  // constant members)
+                s.Print();
         }
         void PrintPdbPath() const { std::wcout << L"  [" << pdbPath << L"] (same as above)\n"; }
 
@@ -418,11 +344,16 @@ namespace {
     private:
         bool IsEqualTo(const UdtInfo& other) const
         {
-            if (size           != other.size)           return false;
-            if (udtKind        != other.udtKind)        return false;
-            if (baseNames      != other.baseNames)      return false;
-            if (members.size() != other.members.size()) return false;
-            return std::ranges::equal(members, other.members);
+            if (size                                           != other.size)                           return false;
+            if (udtKind                                        != other.udtKind)                        return false;
+            if (baseNames                                      != other.baseNames)                      return false;
+            if (                   std::get<0>(members).size() != std::get<0>(other.members).size())    return false;
+            if (                   std::get<1>(members).size() != std::get<1>(other.members).size())    return false;
+            if (                   std::get<2>(members).size() != std::get<2>(other.members).size())    return false;
+            if(!std::ranges::equal(std::get<0>(members),          std::get<0>(other.members)))          return false;
+            if(!std::ranges::equal(std::get<1>(members),          std::get<1>(other.members)))          return false;
+            if(!std::ranges::equal(std::get<2>(members),          std::get<2>(other.members)))           return false;
+            return true;
         }
         const wchar_t* UdtKindToString() const
         {
@@ -435,9 +366,12 @@ namespace {
             default:             return L"unknown";
             }
         }
-        static std::vector<InstanceMember> GetInstanceMembers(IDiaSymbol* sym)
+
+        static std::tuple<std::vector<InstanceMember>, std::vector<ConstantMember>, std::vector<StaticMember>> GetMembers(IDiaSymbol* sym)
         {
             std::vector<InstanceMember> members;
+            std::vector<ConstantMember> constants;
+            std::vector<  StaticMember> statics;
 
             CComPtr<IDiaEnumSymbols> children;
             if (SUCCEEDED(sym->findChildren(SymTagData, NULL, nsNone, &children)))
@@ -460,6 +394,15 @@ namespace {
                                                                     Get(child, &IDiaSymbol::get_offset),
                                                                     Get(child, &IDiaSymbol::get_length),
                                                                     Get(child, &IDiaSymbol::get_bitPosition)));
+                    }
+                    else if (DataIsStaticMember == static_cast<DataKind>(dataKind))
+                    {
+                        statics.push_back(StaticMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)),
+                                                                      child, // let ctor do the IDiaSymbol::get_type call
+                                                                  Get(child, &IDiaSymbol::get_locationType),
+                                                                  Get(child, &IDiaSymbol::get_constType),
+                                                                  Get(child, &IDiaSymbol::get_volatileType)));
+
                     } else {
                         continue; // here only so I can put a breakpoint on it
                         //std::wcout << L"in GetInstanceMembers, not a DataIsMember type, but rather " << dataKind << L"\n";
@@ -659,7 +602,7 @@ namespace {
                     }
                 }
             }
-            return InstanceMember::MakeSortedCopy(members);
+            return {InstanceMember::MakeSortedCopy(members), constants, statics};
         }
         static std::vector<ConstantMember> GetConstantMembers(IDiaSymbol* sym)
         {
