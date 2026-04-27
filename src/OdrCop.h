@@ -46,7 +46,6 @@ namespace Odr
         template <typename Derived>
         class MemberInfoBase
         {
-        protected:
             const std::wstring name;
             const std::wstring typeName;
         public:
@@ -55,19 +54,15 @@ namespace Odr
             {
                 if (name     != other.name    ) return false;
                 if (typeName != other.typeName)
-                {
                     if (!(isAnonymous(typeName) && isAnonymous(other.typeName)))
                         return false;
                     // else treat as equal
-                }
                 return static_cast<const Derived*>(this)->IsEqualToImpl(other);
             }
             void Print() const
             {
                 static_cast<const Derived*>(this)->PrintPrefix();
-
                 std::wcout << L"  " << typeName << L"  " << name;
-
                 static_cast<const Derived*>(this)->PrintSuffix();
             }
             friend bool operator==(const Derived& a, const Derived& b) { return  a.IsEqualTo(b); }
@@ -195,32 +190,45 @@ namespace Odr
 
         class InstanceMember : public MemberInfoBase<InstanceMember>
         {
-            const DWORD     offset;    // byte offset within UDT
+            const LONG      offset;    // byte offset within UDT
             const ULONGLONG bitSize;   // 0 means "not a bitfield"
             const DWORD     bitPos;    // valid only when bitSize != 0
             const BOOL      bConst;    // is "const"
             const BOOL      bVolatile; // is "volatile"
+
+            InstanceMember(IDiaSymbol* child, const std::wstring& name, LONG offset, ULONGLONG bitSize,   DWORD bitPos,    BOOL bConst,       BOOL bVolatile)
+                                       : MemberInfoBase(name, child), offset(offset),  bitSize(bitSize), bitPos(bitPos), bConst(bConst), bVolatile(bVolatile)
+            {
+                //    auto lt = Get(child, &IDiaSymbol::get_locationType);
+                //    switch(lt)
+                //    {
+                //    case LocationType::LocIsNull            : std::wcout << L"locationType is " << L"LocIsNull            " << L"\n"; break;
+                //    case LocationType::LocIsStatic          : std::wcout << L"locationType is " << L"LocIsStatic          " << L"\n"; break;
+                //    case LocationType::LocIsTLS             : std::wcout << L"locationType is " << L"LocIsTLS             " << L"\n"; break;
+                //    case LocationType::LocIsRegRel          : std::wcout << L"locationType is " << L"LocIsRegRel          " << L"\n"; break;
+                //    case LocationType::LocIsThisRel         : std::wcout << L"locationType is " << L"LocIsThisRel         " << L"\n"; break;
+                //    case LocationType::LocIsEnregistered    : std::wcout << L"locationType is " << L"LocIsEnregistered    " << L"\n"; break;
+                //    case LocationType::LocIsBitField        : std::wcout << L"locationType is " << L"LocIsBitField        " << L"\n"; break;
+                //    case LocationType::LocIsSlot            : std::wcout << L"locationType is " << L"LocIsSlot            " << L"\n"; break;
+                //    case LocationType::LocIsIlRel           : std::wcout << L"locationType is " << L"LocIsIlRel           " << L"\n"; break;
+                //    case LocationType::LocInMetaData        : std::wcout << L"locationType is " << L"LocInMetaData        " << L"\n"; break;
+                //    case LocationType::LocIsConstant        : std::wcout << L"locationType is " << L"LocIsConstant        " << L"\n"; break;
+                //    case LocationType::LocIsRegRelAliasIndir: std::wcout << L"locationType is " << L"LocIsRegRelAliasIndir" << L"\n"; break;
+                //    case LocationType::LocTypeMax           : std::wcout << L"locationType is " << L"LocTypeMax           " << L"\n"; break;
+                //    };
+            }
+
         public:
-            InstanceMember(const std::wstring& name, IDiaSymbol* child,  DWORD offset, ULONGLONG bits,   DWORD bitPos)
-                :               MemberInfoBase(name,             child), offset(offset), bitSize(bits), bitPos(bitPos), bConst(GetConst(child)), bVolatile(GetVolatile(child))
-            { /*
-                auto lt = Get(child, &IDiaSymbol::get_locationType);
-                switch(lt)
-                {
-                case LocationType::LocIsNull            : std::wcout << L"locationType is " << L"LocIsNull            " << L"\n"; break;
-                case LocationType::LocIsStatic          : std::wcout << L"locationType is " << L"LocIsStatic          " << L"\n"; break;
-                case LocationType::LocIsTLS             : std::wcout << L"locationType is " << L"LocIsTLS             " << L"\n"; break;
-                case LocationType::LocIsRegRel          : std::wcout << L"locationType is " << L"LocIsRegRel          " << L"\n"; break;
-                case LocationType::LocIsThisRel         : std::wcout << L"locationType is " << L"LocIsThisRel         " << L"\n"; break;
-                case LocationType::LocIsEnregistered    : std::wcout << L"locationType is " << L"LocIsEnregistered    " << L"\n"; break;
-                case LocationType::LocIsBitField        : std::wcout << L"locationType is " << L"LocIsBitField        " << L"\n"; break;
-                case LocationType::LocIsSlot            : std::wcout << L"locationType is " << L"LocIsSlot            " << L"\n"; break;
-                case LocationType::LocIsIlRel           : std::wcout << L"locationType is " << L"LocIsIlRel           " << L"\n"; break;
-                case LocationType::LocInMetaData        : std::wcout << L"locationType is " << L"LocInMetaData        " << L"\n"; break;
-                case LocationType::LocIsConstant        : std::wcout << L"locationType is " << L"LocIsConstant        " << L"\n"; break;
-                case LocationType::LocIsRegRelAliasIndir: std::wcout << L"locationType is " << L"LocIsRegRelAliasIndir" << L"\n"; break;
-                case LocationType::LocTypeMax           : std::wcout << L"locationType is " << L"LocTypeMax           " << L"\n"; break;
-                }; */
+            static InstanceMember Make(IDiaSymbol* child)
+            {
+                auto name      = BstrToWstr(Get(child, &IDiaSymbol::get_name));
+                auto offset    =            Get(child, &IDiaSymbol::get_offset);
+                auto bitSize   =            Get(child, &IDiaSymbol::get_length);
+                auto bitPos    =            Get(child, &IDiaSymbol::get_bitPosition);
+                BOOL bConst    =    GetFromType(child, &IDiaSymbol::get_constType);
+                BOOL bVolatile =    GetFromType(child, &IDiaSymbol::get_volatileType);
+
+                return InstanceMember{child, name, offset, bitSize, bitPos, bConst, bVolatile};
             }
             static std::vector<InstanceMember> MakeSortedCopy(std::vector<InstanceMember>& members)
             {
@@ -235,6 +243,8 @@ namespace Odr
                 return sorted;
             }
         private:
+            friend MemberInfoBase<InstanceMember>;
+
             static BOOL GetFromType(IDiaSymbol* child, HRESULT(IDiaSymbol::* m)(BOOL*))
             {
                 CComPtr<IDiaSymbol> type;
@@ -242,10 +252,6 @@ namespace Odr
                     return Get(type, m);
                 return FALSE;
             }
-            static BOOL GetConst   (IDiaSymbol* child) { return GetFromType(child, &IDiaSymbol::get_constType   ); }
-            static BOOL GetVolatile(IDiaSymbol* child) { return GetFromType(child, &IDiaSymbol::get_volatileType); }
-
-            friend MemberInfoBase<InstanceMember>;
             void PrintPrefix() const
             {
                 std::wcout << L"    +" << offset << (bConst ? L" const" : L"") << (bVolatile ? L" volatile" : L"");
@@ -314,16 +320,16 @@ namespace Odr
             }
         };
 
-        const std::wstring                pdbPath;
-        const std::wstring                name;
-        const ULONGLONG                   size;      // total size in bytes
-        const UdtKind                     udtKind;   // UdtStruct / UdtClass / UdtUnion
+        const std::wstring                 pdbPath;
+        const std::wstring                 name;
+        const ULONGLONG                    size;      // total size in bytes
+        const UdtKind                      udtKind;   // UdtStruct / UdtClass / UdtUnion
         const std::tuple<
-              std::vector<InstanceMember>, // data members in offset order
-              std::vector<ConstantMember>, // constexpr/const static values
-              std::vector<StaticMember  >  // static/constinit/consteval values
-                                        > members;
-        const std::vector<std::wstring  > baseNames; // base class names in order
+              std::vector<InstanceMember>,            // data members in offset order
+              std::vector<ConstantMember>,            // constexpr/const static values
+              std::vector<StaticMember >>             // static/constinit/consteval values
+                                           members;
+        const std::vector<std::wstring  >  baseNames; // base class names in order
     public:
         UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath) : pdbPath  (pdbPath)
                                                               , name(             BstrToWstr(Get(sym, &IDiaSymbol::get_name)))
@@ -342,12 +348,9 @@ namespace Odr
                 for (auto& b : baseNames) std::wcout << L" " << b;
                 std::wcout << L'\n';
             }
-            for (auto& i : std::get<0>(members))  // instance members)
-                i.Print();
-            for (auto& c : std::get<1>(members))  // constant members)
-                c.Print();
-            for (auto& s : std::get<2>(members))  // constant members)
-                s.Print();
+            for (auto& i : std::get<0>(members)) i.Print();
+            for (auto& c : std::get<1>(members)) c.Print();
+            for (auto& s : std::get<2>(members)) s.Print();
         }
         void PrintPdbPath() const { std::wcout << L"  [" << pdbPath << L"] (same as above)\n"; }
 
@@ -357,15 +360,15 @@ namespace Odr
     private:
         bool IsEqualTo(const UdtInfo& other) const
         {
-            if (size                                           != other.size)                           return false;
-            if (udtKind                                        != other.udtKind)                        return false;
-            if (baseNames                                      != other.baseNames)                      return false;
-            if (                   std::get<0>(members).size() != std::get<0>(other.members).size())    return false;
-            if (                   std::get<1>(members).size() != std::get<1>(other.members).size())    return false;
-            if (                   std::get<2>(members).size() != std::get<2>(other.members).size())    return false;
-            if(!std::ranges::equal(std::get<0>(members),          std::get<0>(other.members)))          return false;
-            if(!std::ranges::equal(std::get<1>(members),          std::get<1>(other.members)))          return false;
-            if(!std::ranges::equal(std::get<2>(members),          std::get<2>(other.members)))           return false;
+            if (                         size != other.size                         ) return false;
+            if (                      udtKind != other.udtKind                      ) return false;
+            if (                    baseNames != other.baseNames                    ) return false;
+            if (  std::get<0>(members).size() != std::get<0>(other.members).size()  ) return false;
+            if (  std::get<1>(members).size() != std::get<1>(other.members).size()  ) return false;
+            if (  std::get<2>(members).size() != std::get<2>(other.members).size()  ) return false;
+            if(!std::ranges::equal(std::get<0>(members), std::get<0>(other.members))) return false;
+            if(!std::ranges::equal(std::get<1>(members), std::get<1>(other.members))) return false;
+            if(!std::ranges::equal(std::get<2>(members), std::get<2>(other.members))) return false;
             return true;
         }
         const wchar_t* UdtKindToString() const
@@ -402,11 +405,7 @@ namespace Odr
                     child->get_dataKind(&dataKind);
                     if (DataIsMember == static_cast<DataKind>(dataKind))
                     {
-                        members.push_back(InstanceMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)),
-                                                                        child, // let ctor do the IDiaSymbol::get_type call
-                                                                    Get(child, &IDiaSymbol::get_offset),
-                                                                    Get(child, &IDiaSymbol::get_length),
-                                                                    Get(child, &IDiaSymbol::get_bitPosition)));
+                        members.push_back(InstanceMember::Make(child));
                     }
                     else if (DataIsStaticMember == static_cast<DataKind>(dataKind))
                     {
@@ -697,18 +696,20 @@ namespace Odr
                             CComPtr<IDiaEnumSymbols> udts;
                             if (SUCCEEDED(hr = global->findChildren(SymTagUDT, NULL, nsNone, &udts)))
                             {
-                                ULONG fetched = 0;
-                                CComPtr<IDiaSymbol> udt;
-                                while (SUCCEEDED(udts->Next(1, &udt, &fetched)) && fetched == 1)
-                                {   // Skip anonymous/unnamed UDTs
+                                while(true)
+                                {
+                                    ULONG fetched = 0;
+                                    CComPtr<IDiaSymbol> udt;
+                                    if (FAILED(udts->Next(1, &udt, &fetched)) || fetched == 0)
+                                        break;
+
                                     CComBSTR name;
                                     if (SUCCEEDED(udt->get_name(&name)) && name && name[0] != L'\0') {
+                                        // Skip compiler-generated internal types and anonymous/unnamed UDTs
                                         std::wstring key(name);
-                                        // Skip compiler-generated internal types
                                         if (key.find(L'<') == std::wstring::npos && key.find(L"lambda") == std::wstring::npos)
                                             map[key].push_back(UdtInfo(udt, path));
                                     }
-                                    udt.Release();
                                 }
                             }
                         } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
