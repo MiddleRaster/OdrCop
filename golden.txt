@@ -85,4 +85,10 @@ ODR VIOLATION: SameMemberTypesDifferentOrder
     +0  char  b
     +4  int32_t  a
 
-10 ODR violation(s) found.
+ODR VIOLATION: StructVsClass
+  [tests\x64\Release\TU1.pdb]
+    kind=struct  size=1
+  [tests\x64\Release\TU2.pdb]
+    kind=class  size=1
+
+11 ODR violation(s) found.

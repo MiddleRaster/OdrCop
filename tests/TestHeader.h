@@ -150,6 +150,12 @@ struct DifferentVolatileDataMember
 #endif
 };
 
+#ifdef ONE
+struct StructVsClass
+#else
+class  StructVsClass
+#endif
+{};
 
 #ifdef ALL_ODR_VIOLATIONS
     10. Same inline function but different bodies

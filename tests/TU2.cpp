@@ -15,3 +15,4 @@ DifferentBaseClass                    g_2_DifferentBaseClass;
 //DifferentConstInit                  g_2_DifferentConstInit;
 DifferentConstDataMember              g_2_DifferentConstDataMember;
 DifferentVolatileDataMember           g_2_DifferentVolatileDataMember;
+StructVsClass                         g_2_StructVsClass;
