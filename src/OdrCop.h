@@ -818,6 +818,18 @@ namespace Odr
                                     CComPtr<IDiaEnumSymbols> funcs;
                                     if (SUCCEEDED(compiland->findChildren(SymTagFunction, nullptr, nsNone, &funcs)))
                                     {
+
+                                        static const std::wstring prefixes[] = {
+                                            L"D:\\a\\OdrCop\\",                 //    GitHub Actions' folder structure
+                                            L"C:\\Users\\Bill\\source\\repos\\" // my local machine's folder structure 
+                                        };
+                                        for (const auto& prefix : prefixes) {
+                                            if (_wcsnicmp(comp.c_str(), prefix.c_str(), prefix.size()) == 0) {
+                                                comp = comp.substr(prefix.size());
+                                                break;
+                                            }
+                                        }
+
                                         while (true)
                                         {
                                             ULONG got = 0;

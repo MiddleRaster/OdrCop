@@ -92,10 +92,10 @@ ODR VIOLATION: StructVsClass
     kind=class  size=1
 
 ODR VIOLATION: FunctionsMustBeBitwiseIdentical
-   [C:\Users\Bill\source\repos\OdrCop\TU1\x64\Debug\TU1.obj]
+   [OdrCop\TU1\x64\Debug\TU1.obj]
    function body length: 9
    the first few bytes are: 40 57 b8 01 00 00 00 5f c3 
-   [C:\Users\Bill\source\repos\OdrCop\TU2\x64\Debug\TU2.obj]
+   [OdrCop\TU2\x64\Debug\TU2.obj]
    function body length: 9
    the first few bytes are: 40 57 b8 02 00 00 00 5f c3 
 
