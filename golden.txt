@@ -1,94 +1,102 @@
-Loading: x64\Release\TU1.pdb
-Loading: x64\Release\TU2.pdb
+Loading: x64\Debug\TU1.pdb
+Loading: x64\Debug\TU2.pdb
 
 ODR VIOLATION: DifferentBaseClass
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=1
     bases: Base1
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=1
 
 ODR VIOLATION: DifferentBases
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=1
     bases: Base1
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=1
     bases: Base2
 
 ODR VIOLATION: DifferentConstDataMember
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=4
     +0 const  int32_t  a
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=4
     +0  int32_t  a
 
 ODR VIOLATION: DifferentDataMemberType
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=1
     +0  char  a
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=4
     +0  long  a
 
 ODR VIOLATION: DifferentDataMembers
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=4
     +0  int32_t  a
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=8
     +0  int32_t  a
     +4  int32_t  b
 
 ODR VIOLATION: DifferentOrderOfDataMembers
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=8
     +0  int32_t  a
     +4  int32_t  b
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=8
     +0  int32_t  b
     +4  int32_t  a
 
 ODR VIOLATION: DifferentSizedMember
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=1
     +0  char  a
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=8
     +0  wchar_t*  a
 
 ODR VIOLATION: DifferentTypeOfDataMembers
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=4
     +0  int32_t  a
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=4
     +0  uint32_t  a
 
 ODR VIOLATION: DifferentVolatileDataMember
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=4
     +0 volatile  int32_t  a
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=4
     +0  int32_t  a
 
 ODR VIOLATION: SameMemberTypesDifferentOrder
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=8
     +0  int32_t  a
     +4  char  b
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=struct  size=8
     +0  char  b
     +4  int32_t  a
 
 ODR VIOLATION: StructVsClass
-  [x64\Release\TU1.pdb]
+  [x64\Debug\TU1.pdb]
     kind=struct  size=1
-  [x64\Release\TU2.pdb]
+  [x64\Debug\TU2.pdb]
     kind=class  size=1
 
-11 ODR violation(s) found.
+ODR VIOLATION: FunctionsMustBeBitwiseIdentical
+   [C:\Users\Bill\source\repos\OdrCop\TU1\x64\Debug\TU1.obj]
+   function body length: 9
+   the first few bytes are: 40 57 b8 01 00 00 00 5f c3 
+   [C:\Users\Bill\source\repos\OdrCop\TU2\x64\Debug\TU2.obj]
+   function body length: 9
+   the first few bytes are: 40 57 b8 02 00 00 00 5f c3 
+
+12 ODR violation(s) found.

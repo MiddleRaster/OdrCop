@@ -2,13 +2,15 @@
 
 #include <windows.h>
 #include <dia2.h>
+#include <atlbase.h>
+
 #include <map>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <numeric>
 #include <iostream>
-#include <atlbase.h>
+#include <iomanip>
 
 namespace Odr
 {
@@ -670,19 +672,61 @@ namespace Odr
         }
     };
 
+    struct MappedExe
+    {
+        const BYTE* base = nullptr;
+
+        MappedExe(const wchar_t* path)
+        {
+            HANDLE hFile    = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
+            HANDLE hMapping = CreateFileMappingW(hFile, nullptr, PAGE_READONLY, 0, 0, nullptr);
+            base = static_cast<const BYTE*>(MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0));
+            CloseHandle(hMapping);
+            CloseHandle(hFile);
+        }
+       ~MappedExe() { if (base) UnmapViewOfFile(base); }
+
+        static const BYTE* FuncBytes(const BYTE* base, DWORD rva)
+        {
+            auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + reinterpret_cast<const IMAGE_DOS_HEADER*>(base)->e_lfanew);
+            auto* sect = IMAGE_FIRST_SECTION(nt);
+            for (WORD i = 0; i < nt->FileHeader.NumberOfSections; i++, sect++)
+                if (rva >= sect->VirtualAddress && rva < sect->VirtualAddress + sect->Misc.VirtualSize)
+                    return base + rva - sect->VirtualAddress + sect->PointerToRawData;
+            return nullptr;
+        }
+    };
+
     class FuncInfo
     {
         const std::wstring functionName;
         const std::wstring compiland;
         const ULONGLONG bodyLength;
+        const BYTE* base;
+        std::vector<BYTE> body;
     public:
-        FuncInfo(const std::wstring& functionName, const std::wstring& compiland,   ULONGLONG bodyLength)
-                      : functionName(functionName),          compiland(compiland), bodyLength(bodyLength)
-        {}
+        FuncInfo(IDiaSymbol* pFunc, const std::wstring& functionName, const std::wstring& compiland,   ULONGLONG bodyLength, const BYTE* base)
+                                        : functionName(functionName),          compiland(compiland), bodyLength(bodyLength),       base(base)
+        {
+            DWORD rva = 0;
+            pFunc->get_relativeVirtualAddress(&rva);
+
+            const BYTE* bytes = MappedExe::FuncBytes(base, rva);
+            if (bytes != nullptr)
+                body.assign(bytes, bytes + bodyLength);
+            else
+                std::wcout << L"could not get body for " << functionName << L'\n';
+        }
         void Print() const
         {
             PrintCompilandPath();
             std::wcout << L"   function body length: " << bodyLength << L'\n';
+            std::wcout << L"   the first few bytes are: " << std::hex;
+            auto count = 10<body.size() ? 10 : body.size();
+            for(auto i=0; i<count; ++i)
+                std::wcout << std::setfill(L'0') << std::setw(2) << body[i] << L' ';
+
+            std::wcout << std::dec << L'\n';
         }
         void PrintCompilandPath() const { std::wcout << L"   [" << compiland << L"]\n"; }
 
@@ -691,13 +735,13 @@ namespace Odr
     private:
         bool IsEqualTo(const FuncInfo& other) const
         {
-            if (functionName != other.functionName) return false;
          // if (compiland    != other.compiland)    return false; // compilands will always be different
+            if (functionName != other.functionName) return false;
             if (bodyLength   != other.bodyLength)   return false;
+            if (body         != other.body)         return false;
             return true;
         }
     };
-
 
     class Cop
     {
@@ -708,7 +752,7 @@ namespace Odr
         Cop() { CoInitialize(nullptr); }
        ~Cop() { CoUninitialize(); }
 
-        HRESULT LoadPdb(const std::wstring& path)
+        HRESULT LoadPdb(const std::wstring& path, const BYTE* base)
         {
             HRESULT hr;
 
@@ -792,7 +836,7 @@ namespace Odr
                                                     continue;   // inlined-away or pure virtual, skip
                                                 }
 
-                                                funcMap[std::wstring(funcName)].push_back(FuncInfo(std::wstring(funcName), comp, bodyLength));
+                                                funcMap[std::wstring(funcName)].push_back(FuncInfo(func, std::wstring(funcName), comp, bodyLength, base));
 
                                              // std::wcout << L"   " << funcName.m_str << '\n';
                                             }

@@ -18,7 +18,7 @@ env:
   # Configuration type to build.
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
   # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-  BUILD_CONFIGURATION: Release
+  BUILD_CONFIGURATION: Debug
 
 permissions:
   contents: read
@@ -54,6 +54,6 @@ jobs:
     - name: Run tests (console test EXE)
       shell: cmd
       run: |
-        x64\Release\OdrCop.exe x64\Release\TU1.pdb x64\Release\TU2.pdb > output.txt
+        x64\Debug\OdrCop.exe x64\Debug\TU1.pdb x64\Debug\TU2.pdb > output.txt
         type output.txt
         fc output.txt golden.txt        
