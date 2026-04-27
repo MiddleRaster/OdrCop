@@ -670,9 +670,18 @@ namespace Odr
         }
     };
 
+    class FuncInfo
+    {
+        std::wstring functionName;
+        std::wstring compiland;
+    public:
+        FuncInfo(const std::wstring& functionName, const std::wstring& compiland) : functionName(functionName), compiland(compiland) {}
+    };
+
     class Cop
     {
-        std::map<std::wstring, std::vector<UdtInfo>> map;
+        std::map<std::wstring, std::vector<UdtInfo >>  udtMap;
+        std::map<std::wstring, std::vector<FuncInfo>> funcMap;
 
     public:
         Cop() { CoInitialize(nullptr); }
@@ -693,6 +702,7 @@ namespace Odr
                         CComPtr<IDiaSymbol> global;
                         if (SUCCEEDED(hr = session->get_globalScope(&global)))
                         {
+                            // UDTs
                             CComPtr<IDiaEnumSymbols> udts;
                             if (SUCCEEDED(hr = global->findChildren(SymTagUDT, NULL, nsNone, &udts)))
                             {
@@ -708,10 +718,68 @@ namespace Odr
                                         // Skip compiler-generated internal types and anonymous/unnamed UDTs
                                         std::wstring key(name);
                                         if (key.find(L'<') == std::wstring::npos && key.find(L"lambda") == std::wstring::npos)
-                                            map[key].push_back(UdtInfo(udt, path));
+                                            udtMap[key].push_back(UdtInfo(udt, path));
                                     }
                                 }
                             }
+
+                            // Functions
+                            CComPtr<IDiaEnumSymbols> compilands;
+                            if (SUCCEEDED(global->findChildren(SymTagCompiland, nullptr, nsNone, &compilands)))
+                            {
+                                LONG count = 0L;
+                                compilands->get_Count(&count);
+                                if (count == -37)
+                                    count = -38;
+
+                                while (true)
+                                {
+                                    ULONG fetched = 0;
+                                    CComPtr<IDiaSymbol> compiland;
+                                    if (FAILED(compilands->Next(1, &compiland, &fetched)) || fetched == 0)
+                                        break;
+
+                                    // is it my compiland?
+                                    CComBSTR compilandName;
+                                    compiland->get_name(&compilandName);
+
+                                    std::wstring comp(compilandName.m_str);
+                                    if (comp.substr(comp.rfind(L'\\')+1, comp.rfind(L'.')-comp.rfind(L'\\')-1) !=
+                                        path.substr(path.rfind(L'\\')+1, path.rfind(L'.')-path.rfind(L'\\')-1))
+                                        continue;
+
+                                 // std::wcout << L"getting functions from compiland: " << compilandName.m_str << L'\n';
+
+                                    CComPtr<IDiaEnumSymbols> funcs;
+                                    if (SUCCEEDED(compiland->findChildren(SymTagFunction, nullptr, nsNone, &funcs)))
+                                    {
+                                        while (true)
+                                        {
+                                            ULONG got = 0;
+                                            CComPtr<IDiaSymbol> func;
+                                            if (FAILED(funcs->Next(1, &func, &got)) || got == 0)
+                                                break;
+
+                                            CComBSTR funcName;
+                                            if (SUCCEEDED(func->get_name(&funcName)) && funcName)
+                                            {
+                                                ULONGLONG len = 0;
+                                                func->get_length(&len);
+                                                if (len == 0)
+                                                {
+                                                    std::wcout << funcName.m_str << L" has length 0, which is either inlined-away or pure virtual; skipping\n";
+                                                    continue;   // inlined-away or pure virtual, skip
+                                                }
+
+                                                funcMap[std::wstring(funcName)].push_back(FuncInfo(std::wstring(funcName), comp));
+
+                                             // std::wcout << L"   " << funcName.m_str << '\n';
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                         } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                     }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';
                 }         else std::wcerr << L"loadDataFromPdb failed: " << path << L" with 0x" << std::hex << hr << std::dec << L'\n';
@@ -721,7 +789,7 @@ namespace Odr
         int ReportViolations() const
         {
             int violationCount = 0;
-            for (auto& [name, definitions] : map)
+            for (auto& [name, definitions] : udtMap)
             {
                 if (definitions.size() < 2)
                     continue;

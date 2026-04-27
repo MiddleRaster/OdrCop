@@ -3,6 +3,10 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Folder Name="/shared/">
+    <File Path="shared/TestHeader.h" />
+  </Folder>
   <Project Path="src/src.vcxproj" Id="6c0c73f7-daa8-4274-8f21-2e4f566becf2" />
-  <Project Path="tests/tests.vcxproj" Id="6f2905c1-4a77-436e-bcf0-2bc5760a96ba" />
+  <Project Path="TU1/TU1.vcxproj" Id="ca37d75e-c25d-45fe-976c-1a3d9e13723f" />
+  <Project Path="TU2/TU2.vcxproj" Id="2aa21192-4f8b-4826-9437-91e41742dbea" />
 </Solution>

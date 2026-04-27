@@ -1,5 +1,5 @@
 #define TWO
-#include "TestHeader.h"
+#include "..\shared\TestHeader.h"
 
 DifferentSizedMember                  g_2_DifferentSizedMember;
 DifferentDataMembers                  g_2_DifferentDataMembers;
@@ -16,3 +16,7 @@ DifferentBaseClass                    g_2_DifferentBaseClass;
 DifferentConstDataMember              g_2_DifferentConstDataMember;
 DifferentVolatileDataMember           g_2_DifferentVolatileDataMember;
 StructVsClass                         g_2_StructVsClass;
+
+int (*g_2_fpFunctionsMustBeBitwiseIdentical)() = &FunctionsMustBeBitwiseIdentical;
+
+int main() {}

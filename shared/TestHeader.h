@@ -132,7 +132,6 @@ struct DifferentBaseClass
 #endif
 {};
 
-// let's try two of our own
 struct DifferentConstDataMember
 {
 #ifdef ONE
@@ -157,16 +156,15 @@ class  StructVsClass
 #endif
 {};
 
-#ifdef ALL_ODR_VIOLATIONS
-    10. Same inline function but different bodies
-    Inline functions must be bit‑for‑bit identical across TUs.
+// Same inline function but different bodies
+// Inline functions must be bit‑for‑bit identical across TUs.
+#ifdef ONE
+inline int FunctionsMustBeBitwiseIdentical() { return 1; }
+#else
+inline int FunctionsMustBeBitwiseIdentical() { return 2; }
+#endif
 
-    TU1.cpp
-    cpp
-    inline int f() { return 1; }
-    TU2.cpp
-    cpp
-    inline int f() { return 2; }   // ODR violation
+#ifdef ALL_ODR_VIOLATIONS
     11. Same template specialization but different definitions
     TU1.cpp
     cpp
