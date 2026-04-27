@@ -672,11 +672,32 @@ namespace Odr
 
     class FuncInfo
     {
-        std::wstring functionName;
-        std::wstring compiland;
+        const std::wstring functionName;
+        const std::wstring compiland;
+        const ULONGLONG bodyLength;
     public:
-        FuncInfo(const std::wstring& functionName, const std::wstring& compiland) : functionName(functionName), compiland(compiland) {}
+        FuncInfo(const std::wstring& functionName, const std::wstring& compiland,   ULONGLONG bodyLength)
+                      : functionName(functionName),          compiland(compiland), bodyLength(bodyLength)
+        {}
+        void Print() const
+        {
+            PrintCompilandPath();
+            std::wcout << L"   function body length: " << bodyLength << L'\n';
+        }
+        void PrintCompilandPath() const { std::wcout << L"   [" << compiland << L"]\n"; }
+
+        friend bool operator==(const FuncInfo& a, const FuncInfo& b) { return  a.IsEqualTo(b); }
+        friend bool operator!=(const FuncInfo& a, const FuncInfo& b) { return !a.IsEqualTo(b); }
+    private:
+        bool IsEqualTo(const FuncInfo& other) const
+        {
+            if (functionName != other.functionName) return false;
+         // if (compiland    != other.compiland)    return false; // compilands will always be different
+            if (bodyLength   != other.bodyLength)   return false;
+            return true;
+        }
     };
+
 
     class Cop
     {
@@ -763,15 +784,15 @@ namespace Odr
                                             CComBSTR funcName;
                                             if (SUCCEEDED(func->get_name(&funcName)) && funcName)
                                             {
-                                                ULONGLONG len = 0;
-                                                func->get_length(&len);
-                                                if (len == 0)
+                                                ULONGLONG bodyLength = 0;
+                                                func->get_length(&bodyLength);
+                                                if (bodyLength == 0)
                                                 {
                                                     std::wcout << funcName.m_str << L" has length 0, which is either inlined-away or pure virtual; skipping\n";
                                                     continue;   // inlined-away or pure virtual, skip
                                                 }
 
-                                                funcMap[std::wstring(funcName)].push_back(FuncInfo(std::wstring(funcName), comp));
+                                                funcMap[std::wstring(funcName)].push_back(FuncInfo(std::wstring(funcName), comp, bodyLength));
 
                                              // std::wcout << L"   " << funcName.m_str << '\n';
                                             }
@@ -821,6 +842,40 @@ namespace Odr
                 }
                 std::wcout << L'\n';
             }
+
+            for (auto& [funcName, funcInfos] : funcMap)
+            {
+                if (funcInfos.size() < 2)
+                    continue;
+
+                // Check whether all definitions are identical
+                if (std::all_of(funcInfos.begin() + 1, funcInfos.end(), [&](const auto& fi) { return fi == funcInfos[0]; }))
+                    continue;
+
+                ++violationCount;
+                std::wcout << L"ODR VIOLATION: " << funcName << L'\n';
+
+                // Group identical funcInfos together so output is readable when there are many PDBs.
+                std::vector<bool> printed(funcInfos.size(), false);
+                for (size_t i=0; i< funcInfos.size(); ++i)
+                {
+                    if (printed[i]) continue;
+                    funcInfos[i].Print();
+                    printed[i] = true;
+                
+                    // Mark all later ones that match this one
+                    for (size_t j=i+1; j< funcInfos.size(); ++j)
+                    {
+                        if (!printed[j] && (funcInfos[i] == funcInfos[j]))
+                        {
+                            funcInfos[j].PrintCompilandPath();
+                            printed[j] = true;
+                        }
+                    }
+                }
+                std::wcout << L'\n';
+            }
+
             return violationCount;
         }
     };
