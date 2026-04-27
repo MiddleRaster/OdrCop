@@ -54,6 +54,6 @@ jobs:
     - name: Run tests (console test EXE)
       shell: cmd
       run: |
-        x64\Release\OdrCop.exe tests\x64\Release\TU1.pdb tests\x64\Release\TU2.pdb > output.txt
+        x64\Release\OdrCop.exe x64\Release\TU1.pdb x64\Release\TU2.pdb > output.txt
         type output.txt
         fc output.txt golden.txt        
