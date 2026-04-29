@@ -17,4 +17,7 @@ DifferentConstDataMember              g_2_DifferentConstDataMember;
 DifferentVolatileDataMember           g_2_DifferentVolatileDataMember;
 StructVsClass                         g_2_StructVsClass;
 
-int g_sink_2 = FunctionsMustBeBitwiseIdentical();
+int g_2_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();
+int g_2_call_SameFunctionTemplateSpecializationDifferentDefinitions = SameFunctionTemplateSpecializationDifferentDefinitions<int>();
+
+

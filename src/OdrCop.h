@@ -615,7 +615,31 @@ namespace Odr
             std::wstring key(name ? name.m_str : L"");
 
             if (key.find(L"<unnamed") != std::wstring::npos)
-            { // avoid collions with "unnamed" by appending type and size
+            {
+                /*
+                The problem being solved here is when there is more than nested one unnamed struct/class/union
+                DIA just calls them "<unnamed" but then two different ones would collide.  For example:
+                struct tagDEC {
+                    WORD wReserved;
+                    union {
+                        struct { BYTE scale; BYTE sign; };
+                        USHORT signscale;
+                    };
+                    ULONG Hi32;
+                    union {
+                        struct { ULONG Lo32; ULONG Mid32; };
+                        ULONGLONG Lo64;
+                    };
+                };
+                tagDEC contains two unnamed unions, each containing an unnamed struct.
+                Without this fixup code, the first struct, tagDEC::<unnamed-tag>::<unnamed-rag> which is 2 bytes long,
+                would collide with the second struct, having exactly the same "name"           but being 8 bytes long.
+
+                The solution is to append the type and size to the end of the same, thus making them unique.
+
+                N.B.: it could still fail, if the two types were the same size. Appending the name of the first data-member would solve this last problem.
+                */
+
                 ULONGLONG size = Get(sym, &IDiaSymbol::get_length);
                 DWORD     kind = Get(sym, &IDiaSymbol::get_udtKind);
                 key += L"[" + std::wstring(kind == UdtUnion  ? L"union" :

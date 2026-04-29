@@ -159,19 +159,24 @@ class  StructVsClass
 // Same inline function but different bodies
 // Inline functions must be bit‑for‑bit identical across TUs.
 #ifdef ONE
-__declspec(noinline) inline int FunctionsMustBeBitwiseIdentical() { return 1; }
+inline int FunctionsMustBeBitwiseIdentical() { return 1; }
 #else
-__declspec(noinline) inline int FunctionsMustBeBitwiseIdentical() { return 2; }
+inline int FunctionsMustBeBitwiseIdentical() { return 2; }
 #endif
 
+
+// Same template specialization but different definitions
+template<typename T> inline T   SameFunctionTemplateSpecializationDifferentDefinitions();
+template<          > inline int SameFunctionTemplateSpecializationDifferentDefinitions<int>() 
+{
+#ifdef ONE
+    return 1;
+#else
+    return 2;
+#endif
+}
+
 #ifdef ALL_ODR_VIOLATIONS
-    11. Same template specialization but different definitions
-    TU1.cpp
-    cpp
-    template<> int f<int>() { return 1; }
-    TU2.cpp
-    cpp
-    template<> int f<int>() { return 2; }   // ODR violation
     12. Same constexpr function but different bodies
     TU1.cpp
     cpp
