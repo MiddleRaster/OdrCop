@@ -9,8 +9,9 @@ Usage: ```OdrCop <path to folder of .obj/.pdb files> [more folders ...]``` where
 Build your .dll or .exe with whatever options you like except that the following **must** be set:
 1. /Zi == use Debug info
 2. /Ob0 == turn off inlining
-3. /Fd == output a .pdb file for each .obj, using /Fd$(IntDir)%(Filename).pdb under Configuration Properties -> C/C++ -> Output File -> Program Database File Name
-4. pass one or more paths to folders of .obj and .pdb files (N.B.: the tool will recurse into subfolders)
+3. /Fd == output a .pdb file for each .obj, using /Fd$(IntDir)%(Filename).pdb under Configuration Properties -> C/C++ -> Output File -> Program Database File Name. 
+
+Pass one or more paths to folders of .obj and .pdb files (N.B.: the tool will recurse into subfolders)
 
 ## How it works
 
