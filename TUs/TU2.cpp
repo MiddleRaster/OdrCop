@@ -1,5 +1,5 @@
 #define TWO
-#include "..\shared\TestHeader.h"
+#include "TestHeader.h"
 
 DifferentSizedMember                  g_2_DifferentSizedMember;
 DifferentDataMembers                  g_2_DifferentDataMembers;

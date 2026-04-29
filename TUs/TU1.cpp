@@ -1,5 +1,5 @@
 #define ONE
-#include "..\shared\TestHeader.h"
+#include "TestHeader.h"
 
 DifferentSizedMember                  g_1_DifferentSizedMember;
 DifferentDataMembers                  g_1_DifferentDataMembers;
