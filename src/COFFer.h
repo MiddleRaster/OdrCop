@@ -157,7 +157,10 @@ namespace Odr
         static void Read(const std::wstring& pdbPath, std::map<std::wstring, std::vector<FuncInfo>>& funcMap)
         {
             auto objPath = pdbPath.substr(0, pdbPath.rfind(L'.')) + L".obj";
-            DWORD size   = static_cast<DWORD>(std::filesystem::file_size(objPath));
+            DWORD size;
+            try { size = static_cast<DWORD>(std::filesystem::file_size(objPath)); }
+            catch (...) { return; }
+
             // read the whole .obj into a vector
             std::vector<BYTE> bytes;
             bytes.resize(size);
