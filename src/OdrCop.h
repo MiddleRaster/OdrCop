@@ -518,11 +518,10 @@ namespace Odr
                                         break;
 
                                     CComBSTR name;
-                                    if (SUCCEEDED(udt->get_name(&name)) && name && name[0] != L'\0') {
-                                        // Skip compiler-generated internal types and anonymous/unnamed UDTs
-                                        std::wstring key(name);
-                                        if (key.find(L'<') == std::wstring::npos && key.find(L"lambda") == std::wstring::npos)
-                                            udtMap[key].push_back(UdtInfo(udt, path));
+                                    if (SUCCEEDED(udt->get_name(&name)) && name && name[0] != L'\0')
+                                    {
+                                        std::wstring key = BuildUdtKey(udt);
+                                        udtMap[key].push_back(UdtInfo(udt, path));
                                     }
                                 }
                             }
@@ -606,6 +605,25 @@ namespace Odr
             }
 
             return violationCount;
+        }
+
+    private:
+        static std::wstring BuildUdtKey(IDiaSymbol* sym)
+        {
+            CComBSTR name;
+            sym->get_name(&name);
+            std::wstring key(name ? name.m_str : L"");
+
+            if (key.find(L"<unnamed") != std::wstring::npos)
+            { // avoid collions with "unnamed" by appending type and size
+                ULONGLONG size = Get(sym, &IDiaSymbol::get_length);
+                DWORD     kind = Get(sym, &IDiaSymbol::get_udtKind);
+                key += L"[" + std::wstring(kind == UdtUnion  ? L"union" :
+                                           kind == UdtClass  ? L"class" :
+                                                               L"struct") + L"]";
+                key += L"[size=" + std::to_wstring(size)                  + L"]";
+            }
+            return key;
         }
     };
 }

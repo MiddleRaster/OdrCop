@@ -8,7 +8,7 @@ int wmain(int argc, wchar_t** argv)
 {
     if (argc < 2)
     {
-        std::wcout << L"Usage: odrcop <folder of .obj/.pdb files> [more folders ...] where each .obj/.pdb is built with /Zi, /Fd\"blah.pdb\" and /Ob0\n";
+        std::wcout << L"Usage: OdrCop <folder of .obj/.pdb files> [more folders ...] where each .obj/.pdb is built with /Zi, /Fd\"blah.pdb\" and /Ob0\n";
         return -1;
     }
 
