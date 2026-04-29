@@ -12,6 +12,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include "COFFer.h"
+
 namespace Odr
 {
     inline std::wstring BstrToWstr(BSTR b) { return b ? std::wstring(b) : std::wstring(L"<unnamed>"); }
@@ -276,6 +278,7 @@ namespace Odr
             }
         };
 
+        // does not work. Yet.
         class ConstantMember : public MemberInfoBase<ConstantMember>
         {
             std::wstring constValue;
@@ -418,201 +421,8 @@ namespace Odr
                                                                   Get(child, &IDiaSymbol::get_volatileType)));
 
                     } else {
+                        // add other DataKind types
                         continue; // here only so I can put a breakpoint on it
-                        //std::wcout << L"in GetInstanceMembers, not a DataIsMember type, but rather " << dataKind << L"\n";
-
-                        //CComVariant val;
-                        //HRESULT hr = child->get_value(&val);
-                        //std::wcout << L"get_value hr=0x" << std::hex << hr << std::dec << L"  vt=" << val.vt << L'\n';
-
-                        //auto s = Get(child, &IDiaSymbol::get_value);
-                        //std::wcout << L"converted get_value to " << s << L'\n';
-                        /*
-                        auto lt = Get(child, &IDiaSymbol::get_locationType);
-                        switch(lt)
-                        {
-                        case LocationType::LocIsNull            : std::wcout << L"locationType is " << L"LocIsNull            " << L"\n"; break;
-                        case LocationType::LocIsStatic          : std::wcout << L"locationType is " << L"LocIsStatic          " << L"\n"; break;
-                        case LocationType::LocIsTLS             : std::wcout << L"locationType is " << L"LocIsTLS             " << L"\n"; break;
-                        case LocationType::LocIsRegRel          : std::wcout << L"locationType is " << L"LocIsRegRel          " << L"\n"; break;
-                        case LocationType::LocIsThisRel         : std::wcout << L"locationType is " << L"LocIsThisRel         " << L"\n"; break;
-                        case LocationType::LocIsEnregistered    : std::wcout << L"locationType is " << L"LocIsEnregistered    " << L"\n"; break;
-                        case LocationType::LocIsBitField        : std::wcout << L"locationType is " << L"LocIsBitField        " << L"\n"; break;
-                        case LocationType::LocIsSlot            : std::wcout << L"locationType is " << L"LocIsSlot            " << L"\n"; break;
-                        case LocationType::LocIsIlRel           : std::wcout << L"locationType is " << L"LocIsIlRel           " << L"\n"; break;
-                        case LocationType::LocInMetaData        : std::wcout << L"locationType is " << L"LocInMetaData        " << L"\n"; break;
-                        case LocationType::LocIsConstant        : std::wcout << L"locationType is " << L"LocIsConstant        " << L"\n"; break;
-                        case LocationType::LocIsRegRelAliasIndir: std::wcout << L"locationType is " << L"LocIsRegRelAliasIndir" << L"\n"; break;
-                        case LocationType::LocTypeMax           : std::wcout << L"locationType is " << L"LocTypeMax           " << L"\n"; break;
-                        };
-                        */
-#ifdef KEEP
-                            std::wcout << L"get_symIndexId:                        " << Get(child, &IDiaSymbol::get_symIndexId) << L'\n';
-                            std::wcout << L"get_symTag:                            " << Get(child, &IDiaSymbol::get_symTag) << L'\n';
-                            std::wcout << L"get_name:                              " << Get(child, &IDiaSymbol::get_name) << L'\n';
-                            std::wcout << L"get_lexicalParentId:                   " << Get(child, &IDiaSymbol::get_lexicalParentId) << L'\n';
-                            std::wcout << L"get_classParentId:                     " << Get(child, &IDiaSymbol::get_classParentId) << L'\n';
-                            std::wcout << L"get_typeId:                            " << Get(child, &IDiaSymbol::get_typeId) << L'\n';
-                            std::wcout << L"get_dataKind:                          " << Get(child, &IDiaSymbol::get_dataKind) << L'\n';
-                            std::wcout << L"get_locationType:                      " << Get(child, &IDiaSymbol::get_locationType) << L'\n';
-                            std::wcout << L"get_addressSection:                    " << Get(child, &IDiaSymbol::get_addressSection) << L'\n';
-                            std::wcout << L"get_addressOffset:                     " << Get(child, &IDiaSymbol::get_addressOffset) << L'\n';
-                            std::wcout << L"get_relativeVirtualAddress:            " << Get(child, &IDiaSymbol::get_relativeVirtualAddress) << L'\n';
-                            std::wcout << L"get_virtualAddress:                    " << Get(child, &IDiaSymbol::get_virtualAddress) << L'\n';
-                            std::wcout << L"get_registerId:                        " << Get(child, &IDiaSymbol::get_registerId) << L'\n';
-                            std::wcout << L"get_offset:                            " << Get(child, &IDiaSymbol::get_offset) << L'\n';
-                            std::wcout << L"get_length:                            " << Get(child, &IDiaSymbol::get_length) << L'\n';
-                            std::wcout << L"get_slot:                              " << Get(child, &IDiaSymbol::get_slot) << L'\n';
-                            std::wcout << L"get_volatileType:                      " << Get(child, &IDiaSymbol::get_volatileType) << L'\n';
-                            std::wcout << L"get_constType:                         " << Get(child, &IDiaSymbol::get_constType) << L'\n';
-                            std::wcout << L"get_unalignedType:                     " << Get(child, &IDiaSymbol::get_unalignedType) << L'\n';
-                            std::wcout << L"get_access:                            " << Get(child, &IDiaSymbol::get_access) << L'\n';
-                            std::wcout << L"get_libraryName:                       " << Get(child, &IDiaSymbol::get_libraryName) << L'\n';
-                            std::wcout << L"get_platform:                          " << Get(child, &IDiaSymbol::get_platform) << L'\n';
-                            std::wcout << L"get_language:                          " << Get(child, &IDiaSymbol::get_language) << L'\n';
-                            std::wcout << L"get_editAndContinueEnabled:            " << Get(child, &IDiaSymbol::get_editAndContinueEnabled) << L'\n';
-                            std::wcout << L"get_frontEndMajor:                     " << Get(child, &IDiaSymbol::get_frontEndMajor) << L'\n';
-                            std::wcout << L"get_frontEndMinor:                     " << Get(child, &IDiaSymbol::get_frontEndMinor) << L'\n';
-                            std::wcout << L"get_frontEndBuild:                     " << Get(child, &IDiaSymbol::get_frontEndBuild) << L'\n';
-                            std::wcout << L"get_backEndMajor:                      " << Get(child, &IDiaSymbol::get_backEndMajor) << L'\n';
-                            std::wcout << L"get_backEndMinor:                      " << Get(child, &IDiaSymbol::get_backEndMinor) << L'\n';
-                            std::wcout << L"get_backEndBuild:                      " << Get(child, &IDiaSymbol::get_backEndBuild) << L'\n';
-                            std::wcout << L"get_sourceFileName:                    " << Get(child, &IDiaSymbol::get_sourceFileName) << L'\n';
-                            std::wcout << L"get_unused:                            " << Get(child, &IDiaSymbol::get_unused) << L'\n';
-                            std::wcout << L"get_thunkOrdinal:                      " << Get(child, &IDiaSymbol::get_thunkOrdinal) << L'\n';
-                            std::wcout << L"get_thisAdjust:                        " << Get(child, &IDiaSymbol::get_thisAdjust) << L'\n';
-                            std::wcout << L"get_virtualBaseOffset:                 " << Get(child, &IDiaSymbol::get_virtualBaseOffset) << L'\n';
-                            std::wcout << L"get_virtual:                           " << Get(child, &IDiaSymbol::get_virtual) << L'\n';
-                            std::wcout << L"get_intro:                             " << Get(child, &IDiaSymbol::get_intro) << L'\n';
-                            std::wcout << L"get_pure:                              " << Get(child, &IDiaSymbol::get_pure) << L'\n';
-                            std::wcout << L"get_callingConvention:                 " << Get(child, &IDiaSymbol::get_callingConvention) << L'\n';
-                            std::wcout << L"get_value:                             " << Get(child, &IDiaSymbol::get_value) << L'\n';
-                            std::wcout << L"get_baseType:                          " << Get(child, &IDiaSymbol::get_baseType) << L'\n';
-                            std::wcout << L"get_token:                             " << Get(child, &IDiaSymbol::get_token) << L'\n';
-                            std::wcout << L"get_timeStamp:                         " << Get(child, &IDiaSymbol::get_timeStamp) << L'\n';
-                            std::wcout << L"get_symbolsFileName:                   " << Get(child, &IDiaSymbol::get_symbolsFileName) << L'\n';
-                            std::wcout << L"get_reference:                         " << Get(child, &IDiaSymbol::get_reference) << L'\n';
-                            std::wcout << L"get_count:                             " << Get(child, &IDiaSymbol::get_count) << L'\n';
-                            std::wcout << L"get_bitPosition:                       " << Get(child, &IDiaSymbol::get_bitPosition) << L'\n';
-                            std::wcout << L"get_arrayIndexTypeId:                  " << Get(child, &IDiaSymbol::get_arrayIndexTypeId) << L'\n';
-                            std::wcout << L"get_packed:                            " << Get(child, &IDiaSymbol::get_packed) << L'\n';
-                            std::wcout << L"get_constructor:                       " << Get(child, &IDiaSymbol::get_constructor) << L'\n';
-                            std::wcout << L"get_overloadedOperator:                " << Get(child, &IDiaSymbol::get_overloadedOperator) << L'\n';
-                            std::wcout << L"get_nested:                            " << Get(child, &IDiaSymbol::get_nested) << L'\n';
-                            std::wcout << L"get_hasNestedTypes:                    " << Get(child, &IDiaSymbol::get_hasNestedTypes) << L'\n';
-                            std::wcout << L"get_hasAssignmentOperator:             " << Get(child, &IDiaSymbol::get_hasAssignmentOperator) << L'\n';
-                            std::wcout << L"get_hasCastOperator:                   " << Get(child, &IDiaSymbol::get_hasCastOperator) << L'\n';
-                            std::wcout << L"get_scoped:                            " << Get(child, &IDiaSymbol::get_scoped) << L'\n';
-                            std::wcout << L"get_virtualBaseClass:                  " << Get(child, &IDiaSymbol::get_virtualBaseClass) << L'\n';
-                            std::wcout << L"get_indirectVirtualBaseClass:          " << Get(child, &IDiaSymbol::get_indirectVirtualBaseClass) << L'\n';
-                            std::wcout << L"get_virtualBasePointerOffset:          " << Get(child, &IDiaSymbol::get_virtualBasePointerOffset) << L'\n';
-                            std::wcout << L"get_virtualTableShapeId:               " << Get(child, &IDiaSymbol::get_virtualTableShapeId) << L'\n';
-                            std::wcout << L"get_code:                              " << Get(child, &IDiaSymbol::get_code) << L'\n';
-                            std::wcout << L"get_function:                          " << Get(child, &IDiaSymbol::get_function) << L'\n';
-                            std::wcout << L"get_managed:                           " << Get(child, &IDiaSymbol::get_managed) << L'\n';
-                            std::wcout << L"get_msil:                              " << Get(child, &IDiaSymbol::get_msil) << L'\n';
-                            std::wcout << L"get_virtualBaseDispIndex:              " << Get(child, &IDiaSymbol::get_virtualBaseDispIndex) << L'\n';
-                            std::wcout << L"get_undecoratedName:                   " << Get(child, &IDiaSymbol::get_undecoratedName) << L'\n';
-                            std::wcout << L"get_age:                               " << Get(child, &IDiaSymbol::get_age) << L'\n';
-                            std::wcout << L"get_signature:                         " << Get(child, &IDiaSymbol::get_signature) << L'\n';
-                            std::wcout << L"get_compilerGenerated:                 " << Get(child, &IDiaSymbol::get_compilerGenerated) << L'\n';
-                            std::wcout << L"get_addressTaken:                      " << Get(child, &IDiaSymbol::get_addressTaken) << L'\n';
-                            std::wcout << L"get_rank:                              " << Get(child, &IDiaSymbol::get_rank) << L'\n';
-                            std::wcout << L"get_lowerBoundId:                      " << Get(child, &IDiaSymbol::get_lowerBoundId) << L'\n';
-                            std::wcout << L"get_upperBoundId:                      " << Get(child, &IDiaSymbol::get_upperBoundId) << L'\n';
-                            std::wcout << L"get_offsetInUdt:                       " << Get(child, &IDiaSymbol::get_offsetInUdt) << L'\n';
-                            std::wcout << L"get_paramBasePointerRegisterId:        " << Get(child, &IDiaSymbol::get_paramBasePointerRegisterId) << L'\n';
-                            std::wcout << L"get_localBasePointerRegisterId:        " << Get(child, &IDiaSymbol::get_localBasePointerRegisterId) << L'\n';
-                            std::wcout << L"get_isLocationControlFlowDependent:    " << Get(child, &IDiaSymbol::get_isLocationControlFlowDependent) << L'\n';
-                            std::wcout << L"get_stride:                            " << Get(child, &IDiaSymbol::get_stride) << L'\n';
-                            std::wcout << L"get_numberOfRows:                      " << Get(child, &IDiaSymbol::get_numberOfRows) << L'\n';
-                            std::wcout << L"get_numberOfColumns:                   " << Get(child, &IDiaSymbol::get_numberOfColumns) << L'\n';
-                            std::wcout << L"get_isMatrixRowMajor:                  " << Get(child, &IDiaSymbol::get_isMatrixRowMajor) << L'\n';
-                            std::wcout << L"get_isReturnValue:                     " << Get(child, &IDiaSymbol::get_isReturnValue) << L'\n';
-                            std::wcout << L"get_isOptimizedAway:                   " << Get(child, &IDiaSymbol::get_isOptimizedAway) << L'\n';
-                            std::wcout << L"get_builtInKind:                       " << Get(child, &IDiaSymbol::get_builtInKind) << L'\n';
-                            std::wcout << L"get_registerType:                      " << Get(child, &IDiaSymbol::get_registerType) << L'\n';
-                            std::wcout << L"get_baseDataSlot:                      " << Get(child, &IDiaSymbol::get_baseDataSlot) << L'\n';
-                            std::wcout << L"get_baseDataOffset:                    " << Get(child, &IDiaSymbol::get_baseDataOffset) << L'\n';
-                            std::wcout << L"get_textureSlot:                       " << Get(child, &IDiaSymbol::get_textureSlot) << L'\n';
-                            std::wcout << L"get_samplerSlot:                       " << Get(child, &IDiaSymbol::get_samplerSlot) << L'\n';
-                            std::wcout << L"get_uavSlot:                           " << Get(child, &IDiaSymbol::get_uavSlot) << L'\n';
-                            std::wcout << L"get_sizeInUdt:                         " << Get(child, &IDiaSymbol::get_sizeInUdt) << L'\n';
-                            std::wcout << L"get_memorySpaceKind:                   " << Get(child, &IDiaSymbol::get_memorySpaceKind) << L'\n';
-                            std::wcout << L"get_unmodifiedTypeId:                  " << Get(child, &IDiaSymbol::get_unmodifiedTypeId) << L'\n';
-                            std::wcout << L"get_subTypeId:                         " << Get(child, &IDiaSymbol::get_subTypeId) << L'\n';
-                            std::wcout << L"get_numberOfModifiers:                 " << Get(child, &IDiaSymbol::get_numberOfModifiers) << L'\n';
-                            std::wcout << L"get_numberOfRegisterIndices:           " << Get(child, &IDiaSymbol::get_numberOfRegisterIndices) << L'\n';
-                            std::wcout << L"get_isHLSLData:                        " << Get(child, &IDiaSymbol::get_isHLSLData) << L'\n';
-                            std::wcout << L"get_isPointerToDataMember:             " << Get(child, &IDiaSymbol::get_isPointerToDataMember) << L'\n';
-                            std::wcout << L"get_isPointerToMemberFunction:         " << Get(child, &IDiaSymbol::get_isPointerToMemberFunction) << L'\n';
-                            std::wcout << L"get_isSingleInheritance:               " << Get(child, &IDiaSymbol::get_isSingleInheritance) << L'\n';
-                            std::wcout << L"get_isMultipleInheritance:             " << Get(child, &IDiaSymbol::get_isMultipleInheritance) << L'\n';
-                            std::wcout << L"get_isVirtualInheritance:              " << Get(child, &IDiaSymbol::get_isVirtualInheritance) << L'\n';
-                            std::wcout << L"get_restrictedType:                    " << Get(child, &IDiaSymbol::get_restrictedType) << L'\n';
-                            std::wcout << L"get_isPointerBasedOnSymbolValue:       " << Get(child, &IDiaSymbol::get_isPointerBasedOnSymbolValue) << L'\n';
-                            std::wcout << L"get_baseSymbolId:                      " << Get(child, &IDiaSymbol::get_baseSymbolId) << L'\n';
-                            std::wcout << L"get_objectFileName:                    " << Get(child, &IDiaSymbol::get_objectFileName) << L'\n';
-                            std::wcout << L"get_isAcceleratorGroupSharedLocal:     " << Get(child, &IDiaSymbol::get_isAcceleratorGroupSharedLocal) << L'\n';
-                            std::wcout << L"get_isAcceleratorPointerTagLiveRange:  " << Get(child, &IDiaSymbol::get_isAcceleratorPointerTagLiveRange) << L'\n';
-                            std::wcout << L"get_isAcceleratorStubFunction:         " << Get(child, &IDiaSymbol::get_isAcceleratorStubFunction) << L'\n';
-                            std::wcout << L"get_numberOfAcceleratorPointerTags:    " << Get(child, &IDiaSymbol::get_numberOfAcceleratorPointerTags) << L'\n';
-                            std::wcout << L"get_isSdl:                             " << Get(child, &IDiaSymbol::get_isSdl) << L'\n';
-                            std::wcout << L"get_isWinRTPointer:                    " << Get(child, &IDiaSymbol::get_isWinRTPointer) << L'\n';
-                            std::wcout << L"get_isRefUdt:                          " << Get(child, &IDiaSymbol::get_isRefUdt) << L'\n';
-                            std::wcout << L"get_isValueUdt:                        " << Get(child, &IDiaSymbol::get_isValueUdt) << L'\n';
-                            std::wcout << L"get_isInterfaceUdt:                    " << Get(child, &IDiaSymbol::get_isInterfaceUdt) << L'\n';
-                            std::wcout << L"get_isPGO:                             " << Get(child, &IDiaSymbol::get_isPGO) << L'\n';
-                            std::wcout << L"get_hasValidPGOCounts:                 " << Get(child, &IDiaSymbol::get_hasValidPGOCounts) << L'\n';
-                            std::wcout << L"get_isOptimizedForSpeed:               " << Get(child, &IDiaSymbol::get_isOptimizedForSpeed) << L'\n';
-                            std::wcout << L"get_PGOEntryCount:                     " << Get(child, &IDiaSymbol::get_PGOEntryCount) << L'\n';
-                            std::wcout << L"get_PGOEdgeCount:                      " << Get(child, &IDiaSymbol::get_PGOEdgeCount) << L'\n';
-                            std::wcout << L"get_PGODynamicInstructionCount:        " << Get(child, &IDiaSymbol::get_PGODynamicInstructionCount) << L'\n';
-                            std::wcout << L"get_staticSize:                        " << Get(child, &IDiaSymbol::get_staticSize) << L'\n';
-                            std::wcout << L"get_finalLiveStaticSize:               " << Get(child, &IDiaSymbol::get_finalLiveStaticSize) << L'\n';
-                            std::wcout << L"get_phaseName:                         " << Get(child, &IDiaSymbol::get_phaseName) << L'\n';
-                            std::wcout << L"get_hasControlFlowCheck:               " << Get(child, &IDiaSymbol::get_hasControlFlowCheck) << L'\n';
-                            std::wcout << L"get_constantExport:                    " << Get(child, &IDiaSymbol::get_constantExport) << L'\n';
-                            std::wcout << L"get_dataExport:                        " << Get(child, &IDiaSymbol::get_dataExport) << L'\n';
-                            std::wcout << L"get_privateExport:                     " << Get(child, &IDiaSymbol::get_privateExport) << L'\n';
-                            std::wcout << L"get_noNameExport:                      " << Get(child, &IDiaSymbol::get_noNameExport) << L'\n';
-                            std::wcout << L"get_exportHasExplicitlyAssignedOrdinal:" << Get(child, &IDiaSymbol::get_exportHasExplicitlyAssignedOrdinal) << L'\n';
-                            std::wcout << L"get_exportIsForwarder:                 " << Get(child, &IDiaSymbol::get_exportIsForwarder) << L'\n';
-                            std::wcout << L"get_ordinal:                           " << Get(child, &IDiaSymbol::get_ordinal) << L'\n';
-                            std::wcout << L"get_frameSize:                         " << Get(child, &IDiaSymbol::get_frameSize) << L'\n';
-                            std::wcout << L"get_exceptionHandlerAddressSection:    " << Get(child, &IDiaSymbol::get_exceptionHandlerAddressSection) << L'\n';
-                            std::wcout << L"get_exceptionHandlerAddressOffset:     " << Get(child, &IDiaSymbol::get_exceptionHandlerAddressOffset) << L'\n';
-                            std::wcout << L"get_exceptionHandlerRelativeVirtualAddress:" << Get(child, &IDiaSymbol::get_exceptionHandlerRelativeVirtualAddress) << L'\n';
-                            std::wcout << L"get_exceptionHandlerVirtualAddress:    " << Get(child, &IDiaSymbol::get_exceptionHandlerVirtualAddress) << L'\n';
-                            std::wcout << L"get_characteristics:                   " << Get(child, &IDiaSymbol::get_characteristics) << L'\n';
-                            std::wcout << L"get_bindID:                            " << Get(child, &IDiaSymbol::get_bindID) << L'\n';
-                            std::wcout << L"get_bindSpace:                         " << Get(child, &IDiaSymbol::get_bindSpace) << L'\n';
-                            std::wcout << L"get_bindSlot:                          " << Get(child, &IDiaSymbol::get_bindSlot) << L'\n';
-
-                            // Methods skipped — require special handling:
-                            // get_guid          — returns GUID, needs custom formatting
-                            // get_lexicalParent — returns IDiaSymbol*, would recurse
-                            // get_classParent   — returns IDiaSymbol*, would recurse
-                            // get_type          — returns IDiaSymbol*, would recurse
-                            // get_arrayIndexType       — returns IDiaSymbol*, would recurse
-                            // get_virtualTableShape    — returns IDiaSymbol*, would recurse
-                            // get_lowerBound           — returns IDiaSymbol*, would recurse
-                            // get_upperBound           — returns IDiaSymbol*, would recurse
-                            // get_unmodifiedType       — returns IDiaSymbol*, would recurse
-                            // get_container            — returns IDiaSymbol*, would recurse
-                            // get_virtualBaseTableType — returns IDiaSymbol*, would recurse
-                            // get_baseSymbol           — returns IDiaSymbol*, would recurse
-                            // get_subType              — returns IDiaSymbol*, would recurse
-                            // get_coffGroup            — returns IDiaSymbol*, would recurse
-                            // get_noReturn             — BOOL, included via get_ pattern above? check compilation
-                            // get_dataBytes            — variable-length, two-call pattern
-                            // get_types                — array out-param
-                            // get_typeIds              — array out-param
-                            // get_numericProperties    — array out-param
-                            // get_modifierValues       — array out-param
-                            // get_acceleratorPointerTags — array out-param
-                            // get_undecoratedNameEx    — takes an input param
-#endif
                     }
                 }
             }
@@ -672,77 +482,6 @@ namespace Odr
         }
     };
 
-    struct MappedExe
-    {
-        const BYTE* base = nullptr;
-
-        MappedExe(const wchar_t* path)
-        {
-            HANDLE hFile    = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
-            HANDLE hMapping = CreateFileMappingW(hFile, nullptr, PAGE_READONLY, 0, 0, nullptr);
-            base = static_cast<const BYTE*>(MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0));
-            CloseHandle(hMapping);
-            CloseHandle(hFile);
-        }
-       ~MappedExe() { if (base) UnmapViewOfFile(base); }
-
-        static const BYTE* FuncBytes(const BYTE* base, DWORD rva)
-        {
-            auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + reinterpret_cast<const IMAGE_DOS_HEADER*>(base)->e_lfanew);
-            auto* sect = IMAGE_FIRST_SECTION(nt);
-            for (WORD i = 0; i < nt->FileHeader.NumberOfSections; i++, sect++)
-                if (rva >= sect->VirtualAddress && rva < sect->VirtualAddress + sect->Misc.VirtualSize)
-                    return base + rva - sect->VirtualAddress + sect->PointerToRawData;
-            return nullptr;
-        }
-    };
-
-    class FuncInfo
-    {
-        const std::wstring functionName;
-        const std::wstring compiland;
-        const ULONGLONG bodyLength;
-        const BYTE* base;
-        std::vector<BYTE> body;
-    public:
-        FuncInfo(IDiaSymbol* pFunc, const std::wstring& functionName, const std::wstring& compiland,   ULONGLONG bodyLength, const BYTE* base)
-                                        : functionName(functionName),          compiland(compiland), bodyLength(bodyLength),       base(base)
-        {
-            DWORD rva = 0;
-            pFunc->get_relativeVirtualAddress(&rva);
-
-            const BYTE* bytes = MappedExe::FuncBytes(base, rva);
-            if (bytes != nullptr)
-                body.assign(bytes, bytes + bodyLength);
-            else
-                std::wcout << L"could not get body for " << functionName << L'\n';
-        }
-        void Print() const
-        {
-            PrintCompilandPath();
-            std::wcout << L"   function body length: " << bodyLength << L'\n';
-            std::wcout << L"   the first few bytes are: " << std::hex;
-            auto count = 10<body.size() ? 10 : body.size();
-            for(auto i=0; i<count; ++i)
-                std::wcout << std::setfill(L'0') << std::setw(2) << body[i] << L' ';
-
-            std::wcout << std::dec << L'\n';
-        }
-        void PrintCompilandPath() const { std::wcout << L"   [" << compiland << L"]\n"; }
-
-        friend bool operator==(const FuncInfo& a, const FuncInfo& b) { return  a.IsEqualTo(b); }
-        friend bool operator!=(const FuncInfo& a, const FuncInfo& b) { return !a.IsEqualTo(b); }
-    private:
-        bool IsEqualTo(const FuncInfo& other) const
-        {
-         // if (compiland    != other.compiland)    return false; // compilands will always be different
-            if (functionName != other.functionName) return false;
-            if (bodyLength   != other.bodyLength)   return false;
-            if (body         != other.body)         return false;
-            return true;
-        }
-    };
-
     class Cop
     {
         std::map<std::wstring, std::vector<UdtInfo >>  udtMap;
@@ -752,7 +491,7 @@ namespace Odr
         Cop() { CoInitialize(nullptr); }
        ~Cop() { CoUninitialize(); }
 
-        HRESULT LoadPdb(const std::wstring& path, const BYTE* base)
+        HRESULT LoadPdb(const std::wstring& path)
         {
             HRESULT hr;
 
@@ -789,73 +528,7 @@ namespace Odr
                             }
 
                             // Functions
-                            CComPtr<IDiaEnumSymbols> compilands;
-                            if (SUCCEEDED(global->findChildren(SymTagCompiland, nullptr, nsNone, &compilands)))
-                            {
-                                LONG count = 0L;
-                                compilands->get_Count(&count);
-                                if (count == -37)
-                                    count = -38;
-
-                                while (true)
-                                {
-                                    ULONG fetched = 0;
-                                    CComPtr<IDiaSymbol> compiland;
-                                    if (FAILED(compilands->Next(1, &compiland, &fetched)) || fetched == 0)
-                                        break;
-
-                                    // is it my compiland?
-                                    CComBSTR compilandName;
-                                    compiland->get_name(&compilandName);
-
-                                    std::wstring comp(compilandName.m_str);
-                                    if (comp.substr(comp.rfind(L'\\')+1, comp.rfind(L'.')-comp.rfind(L'\\')-1) !=
-                                        path.substr(path.rfind(L'\\')+1, path.rfind(L'.')-path.rfind(L'\\')-1))
-                                        continue;
-
-                                 // std::wcout << L"getting functions from compiland: " << compilandName.m_str << L'\n';
-
-                                    CComPtr<IDiaEnumSymbols> funcs;
-                                    if (SUCCEEDED(compiland->findChildren(SymTagFunction, nullptr, nsNone, &funcs)))
-                                    {
-
-                                        static const std::wstring prefixes[] = {
-                                            L"D:\\a\\OdrCop\\",                 //    GitHub Actions' folder structure
-                                            L"C:\\Users\\Bill\\source\\repos\\" // my local machine's folder structure 
-                                        };
-                                        for (const auto& prefix : prefixes) {
-                                            if (_wcsnicmp(comp.c_str(), prefix.c_str(), prefix.size()) == 0) {
-                                                comp = comp.substr(prefix.size());
-                                                break;
-                                            }
-                                        }
-
-                                        while (true)
-                                        {
-                                            ULONG got = 0;
-                                            CComPtr<IDiaSymbol> func;
-                                            if (FAILED(funcs->Next(1, &func, &got)) || got == 0)
-                                                break;
-
-                                            CComBSTR funcName;
-                                            if (SUCCEEDED(func->get_name(&funcName)) && funcName)
-                                            {
-                                                ULONGLONG bodyLength = 0;
-                                                func->get_length(&bodyLength);
-                                                if (bodyLength == 0)
-                                                {
-                                                    std::wcout << funcName.m_str << L" has length 0, which is either inlined-away or pure virtual; skipping\n";
-                                                    continue;   // inlined-away or pure virtual, skip
-                                                }
-
-                                                funcMap[std::wstring(funcName)].push_back(FuncInfo(func, std::wstring(funcName), comp, bodyLength, base));
-
-                                             // std::wcout << L"   " << funcName.m_str << '\n';
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            COFF::Read(path, funcMap);
 
                         } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                     }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';

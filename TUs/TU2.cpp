@@ -17,6 +17,8 @@ DifferentConstDataMember              g_2_DifferentConstDataMember;
 DifferentVolatileDataMember           g_2_DifferentVolatileDataMember;
 StructVsClass                         g_2_StructVsClass;
 
-volatile int g_2_sink = FunctionsMustBeBitwiseIdentical();
-
-int main() {}
+void ForceEmit_2()
+{
+    volatile int sink_2 = FunctionsMustBeBitwiseIdentical();
+    (void)sink_2;
+}

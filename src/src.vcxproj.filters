@@ -23,5 +23,11 @@
     <ClInclude Include="OdrCop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cvinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="COFFer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

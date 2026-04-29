@@ -1,29 +1,37 @@
-
+#include <filesystem>
+#include <iostream>
+#include <vector>
 
 #include "OdrCop.h"
 
 int wmain(int argc, wchar_t** argv)
 {
-    if (argc < 3)
+    if (argc < 2)
     {
-        std::wcout << L"Usage: odrcop <a.pdb> <b.pdb> [c.pdb ...] where each .cpp file/TU is built with /Zi and /Fd\"x64\\Debug\\%(Filename).pdb\"\n";
+        std::wcout << L"Usage: odrcop <folder of .obj/.pdb files> [more folders ...] where each .obj/.pdb is built with /Zi, /Fd\"blah.pdb\" and /Ob0\n";
         return -1;
+    }
+
+    std::vector<std::filesystem::path> pdbs;
+    for (int i=1; i<argc; ++i)
+    {
+        const std::filesystem::path root = argv[i];
+        for (const std::filesystem::directory_entry& e : std::filesystem::recursive_directory_iterator(root, std::filesystem::directory_options::skip_permission_denied))
+        {
+            if (e.is_regular_file() && e.path().extension() == ".pdb") {
+                pdbs.push_back(e.path());
+            }
+        }
     }
 
     Odr::Cop odrCop;
 
-    for (int i=1; i<argc; ++i)
+    for(auto& pdbPath : pdbs)
     {
-        std::wstring path(argv[i]);
-        std::wcout << L"Loading: " << path << L'\n';
-
-        // .exe should be right next to .pdb
-        std::wstring exePath = path.substr(0, path.rfind(L'.')) + L".exe";
-        Odr::MappedExe exe(exePath.c_str());
-
-        HRESULT hr = odrCop.LoadPdb(path, exe.base);
+        std::wcout << L"Loading: " << pdbPath << L'\n';
+        HRESULT hr = odrCop.LoadPdb(pdbPath);
         if (FAILED(hr))
-            std::wcerr << L"Failed to load: " << path << L" with HRESULT: 0x" << std::hex << hr << std::dec << L'\n';
+            std::wcerr << L"Failed to load: " << pdbPath << L" with HRESULT: 0x" << std::hex << hr << std::dec << L'\n';
     }
     std::wcout << L'\n';
 

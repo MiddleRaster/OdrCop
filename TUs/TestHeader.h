@@ -159,9 +159,9 @@ class  StructVsClass
 // Same inline function but different bodies
 // Inline functions must be bit‑for‑bit identical across TUs.
 #ifdef ONE
-inline int FunctionsMustBeBitwiseIdentical() { return 1; }
+__declspec(noinline) inline int FunctionsMustBeBitwiseIdentical() { return 1; }
 #else
-inline int FunctionsMustBeBitwiseIdentical() { return 2; }
+__declspec(noinline) inline int FunctionsMustBeBitwiseIdentical() { return 2; }
 #endif
 
 #ifdef ALL_ODR_VIOLATIONS
