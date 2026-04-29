@@ -54,6 +54,16 @@ struct DifferentConstInit
 #endif
 };
 
+// Same constexpr function but different bodies
+constexpr int SameConstexprFunctionDifferentBody()
+{
+#ifdef ONE
+    return 1;
+#else
+    return 2;
+#endif
+}
+
 #endif
 
 
@@ -177,13 +187,7 @@ template<          > inline int SameFunctionTemplateSpecializationDifferentDefin
 }
 
 #ifdef ALL_ODR_VIOLATIONS
-    12. Same constexpr function but different bodies
-    TU1.cpp
-    cpp
-    constexpr int f() { return 1; }
-    TU2.cpp
-    cpp
-    constexpr int f() { return 2; }   // ODR violation
+
     13. Same enum but different enumerator values
     TU1.cpp
     cpp

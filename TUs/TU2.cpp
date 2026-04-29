@@ -19,5 +19,5 @@ StructVsClass                         g_2_StructVsClass;
 
 int g_2_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();
 int g_2_call_SameFunctionTemplateSpecializationDifferentDefinitions = SameFunctionTemplateSpecializationDifferentDefinitions<int>();
-
+//int g_2_call_SameConstexprFunctionDifferentBody                   = SameConstexprFunctionDifferentBody();
 
