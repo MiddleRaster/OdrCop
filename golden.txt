@@ -100,4 +100,12 @@ ODR VIOLATION: FunctionsMustBeBitwiseIdentical
    function body length: 9
    the first few bytes are: 40 57 b8 02 00 00 00 5f c3 
 
-12 ODR violation(s) found.
+ODR VIOLATION: SameFunctionTemplateSpecializationDifferentDefinitions<int>
+   [TUs\x64\Debug\TU1.obj]
+   function body length: 9
+   the first few bytes are: 40 57 b8 01 00 00 00 5f c3 
+   [TUs\x64\Debug\TU2.obj]
+   function body length: 9
+   the first few bytes are: 40 57 b8 02 00 00 00 5f c3 
+
+13 ODR violation(s) found.
