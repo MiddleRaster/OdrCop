@@ -622,109 +622,49 @@ namespace Odr
         }
         int ReportViolations() const
         {
+            int
+            violationCount  = ReportMapViolations( udtMap, [](const auto&  d) {  d.PrintPdbPath();       });
+            violationCount += ReportMapViolations(funcMap, [](const auto& fi) { fi.PrintCompilandPath(); });
+            violationCount += ReportMapViolations(enumMap, [](const auto&   ) {                          });
+            return violationCount;
+        }
+
+    private:
+        template<typename Map, typename PrintPath> static int ReportMapViolations(Map& map, PrintPath printPath)
+        {
             int violationCount = 0;
-            for (auto& [name, definitions] : udtMap)
+            for (auto& [name, items] : map)
             {
-                if (definitions.size() < 2)
+                if (items.size() < 2)
                     continue;
 
-                // Check whether all definitions are identical
-                if (std::all_of(definitions.begin()+1, definitions.end(), [&](const auto& d) { return d == definitions[0]; }))
+                if (std::all_of(items.begin() + 1, items.end(), [&](const auto& x) { return x == items[0]; }))
                     continue;
 
                 ++violationCount;
                 std::wcout << L"ODR VIOLATION: " << name << L'\n';
 
-                // Group identical definitions together so output is readable when there are many PDBs.
-                std::vector<bool> printed(definitions.size(), false);
-                for (size_t i=0; i<definitions.size(); ++i)
+                std::vector<bool> printed(items.size(), false);
+                for (size_t i=0; i<items.size(); ++i)
                 {
                     if (printed[i]) continue;
-                    definitions[i].Print();
+                    items[i].Print();
                     printed[i] = true;
-                
-                    // Mark all later ones that match this one
-                    for (size_t j=i+1; j<definitions.size(); ++j)
+
+                    for (size_t j=i+1; j<items.size(); ++j)
                     {
-                        if (!printed[j] && (definitions[i] == definitions[j]))
+                        if (!printed[j] && (items[i] == items[j]))
                         {
-                            definitions[j].PrintPdbPath();
+                            printPath(items[j]);
                             printed[j] = true;
                         }
                     }
                 }
                 std::wcout << L'\n';
             }
-
-            for (auto& [funcName, funcInfos] : funcMap)
-            {
-                if (funcInfos.size() < 2)
-                    continue;
-
-                // Check whether all definitions are identical
-                if (std::all_of(funcInfos.begin() + 1, funcInfos.end(), [&](const auto& fi) { return fi == funcInfos[0]; }))
-                    continue;
-
-                ++violationCount;
-                std::wcout << L"ODR VIOLATION: " << funcName << L'\n';
-
-                // Group identical funcInfos together so output is readable when there are many PDBs.
-                std::vector<bool> printed(funcInfos.size(), false);
-                for (size_t i=0; i< funcInfos.size(); ++i)
-                {
-                    if (printed[i]) continue;
-                    funcInfos[i].Print();
-                    printed[i] = true;
-                
-                    // Mark all later ones that match this one
-                    for (size_t j=i+1; j< funcInfos.size(); ++j)
-                    {
-                        if (!printed[j] && (funcInfos[i] == funcInfos[j]))
-                        {
-                            funcInfos[j].PrintCompilandPath();
-                            printed[j] = true;
-                        }
-                    }
-                }
-                std::wcout << L'\n';
-            }
-
-            for (auto& [enumName, enumInfos] : enumMap)
-            {
-                if (enumInfos.size() < 2)
-                    continue;
-
-                // Check whether all definitions are identical
-                if (std::all_of(enumInfos.begin() + 1, enumInfos.end(), [&](const auto& ei) { return ei == enumInfos[0]; }))
-                    continue;
-
-                ++violationCount;
-                std::wcout << L"ODR VIOLATION: " << enumName << L'\n';
-
-                // Group identical funcInfos together so output is readable when there are many PDBs.
-                std::vector<bool> printed(enumInfos.size(), false);
-                for (size_t i=0; i<enumInfos.size(); ++i)
-                {
-                    if (printed[i]) continue;
-                    enumInfos[i].Print();
-                    printed[i] = true;
-
-                    // Mark all later ones that match this one
-                    for (size_t j=i+1; j<enumInfos.size(); ++j)
-                    {
-                        if (!printed[j] && (enumInfos[i] == enumInfos[j]))
-                        {
-                            printed[j] = true;
-                        }
-                    }
-                }
-                std::wcout << L'\n';
-            }
-
             return violationCount;
         }
 
-    private:
         static std::wstring BuildUdtKey(IDiaSymbol* sym)
         {
             CComBSTR name;
