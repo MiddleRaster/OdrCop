@@ -186,15 +186,20 @@ template<          > inline int SameFunctionTemplateSpecializationDifferentDefin
 #endif
 }
 
+
+// Same enum but different enumerator values
+enum SameEnumButDifferentValues
+{
+#ifdef ONE
+    A = 1, B = 2
+#else
+    A = 1, B = 3
+#endif
+};
+
 #ifdef ALL_ODR_VIOLATIONS
 
-    13. Same enum but different enumerator values
-    TU1.cpp
-    cpp
-    enum E { A = 1, B = 2 };
-    TU2.cpp
-    cpp
-    enum E { A = 1, B = 3 };   // ODR violation
+
     14. Same typedef or using but different underlying type
     TU1.cpp
     cpp

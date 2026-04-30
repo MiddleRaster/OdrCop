@@ -21,3 +21,4 @@ int g_2_call_FunctionsMustBeBitwiseIdentical                        = FunctionsM
 int g_2_call_SameFunctionTemplateSpecializationDifferentDefinitions = SameFunctionTemplateSpecializationDifferentDefinitions<int>();
 //int g_2_call_SameConstexprFunctionDifferentBody                   = SameConstexprFunctionDifferentBody();
 
+auto g_2_enum = SameEnumButDifferentValues::A;

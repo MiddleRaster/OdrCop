@@ -32,15 +32,15 @@ namespace Odr
         void Print() const
         {
             PrintCompilandPath();
-            std::wcout << L"   function body length: " << bodyLength << L'\n';
-            std::wcout << L"   the first few bytes are: " << std::hex;
+            std::wcout << L"    function body length: " << bodyLength << L'\n';
+            std::wcout << L"    the first few bytes are: " << std::hex;
             auto count = 10<body.size() ? 10 : body.size();
             for(auto i=0; i<count; ++i)
                 std::wcout << std::setfill(L'0') << std::setw(2) << body[i] << L' ';
 
             std::wcout << std::dec << L'\n';
         }
-        void PrintCompilandPath() const { std::wcout << L"   [" << compiland << L"]\n"; }
+        void PrintCompilandPath() const { std::wcout << L"  [" << compiland << L"]\n"; }
 
         friend bool operator==(const FuncInfo& a, const FuncInfo& b) { return  a.IsEqualTo(b); }
         friend bool operator!=(const FuncInfo& a, const FuncInfo& b) { return !a.IsEqualTo(b); }
