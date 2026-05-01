@@ -3,6 +3,7 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="dumper/dumper.vcxproj" Id="a23fd63e-0c84-4085-891a-aafd658c20a9" />
   <Project Path="src/src.vcxproj" Id="6c0c73f7-daa8-4274-8f21-2e4f566becf2" />
   <Project Path="TUs/TUs.vcxproj" Id="e5e05d55-665e-44bb-8ee0-7c8c0dadee9d" />
 </Solution>
