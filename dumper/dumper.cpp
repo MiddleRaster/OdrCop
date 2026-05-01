@@ -378,7 +378,7 @@ IDiaSymbol interface
                 break;
 
             CComBSTR name;
-            if (S_FALSE == child->get_name(&name))
+            if (S_FALSE == child->get_name(&name) || !name || name[0] == L'\0')
                 name = L"unnamed item";
 
             Recurse(tab, name.m_str, child, visited);
