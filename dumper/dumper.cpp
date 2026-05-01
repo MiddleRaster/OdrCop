@@ -420,8 +420,8 @@ int wmain(int argc, wchar_t** argv)
 {
     if (argc < 2)
     {
-        std::wcout << L"Usage: DiaDump <path to a .pdb file> - will dump all types by name in the .pdb\n";
-        std::wcout << L"Usage: DiaDump <path to a .pdb file> some_type_name - will dump all properties and child properties, recursively\n";
+        std::wcout << L"Usage: DiaDump <path to a .pdb file>                - dump      all types' properties and child properties, recursively\n";
+        std::wcout << L"Usage: DiaDump <path to a .pdb file> some_type_name - dump a single type's properties and child properties, recursively\n";
         return -1;
     }
 
