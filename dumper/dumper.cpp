@@ -6,45 +6,7 @@
 #include <dia2.h>
 #include <atlbase.h>
 
-#include <array>
-// a stripped-down magic_enum
-#define WIDEN2(x) L##x
-#define WIDEN(x)  WIDEN2(x)
-template <auto V> constexpr const wchar_t* raw_name() noexcept { return WIDEN(__FUNCSIG__); }
-template <auto V> std::wstring enum_name_of()
-{
-    std::wstring s = raw_name<V>();
-    auto end   = s.rfind(L'>');
-    auto start = s.rfind(L'<', end) + 1;
-    return s.substr(start, end - start);
-}
-template <auto V> bool is_valid() { return enum_name_of<V>()[0] != L'('; }
-template <typename E, int Min, int Max> struct EnumTable
-{
-    static constexpr int     count = Max-Min+1;
-    std::array<std::wstring, count> names{};
-
-    EnumTable() { fill(std::make_integer_sequence<int, count>{}); }
-    template <int... Is> void fill(std::integer_sequence<int, Is...>)
-    {
-        ((names[Is] = is_valid<static_cast<E>(Min + Is)>() ? enum_name_of<static_cast<E>(Min + Is)>() : std::wstring{}), ...);
-    }
-    std::wstring lookup(int v) const
-    {
-        if (v < Min || v > Max) return {};
-        return names[v - Min];
-    }
-};
-template <typename E, int Min=0, int Max=127> std::wstring enum_name(E value)
-{
-    static const EnumTable<E, Min, Max> table;
-    std::wstring name = table.lookup(static_cast<int>(value));
-    if (name.empty())
-        return L"unknown(" + std::to_wstring(static_cast<int>(value)) + L")";
-    return name;
-}
-
-
+#include "magic_enum.h"
 
 template <typename C, typename R, typename T> std::pair<HRESULT, T> Get(IDiaSymbol* sym, R(C::* m)(T*))
 {
@@ -123,14 +85,8 @@ void PrintAccess(const std::wstring& tab, IDiaSymbol* sym) // Print(tab, item, &
     }
 }
 
-using RecurseFn = void(std::wstring, const std::wstring&, IDiaSymbol*, std::set<DWORD>& visited);
-
-void Recurse(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, std::set<DWORD>& visited)
+void PrintAllProps(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, std::set<DWORD>& visited)
 {
-    auto [_, symIndexId] = Get(item, &IDiaSymbol::get_symIndexId);
-    if (!visited.insert(symIndexId).second)
-        return;   // already seen — cut the cycle
-
     std::wcout << tab << itemName << L":\n";
     tab += L"  ";
 
@@ -166,65 +122,65 @@ void Recurse(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, s
     Print              (tab, item, &IDiaSymbol::get_frontEndBuild,                           L"frontEndBuild");
     Print              (tab, item, &IDiaSymbol::get_backEndMajor,                            L"backEndMajor");
     Print              (tab, item, &IDiaSymbol::get_backEndMinor,                            L"backEndMinor");
-    Print              (tab, item, &IDiaSymbol::get_backEndBuild,                            L"backEndBuild"); 
-    Print              (tab, item, &IDiaSymbol::get_sourceFileName,                          L"sourceFileName"); 
-    Print              (tab, item, &IDiaSymbol::get_unused,                                  L"unused"); 
-    Print              (tab, item, &IDiaSymbol::get_thunkOrdinal,                            L"thunkOrdinal"); 
-    Print              (tab, item, &IDiaSymbol::get_thisAdjust,                              L"thisAdjust"); 
-    Print              (tab, item, &IDiaSymbol::get_virtualBaseOffset,                       L"virtualBaseOffset"); 
-    Print              (tab, item, &IDiaSymbol::get_virtual,                                 L"virtual"); 
-    Print              (tab, item, &IDiaSymbol::get_intro,                                   L"intro"); 
-    Print              (tab, item, &IDiaSymbol::get_pure,                                    L"pure"); 
+    Print              (tab, item, &IDiaSymbol::get_backEndBuild,                            L"backEndBuild");
+    Print              (tab, item, &IDiaSymbol::get_sourceFileName,                          L"sourceFileName");
+    Print              (tab, item, &IDiaSymbol::get_unused,                                  L"unused");
+    Print              (tab, item, &IDiaSymbol::get_thunkOrdinal,                            L"thunkOrdinal");
+    Print              (tab, item, &IDiaSymbol::get_thisAdjust,                              L"thisAdjust");
+    Print              (tab, item, &IDiaSymbol::get_virtualBaseOffset,                       L"virtualBaseOffset");
+    Print              (tab, item, &IDiaSymbol::get_virtual,                                 L"virtual");
+    Print              (tab, item, &IDiaSymbol::get_intro,                                   L"intro");
+    Print              (tab, item, &IDiaSymbol::get_pure,                                    L"pure");
     Print<CV_call_e>   (tab, item, &IDiaSymbol::get_callingConvention,                       L"callingConvention");
-    Print              (tab, item, &IDiaSymbol::get_value,                                   L"value"); 
+    Print              (tab, item, &IDiaSymbol::get_value,                                   L"value");
     Print<BasicType>   (tab, item, &IDiaSymbol::get_baseType,                                L"baseType");
-    Print              (tab, item, &IDiaSymbol::get_token,                                   L"token"); 
-    Print              (tab, item, &IDiaSymbol::get_timeStamp,                               L"timeStamp"); 
+    Print              (tab, item, &IDiaSymbol::get_token,                                   L"token");
+    Print              (tab, item, &IDiaSymbol::get_timeStamp,                               L"timeStamp");
  // Print              (tab, item, &IDiaSymbol::get_guid,                                    L"guid"); 
-    Print              (tab, item, &IDiaSymbol::get_symbolsFileName,                         L"symbolsFileName"); 
-    Print              (tab, item, &IDiaSymbol::get_reference,                               L"reference"); 
-    Print              (tab, item, &IDiaSymbol::get_count,                                   L"count"); 
-    Print              (tab, item, &IDiaSymbol::get_bitPosition,                             L"bitPosition"); 
-    Print              (tab, item, &IDiaSymbol::get_arrayIndexType,                          L"arrayIndexType"); 
-    Print              (tab, item, &IDiaSymbol::get_packed,                                  L"packed"); 
-    Print              (tab, item, &IDiaSymbol::get_constructor,                             L"constructor"); 
-    Print              (tab, item, &IDiaSymbol::get_overloadedOperator,                      L"overloadedOperator"); 
-    Print              (tab, item, &IDiaSymbol::get_nested,                                  L"nested"); 
-    Print              (tab, item, &IDiaSymbol::get_hasNestedTypes,                          L"hasNestedTypes"); 
-    Print              (tab, item, &IDiaSymbol::get_hasAssignmentOperator,                   L"hasAssignmentOperator"); 
-    Print              (tab, item, &IDiaSymbol::get_hasCastOperator,                         L"hasCastOperator"); 
-    Print              (tab, item, &IDiaSymbol::get_scoped,                                  L"scoped"); 
-    Print              (tab, item, &IDiaSymbol::get_virtualBaseClass,                        L"virtualBaseClass"); 
-    Print              (tab, item, &IDiaSymbol::get_indirectVirtualBaseClass,                L"indirectVirtualBaseClass"); 
-    Print              (tab, item, &IDiaSymbol::get_virtualBasePointerOffset,                L"virtualBasePointerOffset"); 
-    Print              (tab, item, &IDiaSymbol::get_virtualTableShape,                       L"virtualTableShape"); 
-    Print              (tab, item, &IDiaSymbol::get_lexicalParentId,                         L"lexicalParentId"); 
-    Print              (tab, item, &IDiaSymbol::get_classParentId,                           L"classParentId"); 
-    Print              (tab, item, &IDiaSymbol::get_typeId,                                  L"typeId"); 
-    Print              (tab, item, &IDiaSymbol::get_arrayIndexTypeId,                        L"arrayIndexTypeId"); 
-    Print              (tab, item, &IDiaSymbol::get_virtualTableShapeId,                     L"virtualTableShapeId"); 
-    Print              (tab, item, &IDiaSymbol::get_code,                                    L"code"); 
-    Print              (tab, item, &IDiaSymbol::get_function,                                L"function"); 
-    Print              (tab, item, &IDiaSymbol::get_managed,                                 L"managed"); 
-    Print              (tab, item, &IDiaSymbol::get_msil,                                    L"msil"); 
-    Print              (tab, item, &IDiaSymbol::get_virtualBaseDispIndex,                    L"virtualBaseDispIndex"); 
-    Print              (tab, item, &IDiaSymbol::get_undecoratedName,                         L"undecoratedName"); 
-    Print              (tab, item, &IDiaSymbol::get_age,                                     L"age"); 
-    Print              (tab, item, &IDiaSymbol::get_signature,                               L"signature"); 
-    Print              (tab, item, &IDiaSymbol::get_compilerGenerated,                       L"compilerGenerated"); 
-    Print              (tab, item, &IDiaSymbol::get_addressTaken,                            L"addressTaken"); 
-    Print              (tab, item, &IDiaSymbol::get_rank,                                    L"rank"); 
-    Print              (tab, item, &IDiaSymbol::get_lowerBound,                              L"lowerBound"); 
-    Print              (tab, item, &IDiaSymbol::get_upperBound,                              L"upperBound"); 
-    Print              (tab, item, &IDiaSymbol::get_lowerBoundId,                            L"lowerBoundId"); 
-    Print              (tab, item, &IDiaSymbol::get_upperBoundId,                            L"upperBoundId"); 
-    Print              (tab, item, &IDiaSymbol::get_targetSection,                           L"targetSection"); 
-    Print              (tab, item, &IDiaSymbol::get_targetOffset,                            L"targetOffset"); 
-    Print              (tab, item, &IDiaSymbol::get_targetRelativeVirtualAddress,            L"targetRelativeVirtualAddress"); 
-    Print              (tab, item, &IDiaSymbol::get_targetVirtualAddress,                    L"targetVirtualAddress"); 
-    Print              (tab, item, &IDiaSymbol::get_machineType,                             L"machineType"); 
-    Print              (tab, item, &IDiaSymbol::get_oemId,                                   L"oemId"); 
-    Print              (tab, item, &IDiaSymbol::get_oemSymbolId,                             L"oemSymbolId"); 
+    Print              (tab, item, &IDiaSymbol::get_symbolsFileName,                         L"symbolsFileName");
+    Print              (tab, item, &IDiaSymbol::get_reference,                               L"reference");
+    Print              (tab, item, &IDiaSymbol::get_count,                                   L"count");
+    Print              (tab, item, &IDiaSymbol::get_bitPosition,                             L"bitPosition");
+    Print              (tab, item, &IDiaSymbol::get_arrayIndexType,                          L"arrayIndexType");
+    Print              (tab, item, &IDiaSymbol::get_packed,                                  L"packed");
+    Print              (tab, item, &IDiaSymbol::get_constructor,                             L"constructor");
+    Print              (tab, item, &IDiaSymbol::get_overloadedOperator,                      L"overloadedOperator");
+    Print              (tab, item, &IDiaSymbol::get_nested,                                  L"nested");
+    Print              (tab, item, &IDiaSymbol::get_hasNestedTypes,                          L"hasNestedTypes");
+    Print              (tab, item, &IDiaSymbol::get_hasAssignmentOperator,                   L"hasAssignmentOperator");
+    Print              (tab, item, &IDiaSymbol::get_hasCastOperator,                         L"hasCastOperator");
+    Print              (tab, item, &IDiaSymbol::get_scoped,                                  L"scoped");
+    Print              (tab, item, &IDiaSymbol::get_virtualBaseClass,                        L"virtualBaseClass");
+    Print              (tab, item, &IDiaSymbol::get_indirectVirtualBaseClass,                L"indirectVirtualBaseClass");
+    Print              (tab, item, &IDiaSymbol::get_virtualBasePointerOffset,                L"virtualBasePointerOffset");
+    Print              (tab, item, &IDiaSymbol::get_virtualTableShape,                       L"virtualTableShape");
+    Print              (tab, item, &IDiaSymbol::get_lexicalParentId,                         L"lexicalParentId");
+    Print              (tab, item, &IDiaSymbol::get_classParentId,                           L"classParentId");
+    Print              (tab, item, &IDiaSymbol::get_typeId,                                  L"typeId");
+    Print              (tab, item, &IDiaSymbol::get_arrayIndexTypeId,                        L"arrayIndexTypeId");
+    Print              (tab, item, &IDiaSymbol::get_virtualTableShapeId,                     L"virtualTableShapeId");
+    Print              (tab, item, &IDiaSymbol::get_code,                                    L"code");
+    Print              (tab, item, &IDiaSymbol::get_function,                                L"function");
+    Print              (tab, item, &IDiaSymbol::get_managed,                                 L"managed");
+    Print              (tab, item, &IDiaSymbol::get_msil,                                    L"msil");
+    Print              (tab, item, &IDiaSymbol::get_virtualBaseDispIndex,                    L"virtualBaseDispIndex");
+    Print              (tab, item, &IDiaSymbol::get_undecoratedName,                         L"undecoratedName");
+    Print              (tab, item, &IDiaSymbol::get_age,                                     L"age");
+    Print              (tab, item, &IDiaSymbol::get_signature,                               L"signature");
+    Print              (tab, item, &IDiaSymbol::get_compilerGenerated,                       L"compilerGenerated");
+    Print              (tab, item, &IDiaSymbol::get_addressTaken,                            L"addressTaken");
+    Print              (tab, item, &IDiaSymbol::get_rank,                                    L"rank");
+    Print              (tab, item, &IDiaSymbol::get_lowerBound,                              L"lowerBound");
+    Print              (tab, item, &IDiaSymbol::get_upperBound,                              L"upperBound");
+    Print              (tab, item, &IDiaSymbol::get_lowerBoundId,                            L"lowerBoundId");
+    Print              (tab, item, &IDiaSymbol::get_upperBoundId,                            L"upperBoundId");
+    Print              (tab, item, &IDiaSymbol::get_targetSection,                           L"targetSection");
+    Print              (tab, item, &IDiaSymbol::get_targetOffset,                            L"targetOffset");
+    Print              (tab, item, &IDiaSymbol::get_targetRelativeVirtualAddress,            L"targetRelativeVirtualAddress");
+    Print              (tab, item, &IDiaSymbol::get_targetVirtualAddress,                    L"targetVirtualAddress");
+    Print              (tab, item, &IDiaSymbol::get_machineType,                             L"machineType");
+    Print              (tab, item, &IDiaSymbol::get_oemId,                                   L"oemId");
+    Print              (tab, item, &IDiaSymbol::get_oemSymbolId,                             L"oemSymbolId");
     Print              (tab, item, &IDiaSymbol::get_objectPointerType,                       L"get_objectPointerType");
     Print              (tab, item, &IDiaSymbol::get_noReturn,                                L"noReturn");
     Print              (tab, item, &IDiaSymbol::get_customCallingConvention,                 L"customCallingConvention");
@@ -354,18 +310,28 @@ void Recurse(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, s
     Print              (tab, item, &IDiaSymbol::get_bindSlot,                                L"bindSlot");
 
 #ifdef KEEP
-IDiaSymbol interface
-    virtual HRESULT STDMETHODCALLTYPE get_types(
-        /* [in] */ DWORD cTypes,
-        /* [out] */ DWORD * pcTypes,
-        /* [size_is][size_is][out] */ IDiaSymbol * *pTypes) = 0;
+    IDiaSymbol interface
+        virtual HRESULT STDMETHODCALLTYPE get_types(
+            /* [in] */ DWORD cTypes,
+            /* [out] */ DWORD * pcTypes,
+            /* [size_is][size_is][out] */ IDiaSymbol * *pTypes) = 0;
 
     virtual HRESULT STDMETHODCALLTYPE get_undecoratedNameEx(
         /* [in] */ DWORD undecorateOptions,
         /* [out] */ BSTR * name) = 0;
 #endif
+}
+
+void PrintPropsAndRecurse(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, std::set<DWORD>& visited)
+{
+    auto [_, symIndexId] = Get(item, &IDiaSymbol::get_symIndexId);
+    if (!visited.insert(symIndexId).second)
+        return; // seen already, don't recurse
+
+    PrintAllProps(tab, itemName, item, visited);
 
     // now get all children and recurse on each
+    tab += L"  ";
     HRESULT hr;
     CComPtr<IDiaEnumSymbols> children;
     if (S_OK == (hr = item->findChildren(SymTagNull, NULL, nsNone, &children)) && (children != nullptr))
@@ -381,13 +347,12 @@ IDiaSymbol interface
             if (S_FALSE == child->get_name(&name) || !name || name[0] == L'\0')
                 name = L"unnamed item";
 
-            Recurse(tab, name.m_str, child, visited);
+            PrintPropsAndRecurse(tab, name.m_str, child, visited);
         }
     }
 }
-void DoNotRecurse(std::wstring, const std::wstring&, IDiaSymbol*, std::set<DWORD>&) {}
 
-void OutputSpecificItem(IDiaSymbol* child, const wchar_t* desiredItem, RecurseFn* recurse)
+template<typename Recurse> void OutputSpecificItem(IDiaSymbol* child, const wchar_t* desiredItem, Recurse recurse)
 {
     CComBSTR name;
     if ((S_OK == child->get_name(&name)) && name && name[0] != L'\0')
@@ -396,21 +361,22 @@ void OutputSpecificItem(IDiaSymbol* child, const wchar_t* desiredItem, RecurseFn
         {
             // found it!
             std::set<DWORD> visited;
-            Recurse(L"  ", desiredItem, child, visited);
+            recurse(L"", desiredItem, child, visited);
         }
     }
 }
-void OutputEvenUnnamed(IDiaSymbol* child, const wchar_t* /*desiredItem*/, RecurseFn* recurse)
+
+template<typename Recurse> void OutputEvenUnnamed(IDiaSymbol* child, const wchar_t* desiredItem, Recurse recurse)
 {
     CComBSTR name;
     if (S_OK != child->get_name(&name))
         name = L"unnamed item";
 
     std::set<DWORD> visited;
-    Recurse(L"", name.m_str, child, visited);
+    recurse(L"", name.m_str, child, visited);
 }
 
-HRESULT ForEachSymbol(const std::filesystem::path& path, const wchar_t* desiredItem, void (*onFound)(IDiaSymbol*, const wchar_t*, RecurseFn*), RecurseFn* recurse)
+template<typename DoIt, typename Recurse> HRESULT ForEachSymbol(const std::filesystem::path& path, const wchar_t* desiredItem, DoIt doIt, Recurse recurse)
 {
     CoInitialize(nullptr);
 
@@ -437,7 +403,7 @@ HRESULT ForEachSymbol(const std::filesystem::path& path, const wchar_t* desiredI
                                 if (FAILED(children->Next(1, &child, &fetched)) || fetched == 0)
                                     break;
 
-                                onFound(child, desiredItem, recurse);
+                                doIt(child, desiredItem, recurse);
                             }
                         }
 
@@ -469,11 +435,12 @@ int wmain(int argc, wchar_t** argv)
 
     if (argc == 2) {   // dump all IDiaSymbol names in .pdb file
         std::wcout << L"Dumping all types in " << root << L'\n';
-        ForEachSymbol(root, nullptr, OutputEvenUnnamed,  Recurse);
+        ForEachSymbol(root, nullptr, OutputEvenUnnamed<decltype(PrintPropsAndRecurse)*>,  PrintPropsAndRecurse);
     } else {
         std::wcout << L"Dumping " << argv[2] << L" and sub-elements in " << root << L'\n';
-        ForEachSymbol(root, argv[2], OutputSpecificItem, Recurse);
+        ForEachSymbol(root, argv[2], OutputSpecificItem<decltype(PrintPropsAndRecurse)*>, PrintPropsAndRecurse);
     }
 
     return 0;
 }
+
