@@ -135,10 +135,10 @@ void Recurse(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, s
     tab += L"  ";
 
     // move an important few up top
-    PrintUdtKind (tab, item); // Print(tab, item, &IDiaSymbol::get_udtKind,  L"get_udtKind");
-    Print<       DataKind>(tab, item, &IDiaSymbol::get_dataKind, L"dataKind"); // PrintDataKind(tab, item); // Print(tab, item, &IDiaSymbol::get_dataKind, L"dataKind");
-    Print<enum SymTagEnum>(tab, item, &IDiaSymbol::get_symTag,   L"symTag");   // PrintSymTag  (tab, item); // Print(tab, item, &IDiaSymbol::get_symTag,   L"symTag");
-    PrintAccess  (tab, item); // Print(tab, item, &IDiaSymbol::get_access, L"access");
+    PrintUdtKind          (tab, item);
+    Print<       DataKind>(tab, item, &IDiaSymbol::get_dataKind,                             L"dataKind");
+    Print<enum SymTagEnum>(tab, item, &IDiaSymbol::get_symTag,                               L"symTag");
+    PrintAccess           (tab, item);
 
     Print              (tab, item, &IDiaSymbol::get_name,                                    L"name");
     Print              (tab, item, &IDiaSymbol::get_symIndexId,                              L"symIndexId");
