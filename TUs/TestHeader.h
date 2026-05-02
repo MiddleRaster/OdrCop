@@ -6,10 +6,10 @@
 //   - static constexpr / consteval / constinit
 //   - typedefs
 //   - default template arguments
+//   - noexcept differences
 // 
 // below here is untested (as yet)
 //   - constexpr / inline differences on member functions
-//   - noexcept differences
 //   - Attribute differences (__declspec etc.)
 
 #ifdef KNOWN_LIMITATIONS_OF_PDB_DIA
@@ -85,6 +85,17 @@ template<typename T = char>
 template<typename T = long>
 #endif
 struct SameTemplateDifferentDefaultTemplateArguments {};
+
+// Same class but different noexcept on member functions
+struct SameClassDifferentNoExceptOnMethod
+{
+    void f()
+#ifdef ONE
+        noexcept
+#endif
+    {
+    }
+};
 
 #endif // cannot be seen by DIA or COFF
 
@@ -259,6 +270,7 @@ struct SameClassDifferentVirtualnessOnFunction
 };
 
 
+
 #ifdef ALL_ODR_VIOLATIONS
     18. Same class but different final / override usage
     These change the virtual table.
@@ -309,13 +321,5 @@ struct SameClassDifferentVirtualnessOnFunction
     cpp
     struct S {};   // ODR violation
 
-    25. Same class but different noexcept on member functions
-    Affects type identity.
 
-    TU1.cpp
-    cpp
-    struct S { void f() noexcept; };
-    TU2.cpp
-    cpp
-    struct S { void f(); };   // ODR violation
 #endif

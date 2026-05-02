@@ -21,6 +21,7 @@ SameClassDifferentAlignment                       g_2_SameClassDifferentAlignmen
 SameClassDifferentVirtualFunctionTableShape       g_2_SameClassDifferentVirtualFunctionTableShape;
 SameClassDifferentVirtualFunctionNames            g_2_SameClassDifferentVirtualFunctionNames;
 SameClassDifferentVirtualnessOnFunction           g_2_SameClassDifferentVirtualnessOnFunction;
+//SameClassDifferentNoExceptOnMethod              g_2_SameClassDifferentNoExceptOnMethod;
 
 
 int g_2_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();
