@@ -4,6 +4,7 @@
 //   - Default argument differences
 //   - static constexpr / static const member value differences
 //   - static constexpr / consteval / constinit
+//   - typedefs
 // 
 // below here is untested (as yet)
 //   - constexpr / inline differences on member functions
@@ -63,6 +64,18 @@ constexpr int SameConstexprFunctionDifferentBody()
     return 2;
 #endif
 }
+
+
+//Same typedef or using but different underlying type
+struct SomeStructForTypedefTesting1 { int x1; };
+struct SomeStructForTypedefTesting2 { int x2; };
+typedef
+#ifdef ONE
+SomeStructForTypedefTesting1
+#else
+SomeStructForTypedefTesting2
+#endif
+SameTypedefDifferentUnderlyingType;
 
 #endif
 
@@ -197,16 +210,8 @@ enum SameEnumButDifferentValues
 #endif
 };
 
+
 #ifdef ALL_ODR_VIOLATIONS
-
-
-    14. Same typedef or using but different underlying type
-    TU1.cpp
-    cpp
-    typedef int T;
-    TU2.cpp
-    cpp
-    typedef long T;   // ODR violation
     15. Same template but different default template arguments
     TU1.cpp
     cpp

@@ -1,0 +1,932 @@
+Microsoft (R) COFF/PE Dumper Version 14.50.35730.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file TUs\x64\Debug\TU1.obj
+
+File Type: COFF OBJECT
+
+FILE HEADER VALUES
+            8664 machine (x64)
+              19 number of sections
+        69F541C0 time date stamp Fri May  1 20:13:52 2026
+            1220 file pointer to symbol table
+              58 number of symbols
+               0 size of optional header
+               0 characteristics
+
+SECTION HEADER #1
+.drectve name
+       0 physical address
+       0 virtual address
+      30 size of raw data
+     3FC file pointer to raw data (000003FC to 0000042B)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+  100A00 flags
+         Info
+         Remove
+         1 byte align
+
+RAW DATA #1
+  00000000: 20 20 20 2F 44 45 46 41 55 4C 54 4C 49 42 3A 22     /DEFAULTLIB:"
+  00000010: 4D 53 56 43 52 54 44 22 20 2F 44 45 46 41 55 4C  MSVCRTD" /DEFAUL
+  00000020: 54 4C 49 42 3A 22 4F 4C 44 4E 41 4D 45 53 22 20  TLIB:"OLDNAMES" 
+
+   Linker Directives
+   -----------------
+   /DEFAULTLIB:MSVCRTD
+   /DEFAULTLIB:OLDNAMES
+
+SECTION HEADER #2
+.debug$S name
+       0 physical address
+       0 virtual address
+     65C size of raw data
+     42C file pointer to raw data (0000042C to 00000A87)
+     A88 file pointer to relocation table
+       0 file pointer to line numbers
+      22 number of relocations
+       0 number of line numbers
+42100040 flags
+         Initialized Data
+         Discardable
+         1 byte align
+         Read Only
+
+RAW DATA #2
+  00000000: 04 00 00 00 F1 00 00 00 84 00 00 00 3E 00 01 11  ....ñ.......>...
+  00000010: 00 00 00 00 43 3A 5C 55 73 65 72 73 5C 42 69 6C  ....C:\Users\Bil
+  00000020: 6C 5C 73 6F 75 72 63 65 5C 72 65 70 6F 73 5C 4F  l\source\repos\O
+  00000030: 64 72 43 6F 70 5C 54 55 73 5C 78 36 34 5C 44 65  drCop\TUs\x64\De
+  00000040: 62 75 67 5C 54 55 31 2E 6F 62 6A 00 3A 00 3C 11  bug\TU1.obj.:.<.
+  00000050: 01 60 02 00 D0 00 13 00 32 00 92 8B 00 00 13 00  .`..Ð...2.......
+  00000060: 32 00 92 8B 00 00 4D 69 63 72 6F 73 6F 66 74 20  2.....Microsoft 
+  00000070: 28 52 29 20 4F 70 74 69 6D 69 7A 69 6E 67 20 43  (R) Optimizing C
+  00000080: 6F 6D 70 69 6C 65 72 00 06 00 24 11 73 74 64 00  ompiler...$.std.
+  00000090: F1 00 00 00 EE 04 00 00 0A 00 07 11 1D 10 00 00  ñ...î...........
+  000000A0: 01 00 41 00 25 00 0D 11 2F 10 00 00 00 00 00 00  ..A.%.../.......
+  000000B0: 00 00 67 5F 31 5F 44 69 66 66 65 72 65 6E 74 53  ..g_1_DifferentS
+  000000C0: 69 7A 65 64 4D 65 6D 62 65 72 00 25 00 0D 11 22  izedMember.%..."
+  000000D0: 10 00 00 00 00 00 00 00 00 67 5F 31 5F 44 69 66  .........g_1_Dif
+  000000E0: 66 65 72 65 6E 74 44 61 74 61 4D 65 6D 62 65 72  ferentDataMember
+  000000F0: 73 00 2C 00 0D 11 2A 10 00 00 00 00 00 00 00 00  s.,...*.........
+  00000100: 67 5F 31 5F 44 69 66 66 65 72 65 6E 74 4F 72 64  g_1_DifferentOrd
+  00000110: 65 72 4F 66 44 61 74 61 4D 65 6D 62 65 72 73 00  erOfDataMembers.
+  00000120: 2B 00 0D 11 24 10 00 00 00 00 00 00 00 00 67 5F  +...$.........g_
+  00000130: 31 5F 44 69 66 66 65 72 65 6E 74 54 79 70 65 4F  1_DifferentTypeO
+  00000140: 66 44 61 74 61 4D 65 6D 62 65 72 73 00 1F 00 0D  fDataMembers....
+  00000150: 11 18 10 00 00 00 00 00 00 00 00 67 5F 31 5F 44  ...........g_1_D
+  00000160: 69 66 66 65 72 65 6E 74 42 61 73 65 73 00 28 00  ifferentBases.(.
+  00000170: 0D 11 1B 10 00 00 00 00 00 00 00 00 67 5F 31 5F  ............g_1_
+  00000180: 44 69 66 66 65 72 65 6E 74 44 61 74 61 4D 65 6D  DifferentDataMem
+  00000190: 62 65 72 54 79 70 65 00 2E 00 0D 11 2D 10 00 00  berType.....-...
+  000001A0: 00 00 00 00 00 00 67 5F 31 5F 53 61 6D 65 4D 65  ......g_1_SameMe
+  000001B0: 6D 62 65 72 54 79 70 65 73 44 69 66 66 65 72 65  mberTypesDiffere
+  000001C0: 6E 74 4F 72 64 65 72 00 23 00 0D 11 27 10 00 00  ntOrder.#...'...
+  000001D0: 00 00 00 00 00 00 67 5F 31 5F 44 69 66 66 65 72  ......g_1_Differ
+  000001E0: 65 6E 74 42 61 73 65 43 6C 61 73 73 00 29 00 0D  entBaseClass.)..
+  000001F0: 11 06 10 00 00 00 00 00 00 00 00 67 5F 31 5F 44  ...........g_1_D
+  00000200: 69 66 66 65 72 65 6E 74 43 6F 6E 73 74 44 61 74  ifferentConstDat
+  00000210: 61 4D 65 6D 62 65 72 00 2C 00 0D 11 0F 10 00 00  aMember.,.......
+  00000220: 00 00 00 00 00 00 67 5F 31 5F 44 69 66 66 65 72  ......g_1_Differ
+  00000230: 65 6E 74 56 6F 6C 61 74 69 6C 65 44 61 74 61 4D  entVolatileDataM
+  00000240: 65 6D 62 65 72 00 1E 00 0D 11 1F 10 00 00 00 00  ember...........
+  00000250: 00 00 00 00 67 5F 31 5F 53 74 72 75 63 74 56 73  ....g_1_StructVs
+  00000260: 43 6C 61 73 73 00 35 00 0D 11 74 00 00 00 00 00  Class.5...t.....
+  00000270: 00 00 00 00 67 5F 31 5F 63 61 6C 6C 5F 46 75 6E  ....g_1_call_Fun
+  00000280: 63 74 69 6F 6E 73 4D 75 73 74 42 65 42 69 74 77  ctionsMustBeBitw
+  00000290: 69 73 65 49 64 65 6E 74 69 63 61 6C 00 42 00 0C  iseIdentical.B..
+  000002A0: 11 25 10 00 00 00 00 00 00 00 00 67 5F 31 5F 63  .%.........g_1_c
+  000002B0: 61 6C 6C 5F 46 75 6E 63 74 69 6F 6E 73 4D 75 73  all_FunctionsMus
+  000002C0: 74 42 65 42 69 74 77 69 73 65 49 64 65 6E 74 69  tBeBitwiseIdenti
+  000002D0: 63 61 6C 24 69 6E 69 74 69 61 6C 69 7A 65 72 24  cal$initializer$
+  000002E0: 00 4C 00 0D 11 74 00 00 00 00 00 00 00 00 00 67  .L...t.........g
+  000002F0: 5F 31 5F 63 61 6C 6C 5F 53 61 6D 65 46 75 6E 63  _1_call_SameFunc
+  00000300: 74 69 6F 6E 54 65 6D 70 6C 61 74 65 53 70 65 63  tionTemplateSpec
+  00000310: 69 61 6C 69 7A 61 74 69 6F 6E 44 69 66 66 65 72  ializationDiffer
+  00000320: 65 6E 74 44 65 66 69 6E 69 74 69 6F 6E 73 00 59  entDefinitions.Y
+  00000330: 00 0C 11 25 10 00 00 00 00 00 00 00 00 67 5F 31  ...%.........g_1
+  00000340: 5F 63 61 6C 6C 5F 53 61 6D 65 46 75 6E 63 74 69  _call_SameFuncti
+  00000350: 6F 6E 54 65 6D 70 6C 61 74 65 53 70 65 63 69 61  onTemplateSpecia
+  00000360: 6C 69 7A 61 74 69 6F 6E 44 69 66 66 65 72 65 6E  lizationDifferen
+  00000370: 74 44 65 66 69 6E 69 74 69 6F 6E 73 24 69 6E 69  tDefinitions$ini
+  00000380: 74 69 61 6C 69 7A 65 72 24 00 15 00 0D 11 1D 10  tializer$.......
+  00000390: 00 00 00 00 00 00 00 00 67 5F 31 5F 65 6E 75 6D  ........g_1_enum
+  000003A0: 00 33 00 0D 11 70 00 00 00 00 00 00 00 00 00 67  .3...p.........g
+  000003B0: 5F 31 5F 73 61 6D 65 54 79 70 65 64 65 66 44 69  _1_sameTypedefDi
+  000003C0: 66 66 65 72 65 6E 74 55 6E 64 65 72 6C 79 69 6E  fferentUnderlyin
+  000003D0: 67 54 79 70 65 00 1B 00 08 11 2F 10 00 00 44 69  gType...../...Di
+  000003E0: 66 66 65 72 65 6E 74 53 69 7A 65 64 4D 65 6D 62  fferentSizedMemb
+  000003F0: 65 72 00 24 00 08 11 2D 10 00 00 53 61 6D 65 4D  er.$...-...SameM
+  00000400: 65 6D 62 65 72 54 79 70 65 73 44 69 66 66 65 72  emberTypesDiffer
+  00000410: 65 6E 74 4F 72 64 65 72 00 22 00 08 11 2A 10 00  entOrder."...*..
+  00000420: 00 44 69 66 66 65 72 65 6E 74 4F 72 64 65 72 4F  .DifferentOrderO
+  00000430: 66 44 61 74 61 4D 65 6D 62 65 72 73 00 19 00 08  fDataMembers....
+  00000440: 11 27 10 00 00 44 69 66 66 65 72 65 6E 74 42 61  .'...DifferentBa
+  00000450: 73 65 43 6C 61 73 73 00 21 00 08 11 24 10 00 00  seClass.!...$...
+  00000460: 44 69 66 66 65 72 65 6E 74 54 79 70 65 4F 66 44  DifferentTypeOfD
+  00000470: 61 74 61 4D 65 6D 62 65 72 73 00 1B 00 08 11 22  ataMembers....."
+  00000480: 10 00 00 44 69 66 66 65 72 65 6E 74 44 61 74 61  ...DifferentData
+  00000490: 4D 65 6D 62 65 72 73 00 1E 00 08 11 1B 10 00 00  Members.........
+  000004A0: 44 69 66 66 65 72 65 6E 74 44 61 74 61 4D 65 6D  DifferentDataMem
+  000004B0: 62 65 72 54 79 70 65 00 14 00 08 11 1F 10 00 00  berType.........
+  000004C0: 53 74 72 75 63 74 56 73 43 6C 61 73 73 00 29 00  StructVsClass.).
+  000004D0: 08 11 70 00 00 00 53 61 6D 65 54 79 70 65 64 65  ..p...SameTypede
+  000004E0: 66 44 69 66 66 65 72 65 6E 74 55 6E 64 65 72 6C  fDifferentUnderl
+  000004F0: 79 69 6E 67 54 79 70 65 00 21 00 08 11 1D 10 00  yingType.!......
+  00000500: 00 53 61 6D 65 45 6E 75 6D 42 75 74 44 69 66 66  .SameEnumButDiff
+  00000510: 65 72 65 6E 74 56 61 6C 75 65 73 00 0C 00 08 11  erentValues.....
+  00000520: 16 10 00 00 42 61 73 65 31 00 15 00 08 11 18 10  ....Base1.......
+  00000530: 00 00 44 69 66 66 65 72 65 6E 74 42 61 73 65 73  ..DifferentBases
+  00000540: 00 1F 00 08 11 06 10 00 00 44 69 66 66 65 72 65  .........Differe
+  00000550: 6E 74 43 6F 6E 73 74 44 61 74 61 4D 65 6D 62 65  ntConstDataMembe
+  00000560: 72 00 22 00 08 11 0F 10 00 00 44 69 66 66 65 72  r.".......Differ
+  00000570: 65 6E 74 56 6F 6C 61 74 69 6C 65 44 61 74 61 4D  entVolatileDataM
+  00000580: 65 6D 62 65 72 00 00 00 F4 00 00 00 50 00 00 00  ember...ô...P...
+  00000590: 01 00 00 00 20 03 4F 66 BA F7 4B C5 18 54 A1 E1  .... .Ofº÷KÅ.T¡á
+  000005A0: 43 3E 9A 6F 8A B8 7B 1E 89 E8 26 53 A4 C2 C1 DB  C>.o.¸{..è&S¤ÂÁÛ
+  000005B0: 34 3B F9 7B 0B 14 00 00 2F 00 00 00 20 03 93 4B  4;ù{..../... ..K
+  000005C0: AD E0 30 AC 49 6E 7B 41 F3 71 94 1A B6 E9 2A 65  ­à0¬In{Aóq..¶é*e
+  000005D0: A5 F5 A4 44 BC 13 A1 0E 39 9A A8 AD 42 62 00 00  ¥õ¤D¼.¡.9.¨­Bb..
+  000005E0: F3 00 00 00 62 00 00 00 00 43 3A 5C 55 73 65 72  ó...b....C:\User
+  000005F0: 73 5C 42 69 6C 6C 5C 73 6F 75 72 63 65 5C 72 65  s\Bill\source\re
+  00000600: 70 6F 73 5C 4F 64 72 43 6F 70 5C 54 55 73 5C 54  pos\OdrCop\TUs\T
+  00000610: 55 31 2E 63 70 70 00 43 3A 5C 55 73 65 72 73 5C  U1.cpp.C:\Users\
+  00000620: 42 69 6C 6C 5C 73 6F 75 72 63 65 5C 72 65 70 6F  Bill\source\repo
+  00000630: 73 5C 4F 64 72 43 6F 70 5C 54 55 73 5C 54 65 73  s\OdrCop\TUs\Tes
+  00000640: 74 48 65 61 64 65 72 2E 68 00 00 00 F1 00 00 00  tHeader.h...ñ...
+  00000650: 08 00 00 00 06 00 4C 11 20 10 00 00              ......L. ...
+
+RELOCATIONS #2
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 000000AC  SECREL                     00000000         9  ?g_1_DifferentSizedMember@@3UDifferentSizedMember@@A (struct DifferentSizedMember g_1_DifferentSizedMember)
+ 000000B0  SECTION                        0000         9  ?g_1_DifferentSizedMember@@3UDifferentSizedMember@@A (struct DifferentSizedMember g_1_DifferentSizedMember)
+ 000000D3  SECREL                     00000000         A  ?g_1_DifferentDataMembers@@3UDifferentDataMembers@@A (struct DifferentDataMembers g_1_DifferentDataMembers)
+ 000000D7  SECTION                        0000         A  ?g_1_DifferentDataMembers@@3UDifferentDataMembers@@A (struct DifferentDataMembers g_1_DifferentDataMembers)
+ 000000FA  SECREL                     00000000         B  ?g_1_DifferentOrderOfDataMembers@@3UDifferentOrderOfDataMembers@@A (struct DifferentOrderOfDataMembers g_1_DifferentOrderOfDataMembers)
+ 000000FE  SECTION                        0000         B  ?g_1_DifferentOrderOfDataMembers@@3UDifferentOrderOfDataMembers@@A (struct DifferentOrderOfDataMembers g_1_DifferentOrderOfDataMembers)
+ 00000128  SECREL                     00000000         C  ?g_1_DifferentTypeOfDataMembers@@3UDifferentTypeOfDataMembers@@A (struct DifferentTypeOfDataMembers g_1_DifferentTypeOfDataMembers)
+ 0000012C  SECTION                        0000         C  ?g_1_DifferentTypeOfDataMembers@@3UDifferentTypeOfDataMembers@@A (struct DifferentTypeOfDataMembers g_1_DifferentTypeOfDataMembers)
+ 00000155  SECREL                     00000000         D  ?g_1_DifferentBases@@3UDifferentBases@@A (struct DifferentBases g_1_DifferentBases)
+ 00000159  SECTION                        0000         D  ?g_1_DifferentBases@@3UDifferentBases@@A (struct DifferentBases g_1_DifferentBases)
+ 00000176  SECREL                     00000000         E  ?g_1_DifferentDataMemberType@@3UDifferentDataMemberType@@A (struct DifferentDataMemberType g_1_DifferentDataMemberType)
+ 0000017A  SECTION                        0000         E  ?g_1_DifferentDataMemberType@@3UDifferentDataMemberType@@A (struct DifferentDataMemberType g_1_DifferentDataMemberType)
+ 000001A0  SECREL                     00000000         F  ?g_1_SameMemberTypesDifferentOrder@@3USameMemberTypesDifferentOrder@@A (struct SameMemberTypesDifferentOrder g_1_SameMemberTypesDifferentOrder)
+ 000001A4  SECTION                        0000         F  ?g_1_SameMemberTypesDifferentOrder@@3USameMemberTypesDifferentOrder@@A (struct SameMemberTypesDifferentOrder g_1_SameMemberTypesDifferentOrder)
+ 000001D0  SECREL                     00000000        10  ?g_1_DifferentBaseClass@@3UDifferentBaseClass@@A (struct DifferentBaseClass g_1_DifferentBaseClass)
+ 000001D4  SECTION                        0000        10  ?g_1_DifferentBaseClass@@3UDifferentBaseClass@@A (struct DifferentBaseClass g_1_DifferentBaseClass)
+ 000001F5  SECREL                     00000000        11  ?g_1_DifferentConstDataMember@@3UDifferentConstDataMember@@A (struct DifferentConstDataMember g_1_DifferentConstDataMember)
+ 000001F9  SECTION                        0000        11  ?g_1_DifferentConstDataMember@@3UDifferentConstDataMember@@A (struct DifferentConstDataMember g_1_DifferentConstDataMember)
+ 00000220  SECREL                     00000000        12  ?g_1_DifferentVolatileDataMember@@3UDifferentVolatileDataMember@@A (struct DifferentVolatileDataMember g_1_DifferentVolatileDataMember)
+ 00000224  SECTION                        0000        12  ?g_1_DifferentVolatileDataMember@@3UDifferentVolatileDataMember@@A (struct DifferentVolatileDataMember g_1_DifferentVolatileDataMember)
+ 0000024E  SECREL                     00000000        13  ?g_1_StructVsClass@@3UStructVsClass@@A (struct StructVsClass g_1_StructVsClass)
+ 00000252  SECTION                        0000        13  ?g_1_StructVsClass@@3UStructVsClass@@A (struct StructVsClass g_1_StructVsClass)
+ 0000026E  SECREL                     00000000        48  ?g_1_call_FunctionsMustBeBitwiseIdentical@@3HA (int g_1_call_FunctionsMustBeBitwiseIdentical)
+ 00000272  SECTION                        0000        48  ?g_1_call_FunctionsMustBeBitwiseIdentical@@3HA (int g_1_call_FunctionsMustBeBitwiseIdentical)
+ 000002A5  SECREL                     00000000        52  ?g_1_call_FunctionsMustBeBitwiseIdentical$initializer$@@3P6AXXZEA (void (__cdecl* g_1_call_FunctionsMustBeBitwiseIdentical$initializer$)(void))
+ 000002A9  SECTION                        0000        52  ?g_1_call_FunctionsMustBeBitwiseIdentical$initializer$@@3P6AXXZEA (void (__cdecl* g_1_call_FunctionsMustBeBitwiseIdentical$initializer$)(void))
+ 000002E9  SECREL                     00000000        49  ?g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@3HA (int g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions)
+ 000002ED  SECTION                        0000        49  ?g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@3HA (int g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions)
+ 00000337  SECREL                     00000000        53  ?g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions$initializer$@@3P6AXXZEA (void (__cdecl* g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions$initializer$)(void))
+ 0000033B  SECTION                        0000        53  ?g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions$initializer$@@3P6AXXZEA (void (__cdecl* g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions$initializer$)(void))
+ 00000392  SECREL                     00000000        16  ?g_1_enum@@3W4SameEnumButDifferentValues@@A (enum SameEnumButDifferentValues g_1_enum)
+ 00000396  SECTION                        0000        16  ?g_1_enum@@3W4SameEnumButDifferentValues@@A (enum SameEnumButDifferentValues g_1_enum)
+ 000003A9  SECREL                     00000000        17  ?g_1_sameTypedefDifferentUnderlyingType@@3DA (char g_1_sameTypedefDifferentUnderlyingType)
+ 000003AD  SECTION                        0000        17  ?g_1_sameTypedefDifferentUnderlyingType@@3DA (char g_1_sameTypedefDifferentUnderlyingType)
+
+SECTION HEADER #3
+    .bss name
+       0 physical address
+       0 virtual address
+      30 size of raw data
+       0 file pointer to raw data
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+C0400080 flags
+         Uninitialized Data
+         8 byte align
+         Read Write
+
+SECTION HEADER #4
+   .data name
+       0 physical address
+       0 virtual address
+       4 size of raw data
+     BDC file pointer to raw data (00000BDC to 00000BDF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+C0300040 flags
+         Initialized Data
+         4 byte align
+         Read Write
+
+RAW DATA #4
+  00000000: 01 00 00 00                                      ....
+
+SECTION HEADER #5
+.text$mn name
+       0 physical address
+       0 virtual address
+       9 size of raw data
+     BE0 file pointer to raw data (00000BE0 to 00000BE8)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+60501020 flags
+         Code
+         COMDAT; sym= "int __cdecl SameFunctionTemplateSpecializationDifferentDefinitions<int>(void)" (??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ)
+         16 byte align
+         Execute Read
+
+RAW DATA #5
+  00000000: 40 57 B8 01 00 00 00 5F C3                       @W¸...._Ã
+
+SECTION HEADER #6
+.debug$S name
+       0 physical address
+       0 virtual address
+      CC size of raw data
+     BE9 file pointer to raw data (00000BE9 to 00000CB4)
+     CB5 file pointer to relocation table
+       0 file pointer to line numbers
+       4 number of relocations
+       0 number of line numbers
+42101040 flags
+         Initialized Data
+         COMDAT (no symbol)
+         Discardable
+         1 byte align
+         Read Only
+
+RAW DATA #6
+  00000000: 04 00 00 00 F1 00 00 00 85 00 00 00 61 00 47 11  ....ñ.......a.G.
+  00000010: 00 00 00 00 00 00 00 00 00 00 00 00 09 00 00 00  ................
+  00000020: 02 00 00 00 07 00 00 00 04 10 00 00 00 00 00 00  ................
+  00000030: 00 00 00 53 61 6D 65 46 75 6E 63 74 69 6F 6E 54  ...SameFunctionT
+  00000040: 65 6D 70 6C 61 74 65 53 70 65 63 69 61 6C 69 7A  emplateSpecializ
+  00000050: 61 74 69 6F 6E 44 69 66 66 65 72 65 6E 74 44 65  ationDifferentDe
+  00000060: 66 69 6E 69 74 69 6F 6E 73 3C 69 6E 74 3E 00 1C  finitions<int>..
+  00000070: 00 12 10 00 00 00 00 00 00 00 00 00 00 00 00 08  ................
+  00000080: 00 00 00 00 00 00 00 00 00 20 50 11 10 02 00 4F  ......... P....O
+  00000090: 11 00 00 00 F2 00 00 00 30 00 00 00 00 00 00 00  ....ò...0.......
+  000000A0: 00 00 00 00 09 00 00 00 28 00 00 00 03 00 00 00  ........(.......
+  000000B0: 24 00 00 00 00 00 00 00 B5 00 00 80 02 00 00 00  $.......µ.......
+  000000C0: B7 00 00 80 07 00 00 00 BB 00 00 80              ·.......»...
+
+RELOCATIONS #6
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 0000002C  SECREL                     00000000        29  ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ (int __cdecl SameFunctionTemplateSpecializationDifferentDefinitions<int>(void))
+ 00000030  SECTION                        0000        29  ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ (int __cdecl SameFunctionTemplateSpecializationDifferentDefinitions<int>(void))
+ 0000009C  SECREL                     00000000        29  ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ (int __cdecl SameFunctionTemplateSpecializationDifferentDefinitions<int>(void))
+ 000000A0  SECTION                        0000        29  ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ (int __cdecl SameFunctionTemplateSpecializationDifferentDefinitions<int>(void))
+
+SECTION HEADER #7
+.text$di name
+       0 physical address
+       0 virtual address
+      17 size of raw data
+     CDD file pointer to raw data (00000CDD to 00000CF3)
+     CF4 file pointer to relocation table
+       0 file pointer to line numbers
+       2 number of relocations
+       0 number of line numbers
+60501020 flags
+         Code
+         COMDAT; sym= "void __cdecl `dynamic initializer for 'g_1_call_FunctionsMustBeBitwiseIdentical''(void)" (??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ)
+         16 byte align
+         Execute Read
+
+RAW DATA #7
+  00000000: 40 57 48 83 EC 20 E8 00 00 00 00 89 05 00 00 00  @WH.ì è.........
+  00000010: 00 48 83 C4 20 5F C3                             .H.Ä _Ã
+
+RELOCATIONS #7
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000007  REL32                      00000000        28  ?FunctionsMustBeBitwiseIdentical@@YAHXZ (int __cdecl FunctionsMustBeBitwiseIdentical(void))
+ 0000000D  REL32                      00000000        48  ?g_1_call_FunctionsMustBeBitwiseIdentical@@3HA (int g_1_call_FunctionsMustBeBitwiseIdentical)
+
+SECTION HEADER #8
+.debug$S name
+       0 physical address
+       0 virtual address
+      C4 size of raw data
+     D08 file pointer to raw data (00000D08 to 00000DCB)
+     DCC file pointer to relocation table
+       0 file pointer to line numbers
+       4 number of relocations
+       0 number of line numbers
+42101040 flags
+         Initialized Data
+         COMDAT (no symbol)
+         Discardable
+         1 byte align
+         Read Only
+
+RAW DATA #8
+  00000000: 04 00 00 00 F1 00 00 00 8E 00 00 00 6A 00 46 11  ....ñ.......j.F.
+  00000010: 00 00 00 00 00 00 00 00 00 00 00 00 17 00 00 00  ................
+  00000020: 06 00 00 00 11 00 00 00 05 10 00 00 00 00 00 00  ................
+  00000030: 00 00 00 60 64 79 6E 61 6D 69 63 20 69 6E 69 74  ...`dynamic init
+  00000040: 69 61 6C 69 7A 65 72 20 66 6F 72 20 27 67 5F 31  ializer for 'g_1
+  00000050: 5F 63 61 6C 6C 5F 46 75 6E 63 74 69 6F 6E 73 4D  _call_FunctionsM
+  00000060: 75 73 74 42 65 42 69 74 77 69 73 65 49 64 65 6E  ustBeBitwiseIden
+  00000070: 74 69 63 61 6C 27 27 00 1C 00 12 10 20 00 00 00  tical''..... ...
+  00000080: 00 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00  ................
+  00000090: 00 00 00 50 11 10 02 00 4F 11 00 00 F2 00 00 00  ...P....O...ò...
+  000000A0: 20 00 00 00 00 00 00 00 00 00 00 00 17 00 00 00   ...............
+  000000B0: 00 00 00 00 01 00 00 00 14 00 00 00 00 00 00 00  ................
+  000000C0: 14 00 00 80                                      ....
+
+RELOCATIONS #8
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 0000002C  SECREL                     00000000        2A  ??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_FunctionsMustBeBitwiseIdentical''(void))
+ 00000030  SECTION                        0000        2A  ??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_FunctionsMustBeBitwiseIdentical''(void))
+ 000000A4  SECREL                     00000000        2A  ??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_FunctionsMustBeBitwiseIdentical''(void))
+ 000000A8  SECTION                        0000        2A  ??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_FunctionsMustBeBitwiseIdentical''(void))
+
+SECTION HEADER #9
+.text$di name
+       0 physical address
+       0 virtual address
+      17 size of raw data
+     DF4 file pointer to raw data (00000DF4 to 00000E0A)
+     E0B file pointer to relocation table
+       0 file pointer to line numbers
+       2 number of relocations
+       0 number of line numbers
+60501020 flags
+         Code
+         COMDAT; sym= "void __cdecl `dynamic initializer for 'g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions''(void)" (??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ)
+         16 byte align
+         Execute Read
+
+RAW DATA #9
+  00000000: 40 57 48 83 EC 20 E8 00 00 00 00 89 05 00 00 00  @WH.ì è.........
+  00000010: 00 48 83 C4 20 5F C3                             .H.Ä _Ã
+
+RELOCATIONS #9
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000007  REL32                      00000000        29  ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ (int __cdecl SameFunctionTemplateSpecializationDifferentDefinitions<int>(void))
+ 0000000D  REL32                      00000000        49  ?g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@3HA (int g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions)
+
+SECTION HEADER #A
+.debug$S name
+       0 physical address
+       0 virtual address
+      DC size of raw data
+     E1F file pointer to raw data (00000E1F to 00000EFA)
+     EFB file pointer to relocation table
+       0 file pointer to line numbers
+       4 number of relocations
+       0 number of line numbers
+42101040 flags
+         Initialized Data
+         COMDAT (no symbol)
+         Discardable
+         1 byte align
+         Read Only
+
+RAW DATA #A
+  00000000: 04 00 00 00 F1 00 00 00 A5 00 00 00 81 00 46 11  ....ñ...¥.....F.
+  00000010: 00 00 00 00 00 00 00 00 00 00 00 00 17 00 00 00  ................
+  00000020: 06 00 00 00 11 00 00 00 06 10 00 00 00 00 00 00  ................
+  00000030: 00 00 00 60 64 79 6E 61 6D 69 63 20 69 6E 69 74  ...`dynamic init
+  00000040: 69 61 6C 69 7A 65 72 20 66 6F 72 20 27 67 5F 31  ializer for 'g_1
+  00000050: 5F 63 61 6C 6C 5F 53 61 6D 65 46 75 6E 63 74 69  _call_SameFuncti
+  00000060: 6F 6E 54 65 6D 70 6C 61 74 65 53 70 65 63 69 61  onTemplateSpecia
+  00000070: 6C 69 7A 61 74 69 6F 6E 44 69 66 66 65 72 65 6E  lizationDifferen
+  00000080: 74 44 65 66 69 6E 69 74 69 6F 6E 73 27 27 00 1C  tDefinitions''..
+  00000090: 00 12 10 20 00 00 00 00 00 00 00 00 00 00 00 08  ... ............
+  000000A0: 00 00 00 00 00 00 00 00 00 00 50 11 10 02 00 4F  ..........P....O
+  000000B0: 11 00 00 00 F2 00 00 00 20 00 00 00 00 00 00 00  ....ò... .......
+  000000C0: 00 00 00 00 17 00 00 00 00 00 00 00 01 00 00 00  ................
+  000000D0: 14 00 00 00 00 00 00 00 15 00 00 80              ............
+
+RELOCATIONS #A
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 0000002C  SECREL                     00000000        2B  ??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions''(void))
+ 00000030  SECTION                        0000        2B  ??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions''(void))
+ 000000BC  SECREL                     00000000        2B  ??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions''(void))
+ 000000C0  SECTION                        0000        2B  ??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions''(void))
+
+SECTION HEADER #B
+.text$mn name
+       0 physical address
+       0 virtual address
+       9 size of raw data
+     F23 file pointer to raw data (00000F23 to 00000F2B)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+60501020 flags
+         Code
+         COMDAT; sym= "int __cdecl FunctionsMustBeBitwiseIdentical(void)" (?FunctionsMustBeBitwiseIdentical@@YAHXZ)
+         16 byte align
+         Execute Read
+
+RAW DATA #B
+  00000000: 40 57 B8 01 00 00 00 5F C3                       @W¸...._Ã
+
+SECTION HEADER #C
+.debug$S name
+       0 physical address
+       0 virtual address
+      A0 size of raw data
+     F2C file pointer to raw data (00000F2C to 00000FCB)
+     FCC file pointer to relocation table
+       0 file pointer to line numbers
+       4 number of relocations
+       0 number of line numbers
+42101040 flags
+         Initialized Data
+         COMDAT (no symbol)
+         Discardable
+         1 byte align
+         Read Only
+
+RAW DATA #C
+  00000000: 04 00 00 00 F1 00 00 00 69 00 00 00 45 00 47 11  ....ñ...i...E.G.
+  00000010: 00 00 00 00 00 00 00 00 00 00 00 00 09 00 00 00  ................
+  00000020: 02 00 00 00 07 00 00 00 03 10 00 00 00 00 00 00  ................
+  00000030: 00 00 00 46 75 6E 63 74 69 6F 6E 73 4D 75 73 74  ...FunctionsMust
+  00000040: 42 65 42 69 74 77 69 73 65 49 64 65 6E 74 69 63  BeBitwiseIdentic
+  00000050: 61 6C 00 1C 00 12 10 00 00 00 00 00 00 00 00 00  al..............
+  00000060: 00 00 00 08 00 00 00 00 00 00 00 00 00 20 50 11  ............. P.
+  00000070: 10 02 00 4F 11 00 00 00 F2 00 00 00 20 00 00 00  ...O....ò... ...
+  00000080: 00 00 00 00 00 00 00 00 09 00 00 00 28 00 00 00  ............(...
+  00000090: 01 00 00 00 14 00 00 00 00 00 00 00 AC 00 00 80  ............¬...
+
+RELOCATIONS #C
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 0000002C  SECREL                     00000000        28  ?FunctionsMustBeBitwiseIdentical@@YAHXZ (int __cdecl FunctionsMustBeBitwiseIdentical(void))
+ 00000030  SECTION                        0000        28  ?FunctionsMustBeBitwiseIdentical@@YAHXZ (int __cdecl FunctionsMustBeBitwiseIdentical(void))
+ 00000080  SECREL                     00000000        28  ?FunctionsMustBeBitwiseIdentical@@YAHXZ (int __cdecl FunctionsMustBeBitwiseIdentical(void))
+ 00000084  SECTION                        0000        28  ?FunctionsMustBeBitwiseIdentical@@YAHXZ (int __cdecl FunctionsMustBeBitwiseIdentical(void))
+
+SECTION HEADER #D
+  .xdata name
+       0 physical address
+       0 virtual address
+       8 size of raw data
+     FF4 file pointer to raw data (00000FF4 to 00000FFB)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+40301040 flags
+         Initialized Data
+         COMDAT; sym= $unwind$?FunctionsMustBeBitwiseIdentical@@YAHXZ
+         4 byte align
+         Read Only
+
+RAW DATA #D
+  00000000: 01 02 01 00 02 70 00 00                          .....p..
+
+SECTION HEADER #E
+  .pdata name
+       0 physical address
+       0 virtual address
+       C size of raw data
+     FFC file pointer to raw data (00000FFC to 00001007)
+    1008 file pointer to relocation table
+       0 file pointer to line numbers
+       3 number of relocations
+       0 number of line numbers
+40301040 flags
+         Initialized Data
+         COMDAT; sym= $pdata$?FunctionsMustBeBitwiseIdentical@@YAHXZ
+         4 byte align
+         Read Only
+
+RAW DATA #E
+  00000000: 00 00 00 00 09 00 00 00 00 00 00 00              ............
+
+Function Table #14 (1)
+
+           Begin     End       Info
+
+  00000000 00000000  00000009  00000000
+
+RELOCATIONS #E
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000000  ADDR32NB                   00000000        2E  $LN3
+ 00000004  ADDR32NB                   00000009        2E  $LN3
+ 00000008  ADDR32NB                   00000000        32  $unwind$?FunctionsMustBeBitwiseIdentical@@YAHXZ
+
+SECTION HEADER #F
+  .xdata name
+       0 physical address
+       0 virtual address
+       8 size of raw data
+    1026 file pointer to raw data (00001026 to 0000102D)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+40301040 flags
+         Initialized Data
+         COMDAT; sym= $unwind$??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ
+         4 byte align
+         Read Only
+
+RAW DATA #F
+  00000000: 01 02 01 00 02 70 00 00                          .....p..
+
+SECTION HEADER #10
+  .pdata name
+       0 physical address
+       0 virtual address
+       C size of raw data
+    102E file pointer to raw data (0000102E to 00001039)
+    103A file pointer to relocation table
+       0 file pointer to line numbers
+       3 number of relocations
+       0 number of line numbers
+40301040 flags
+         Initialized Data
+         COMDAT; sym= $pdata$??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ
+         4 byte align
+         Read Only
+
+RAW DATA #10
+  00000000: 00 00 00 00 09 00 00 00 00 00 00 00              ............
+
+Function Table #16 (1)
+
+           Begin     End       Info
+
+  00000000 00000000  00000009  00000000
+
+RELOCATIONS #10
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000000  ADDR32NB                   00000000        2F  $LN3
+ 00000004  ADDR32NB                   00000009        2F  $LN3
+ 00000008  ADDR32NB                   00000000        38  $unwind$??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ
+
+SECTION HEADER #11
+  .xdata name
+       0 physical address
+       0 virtual address
+       8 size of raw data
+    1058 file pointer to raw data (00001058 to 0000105F)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+40301040 flags
+         Initialized Data
+         COMDAT; sym= $unwind$??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ
+         4 byte align
+         Read Only
+
+RAW DATA #11
+  00000000: 01 06 02 00 06 32 02 70                          .....2.p
+
+SECTION HEADER #12
+  .pdata name
+       0 physical address
+       0 virtual address
+       C size of raw data
+    1060 file pointer to raw data (00001060 to 0000106B)
+    106C file pointer to relocation table
+       0 file pointer to line numbers
+       3 number of relocations
+       0 number of line numbers
+40301040 flags
+         Initialized Data
+         COMDAT; sym= $pdata$??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ
+         4 byte align
+         Read Only
+
+RAW DATA #12
+  00000000: 00 00 00 00 17 00 00 00 00 00 00 00              ............
+
+Function Table #18 (1)
+
+           Begin     End       Info
+
+  00000000 00000000  00000017  00000000
+
+RELOCATIONS #12
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000000  ADDR32NB                   00000000        2A  ??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_FunctionsMustBeBitwiseIdentical''(void))
+ 00000004  ADDR32NB                   00000017        2A  ??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_FunctionsMustBeBitwiseIdentical''(void))
+ 00000008  ADDR32NB                   00000000        3E  $unwind$??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ
+
+SECTION HEADER #13
+  .xdata name
+       0 physical address
+       0 virtual address
+       8 size of raw data
+    108A file pointer to raw data (0000108A to 00001091)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+40301040 flags
+         Initialized Data
+         COMDAT; sym= $unwind$??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ
+         4 byte align
+         Read Only
+
+RAW DATA #13
+  00000000: 01 06 02 00 06 32 02 70                          .....2.p
+
+SECTION HEADER #14
+  .pdata name
+       0 physical address
+       0 virtual address
+       C size of raw data
+    1092 file pointer to raw data (00001092 to 0000109D)
+    109E file pointer to relocation table
+       0 file pointer to line numbers
+       3 number of relocations
+       0 number of line numbers
+40301040 flags
+         Initialized Data
+         COMDAT; sym= $pdata$??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ
+         4 byte align
+         Read Only
+
+RAW DATA #14
+  00000000: 00 00 00 00 17 00 00 00 00 00 00 00              ............
+
+Function Table #20 (1)
+
+           Begin     End       Info
+
+  00000000 00000000  00000017  00000000
+
+RELOCATIONS #14
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000000  ADDR32NB                   00000000        2B  ??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions''(void))
+ 00000004  ADDR32NB                   00000017        2B  ??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions''(void))
+ 00000008  ADDR32NB                   00000000        44  $unwind$??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ
+
+SECTION HEADER #15
+.rtc$IMZ name
+       0 physical address
+       0 virtual address
+       8 size of raw data
+    10BC file pointer to raw data (000010BC to 000010C3)
+    10C4 file pointer to relocation table
+       0 file pointer to line numbers
+       1 number of relocations
+       0 number of line numbers
+40401040 flags
+         Initialized Data
+         COMDAT; sym= _RTC_InitBase.rtc$IMZ
+         8 byte align
+         Read Only
+
+RAW DATA #15
+  00000000: 00 00 00 00 00 00 00 00                          ........
+
+RELOCATIONS #15
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000000  ADDR64            00000000 00000000        2C  _RTC_InitBase
+
+SECTION HEADER #16
+.rtc$TMZ name
+       0 physical address
+       0 virtual address
+       8 size of raw data
+    10CE file pointer to raw data (000010CE to 000010D5)
+    10D6 file pointer to relocation table
+       0 file pointer to line numbers
+       1 number of relocations
+       0 number of line numbers
+40401040 flags
+         Initialized Data
+         COMDAT; sym= _RTC_Shutdown.rtc$TMZ
+         8 byte align
+         Read Only
+
+RAW DATA #16
+  00000000: 00 00 00 00 00 00 00 00                          ........
+
+RELOCATIONS #16
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000000  ADDR64            00000000 00000000        2D  _RTC_Shutdown
+
+SECTION HEADER #17
+.CRT$XCU name
+       0 physical address
+       0 virtual address
+      10 size of raw data
+    10E0 file pointer to raw data (000010E0 to 000010EF)
+    10F0 file pointer to relocation table
+       0 file pointer to line numbers
+       2 number of relocations
+       0 number of line numbers
+40400040 flags
+         Initialized Data
+         8 byte align
+         Read Only
+
+RAW DATA #17
+  00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+
+RELOCATIONS #17
+                                                Symbol    Symbol
+ Offset    Type              Applied To         Index     Name
+ --------  ----------------  -----------------  --------  ------
+ 00000000  ADDR64            00000000 00000000        2A  ??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_FunctionsMustBeBitwiseIdentical''(void))
+ 00000008  ADDR64            00000000 00000000        2B  ??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions''(void))
+
+SECTION HEADER #18
+.debug$T name
+       0 physical address
+       0 virtual address
+      54 size of raw data
+    1104 file pointer to raw data (00001104 to 00001157)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+42100040 flags
+         Initialized Data
+         Discardable
+         1 byte align
+         Read Only
+
+RAW DATA #18
+  00000000: 04 00 00 00 4E 00 15 15 E1 80 FF F8 BE F6 56 47  ....N...á.ÿø¾öVG
+  00000010: B3 16 0E E4 19 C9 1E 81 05 00 00 00 43 3A 5C 55  ³..ä.É......C:\U
+  00000020: 73 65 72 73 5C 42 69 6C 6C 5C 73 6F 75 72 63 65  sers\Bill\source
+  00000030: 5C 72 65 70 6F 73 5C 4F 64 72 43 6F 70 5C 54 55  \repos\OdrCop\TU
+  00000040: 73 5C 78 36 34 5C 44 65 62 75 67 5C 54 55 31 2E  s\x64\Debug\TU1.
+  00000050: 70 64 62 00                                      pdb.
+
+SECTION HEADER #19
+ .chks64 name
+       0 physical address
+       0 virtual address
+      C8 size of raw data
+    1158 file pointer to raw data (00001158 to 0000121F)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+     A00 flags
+         Info
+         Remove
+         (no align specified)
+
+RAW DATA #19
+  00000000: 82 25 15 C8 4B 03 11 E9 3A 71 33 29 B6 CE 8D 49  .%.ÈK..é:q3)¶Î.I
+  00000010: 00 00 00 00 00 00 00 00 67 AB DD 72 10 24 F0 FF  ........g«Ýr.$ðÿ
+  00000020: 44 BB E8 01 49 F9 9F 43 70 4F 42 80 4E 7F BD 50  D»è.Iù.CpOB.N.½P
+  00000030: 41 C5 5B 46 4D 65 D8 71 AB 03 15 C3 6A 79 CD DB  AÅ[FMeØq«..ÃjyÍÛ
+  00000040: 41 C5 5B 46 4D 65 D8 71 EE 25 98 59 12 9B 5B CA  AÅ[FMeØqî%.Y..[Ê
+  00000050: 44 BB E8 01 49 F9 9F 43 11 CF F1 31 46 47 63 93  D»è.Iù.C.Ïñ1FGc.
+  00000060: 13 68 24 CC 74 2F 6D 9A 53 83 4B 5C 56 32 5F F9  .h$Ìt/m.S.K\V2_ù
+  00000070: 13 68 24 CC 74 2F 6D 9A 53 83 4B 5C 56 32 5F F9  .h$Ìt/m.S.K\V2_ù
+  00000080: A7 F7 BF 8F 80 62 78 94 20 57 4A 76 1C E8 2E 87  §÷¿..bx. WJv.è..
+  00000090: A7 F7 BF 8F 80 62 78 94 20 57 4A 76 1C E8 2E 87  §÷¿..bx. WJv.è..
+  000000A0: AF 55 70 F5 A1 81 0B 7A AF 55 70 F5 A1 81 0B 7A  ¯Upõ¡..z¯Upõ¡..z
+  000000B0: 37 47 08 FF F7 71 9D D5 09 26 4A 0E BC 4C 6C 91  7G.ÿ÷q.Õ.&J.¼Ll.
+  000000C0: 00 00 00 00 00 00 00 00                          ........
+
+COFF SYMBOL TABLE
+000 01058B92 ABS    notype       Static       | @comp.id
+001 80010390 ABS    notype       Static       | @feat.00
+002 00000003 ABS    notype       Static       | @vol.md
+003 00000000 SECT1  notype       Static       | .drectve
+    Section length   30, #relocs    0, #linenums    0, checksum        0
+005 00000000 SECT2  notype       Static       | .debug$S
+    Section length  65C, #relocs   22, #linenums    0, checksum        0
+007 00000000 SECT3  notype       Static       | .bss
+    Section length   30, #relocs    0, #linenums    0, checksum        0
+009 00000000 SECT3  notype       External     | ?g_1_DifferentSizedMember@@3UDifferentSizedMember@@A (struct DifferentSizedMember g_1_DifferentSizedMember)
+00A 00000004 SECT3  notype       External     | ?g_1_DifferentDataMembers@@3UDifferentDataMembers@@A (struct DifferentDataMembers g_1_DifferentDataMembers)
+00B 00000008 SECT3  notype       External     | ?g_1_DifferentOrderOfDataMembers@@3UDifferentOrderOfDataMembers@@A (struct DifferentOrderOfDataMembers g_1_DifferentOrderOfDataMembers)
+00C 00000010 SECT3  notype       External     | ?g_1_DifferentTypeOfDataMembers@@3UDifferentTypeOfDataMembers@@A (struct DifferentTypeOfDataMembers g_1_DifferentTypeOfDataMembers)
+00D 00000001 SECT3  notype       External     | ?g_1_DifferentBases@@3UDifferentBases@@A (struct DifferentBases g_1_DifferentBases)
+00E 00000002 SECT3  notype       External     | ?g_1_DifferentDataMemberType@@3UDifferentDataMemberType@@A (struct DifferentDataMemberType g_1_DifferentDataMemberType)
+00F 00000018 SECT3  notype       External     | ?g_1_SameMemberTypesDifferentOrder@@3USameMemberTypesDifferentOrder@@A (struct SameMemberTypesDifferentOrder g_1_SameMemberTypesDifferentOrder)
+010 00000003 SECT3  notype       External     | ?g_1_DifferentBaseClass@@3UDifferentBaseClass@@A (struct DifferentBaseClass g_1_DifferentBaseClass)
+011 00000020 SECT3  notype       External     | ?g_1_DifferentConstDataMember@@3UDifferentConstDataMember@@A (struct DifferentConstDataMember g_1_DifferentConstDataMember)
+012 00000024 SECT3  notype       External     | ?g_1_DifferentVolatileDataMember@@3UDifferentVolatileDataMember@@A (struct DifferentVolatileDataMember g_1_DifferentVolatileDataMember)
+013 00000014 SECT3  notype       External     | ?g_1_StructVsClass@@3UStructVsClass@@A (struct StructVsClass g_1_StructVsClass)
+014 00000000 SECT4  notype       Static       | .data
+    Section length    4, #relocs    0, #linenums    0, checksum B8BC6765
+016 00000000 SECT4  notype       External     | ?g_1_enum@@3W4SameEnumButDifferentValues@@A (enum SameEnumButDifferentValues g_1_enum)
+017 00000015 SECT3  notype       External     | ?g_1_sameTypedefDifferentUnderlyingType@@3DA (char g_1_sameTypedefDifferentUnderlyingType)
+018 00000000 SECT5  notype       Static       | .text$mn
+    Section length    9, #relocs    0, #linenums    0, checksum 66F9F92B, selection    2 (pick any)
+01A 00000000 SECT6  notype       Static       | .debug$S
+    Section length   CC, #relocs    4, #linenums    0, checksum        0, selection    5 (pick associative Section 0x5)
+01C 00000000 SECT7  notype       Static       | .text$di
+    Section length   17, #relocs    2, #linenums    0, checksum 12D26884, selection    2 (pick any)
+01E 00000000 SECT8  notype       Static       | .debug$S
+    Section length   C4, #relocs    4, #linenums    0, checksum        0, selection    5 (pick associative Section 0x7)
+020 00000000 SECT9  notype       Static       | .text$di
+    Section length   17, #relocs    2, #linenums    0, checksum 12D26884, selection    2 (pick any)
+022 00000000 SECTA  notype       Static       | .debug$S
+    Section length   DC, #relocs    4, #linenums    0, checksum        0, selection    5 (pick associative Section 0x9)
+024 00000000 SECTB  notype       Static       | .text$mn
+    Section length    9, #relocs    0, #linenums    0, checksum 66F9F92B, selection    2 (pick any)
+026 00000000 SECTC  notype       Static       | .debug$S
+    Section length   A0, #relocs    4, #linenums    0, checksum        0, selection    5 (pick associative Section 0xB)
+028 00000000 SECTB  notype ()    External     | ?FunctionsMustBeBitwiseIdentical@@YAHXZ (int __cdecl FunctionsMustBeBitwiseIdentical(void))
+029 00000000 SECT5  notype ()    External     | ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ (int __cdecl SameFunctionTemplateSpecializationDifferentDefinitions<int>(void))
+02A 00000000 SECT7  notype ()    Static       | ??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_FunctionsMustBeBitwiseIdentical''(void))
+02B 00000000 SECT9  notype ()    Static       | ??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ (void __cdecl `dynamic initializer for 'g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions''(void))
+02C 00000000 UNDEF  notype ()    External     | _RTC_InitBase
+02D 00000000 UNDEF  notype ()    External     | _RTC_Shutdown
+02E 00000000 SECTB  notype       Label        | $LN3
+02F 00000000 SECT5  notype       Label        | $LN3
+030 00000000 SECTD  notype       Static       | .xdata
+    Section length    8, #relocs    0, #linenums    0, checksum 6E9162C9, selection    5 (pick associative Section 0xB)
+032 00000000 SECTD  notype       Static       | $unwind$?FunctionsMustBeBitwiseIdentical@@YAHXZ
+033 00000000 SECTE  notype       Static       | .pdata
+    Section length    C, #relocs    3, #linenums    0, checksum 1F4F1B2B, selection    5 (pick associative Section 0xB)
+035 00000000 SECTE  notype       Static       | $pdata$?FunctionsMustBeBitwiseIdentical@@YAHXZ
+036 00000000 SECTF  notype       Static       | .xdata
+    Section length    8, #relocs    0, #linenums    0, checksum 6E9162C9, selection    5 (pick associative Section 0x5)
+038 00000000 SECTF  notype       Static       | $unwind$??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ
+039 00000000 SECT10 notype       Static       | .pdata
+    Section length    C, #relocs    3, #linenums    0, checksum 1F4F1B2B, selection    5 (pick associative Section 0x5)
+03B 00000000 SECT10 notype       Static       | $pdata$??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ
+03C 00000000 SECT11 notype       Static       | .xdata
+    Section length    8, #relocs    0, #linenums    0, checksum 8205E933, selection    5 (pick associative Section 0x7)
+03E 00000000 SECT11 notype       Static       | $unwind$??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ
+03F 00000000 SECT12 notype       Static       | .pdata
+    Section length    C, #relocs    3, #linenums    0, checksum 767E3832, selection    5 (pick associative Section 0x7)
+041 00000000 SECT12 notype       Static       | $pdata$??__Eg_1_call_FunctionsMustBeBitwiseIdentical@@YAXXZ
+042 00000000 SECT13 notype       Static       | .xdata
+    Section length    8, #relocs    0, #linenums    0, checksum 8205E933, selection    5 (pick associative Section 0x9)
+044 00000000 SECT13 notype       Static       | $unwind$??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ
+045 00000000 SECT14 notype       Static       | .pdata
+    Section length    C, #relocs    3, #linenums    0, checksum 767E3832, selection    5 (pick associative Section 0x9)
+047 00000000 SECT14 notype       Static       | $pdata$??__Eg_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@YAXXZ
+048 0000002C SECT3  notype       External     | ?g_1_call_FunctionsMustBeBitwiseIdentical@@3HA (int g_1_call_FunctionsMustBeBitwiseIdentical)
+049 00000028 SECT3  notype       External     | ?g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions@@3HA (int g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions)
+04A 00000000 SECT15 notype       Static       | .rtc$IMZ
+    Section length    8, #relocs    1, #linenums    0, checksum        0, selection    2 (pick any)
+04C 00000000 SECT15 notype       Static       | _RTC_InitBase.rtc$IMZ
+04D 00000000 SECT16 notype       Static       | .rtc$TMZ
+    Section length    8, #relocs    1, #linenums    0, checksum        0, selection    2 (pick any)
+04F 00000000 SECT16 notype       Static       | _RTC_Shutdown.rtc$TMZ
+050 00000000 SECT17 notype       Static       | .CRT$XCU
+    Section length   10, #relocs    2, #linenums    0, checksum        0
+052 00000000 SECT17 notype       Static       | ?g_1_call_FunctionsMustBeBitwiseIdentical$initializer$@@3P6AXXZEA (void (__cdecl* g_1_call_FunctionsMustBeBitwiseIdentical$initializer$)(void))
+053 00000008 SECT17 notype       Static       | ?g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions$initializer$@@3P6AXXZEA (void (__cdecl* g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions$initializer$)(void))
+054 00000000 SECT18 notype       Static       | .debug$T
+    Section length   54, #relocs    0, #linenums    0, checksum        0
+056 00000000 SECT19 notype       Static       | .chks64
+    Section length   C8, #relocs    0, #linenums    0, checksum        0
+
+String Table Size = 0x726 bytes
+
+  Summary
+
+          10 .CRT$XCU
+          30 .bss
+          C8 .chks64
+           4 .data
+         968 .debug$S
+          54 .debug$T
+          30 .drectve
+          30 .pdata
+           8 .rtc$IMZ
+           8 .rtc$TMZ
+          2E .text$di
+          12 .text$mn
+          20 .xdata

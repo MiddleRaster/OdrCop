@@ -22,3 +22,5 @@ int g_1_call_SameFunctionTemplateSpecializationDifferentDefinitions = SameFuncti
 //int g_1_call_SameConstexprFunctionDifferentBody                   = SameConstexprFunctionDifferentBody();
 
 auto g_1_enum = SameEnumButDifferentValues::A;
+
+//SameTypedefDifferentUnderlyingType g_1_sameTypedefDifferentUnderlyingType{};
