@@ -17,6 +17,7 @@ DifferentConstDataMember                          g_1_DifferentConstDataMember;
 DifferentVolatileDataMember                       g_1_DifferentVolatileDataMember;
 StructVsClass                                     g_1_StructVsClass;
 //SameTemplateDifferentDefaultTemplateArguments<> g_1_SameTemplateDifferentDefaultTemplateArguments;
+SameClassDifferentAlignment                       g_1_SameClassDifferentAlignment;
 
 
 int g_1_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();

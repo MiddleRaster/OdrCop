@@ -219,20 +219,21 @@ enum SameEnumButDifferentValues
 #endif
 };
 
-
-
-
+// Same class but different alignment
+#pragma warning(push)
+#pragma warning(disable: 4324) // really stupid warning
+struct
+#ifdef ONE
+alignas(4)
+#else
+alignas(8)
+#endif
+SameClassDifferentAlignment { int a; };
+#pragma warning(pop)
 
 
 
 #ifdef ALL_ODR_VIOLATIONS
-    16. Same class but different alignment
-    TU1.cpp
-    cpp
-    struct alignas(4) S { int a; };
-    TU2.cpp
-    cpp
-    struct alignas(8) S { int a; };   // ODR violation
     17. Same class but different virtual function table shape
     TU1.cpp
     cpp
