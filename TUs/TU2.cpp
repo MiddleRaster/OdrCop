@@ -19,6 +19,7 @@ StructVsClass                                     g_2_StructVsClass;
 //SameTemplateDifferentDefaultTemplateArguments<> g_2_SameTemplateDifferentDefaultTemplateArguments;
 SameClassDifferentAlignment                       g_2_SameClassDifferentAlignment;
 SameClassDifferentVirtualFunctionTableShape       g_2_SameClassDifferentVirtualFunctionTableShape;
+SameClassDifferentVirtualFunctionNames            g_2_SameClassDifferentVirtualFunctionNames;
 
 
 int g_2_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();

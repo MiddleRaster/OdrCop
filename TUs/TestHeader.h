@@ -240,6 +240,14 @@ struct SameClassDifferentVirtualFunctionTableShape
 #endif
 };
 
+struct SameClassDifferentVirtualFunctionNames
+{
+#ifdef ONE
+    virtual void Foo() {}
+#else
+    virtual void Bar() {}
+#endif
+};
 
 
 

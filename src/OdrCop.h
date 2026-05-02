@@ -335,13 +335,16 @@ namespace Odr
               std::vector<StaticMember >>             // static/constinit/consteval values
                                            members;
         const std::vector<std::wstring  >  baseNames; // base class names in order
+        const std::vector<std::wstring  >  methods;   // method names
     public:
-        UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath) : pdbPath  (pdbPath)
-                                                              , name(             BstrToWstr(Get(sym, &IDiaSymbol::get_name)))
-                                                              , size(                        Get(sym, &IDiaSymbol::get_length))
-                                                              , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
-                                                              , members(GetMembers(sym))
-                                                              , baseNames(GetBaseNames(sym))
+        UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath, const std::vector<std::wstring>& methods) 
+            : pdbPath  (pdbPath)
+            , name(             BstrToWstr(Get(sym, &IDiaSymbol::get_name)))
+            , size(                        Get(sym, &IDiaSymbol::get_length))
+            , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
+            , members(GetMembers(sym))
+            , baseNames(GetBaseNames(sym))
+            , methods(methods)
         {}
         void Print() const
         {
@@ -356,6 +359,13 @@ namespace Odr
             for (auto& i : std::get<0>(members)) i.Print();
             for (auto& c : std::get<1>(members)) c.Print();
             for (auto& s : std::get<2>(members)) s.Print();
+
+            if (methods.size() > 0)
+            {
+                std::wcout << L"    methods:\n";
+                for (auto& m : methods)
+                    std::wcout << L"      " << m << L'\n';
+            }
         }
         void PrintPdbPath() const { std::wcout << L"  [" << pdbPath << L"] (same as above)\n"; }
 
@@ -374,6 +384,7 @@ namespace Odr
             if(!std::ranges::equal(std::get<0>(members), std::get<0>(other.members))) return false;
             if(!std::ranges::equal(std::get<1>(members), std::get<1>(other.members))) return false;
             if(!std::ranges::equal(std::get<2>(members), std::get<2>(other.members))) return false;
+            if(!std::ranges::equal(            methods,              other.methods) ) return false;
             return true;
         }
         const wchar_t* UdtKindToString() const
@@ -573,7 +584,7 @@ namespace Odr
                         {
                             // UDTs
                             CComPtr<IDiaEnumSymbols> udts;
-                            if (SUCCEEDED(hr = global->findChildren(SymTagUDT, NULL, nsNone, &udts)))
+                            if (SUCCEEDED(hr = global->findChildren(SymTagUDT, nullptr, nsNone, &udts)))
                             {
                                 while(true)
                                 {
@@ -585,8 +596,29 @@ namespace Odr
                                     CComBSTR name;
                                     if (SUCCEEDED(udt->get_name(&name)) && name && name[0] != L'\0')
                                     {
+                                        // get method names attached to this udt, if any
+                                        std::vector<std::wstring> methods;
+
+                                        CComPtr<IDiaEnumSymbols> functions;
+                                        if (SUCCEEDED(udt->findChildren(SymTagFunction, nullptr, nsNone, &functions)) && functions)
+                                        {
+                                            while (true)
+                                            {
+                                                ULONG retrieved = 0;
+                                                CComPtr<IDiaSymbol> function;
+                                                if (FAILED(functions->Next(1, &function, &retrieved)) || retrieved == 0)
+                                                    break;
+
+                                                CComBSTR functionName = Get(function, &IDiaSymbol::get_undecoratedName); // prefer this one
+                                                if (functionName.m_str == NULL)
+                                                    function->get_name(&functionName); // but use this one if need be
+                                                if (functionName.m_str != NULL)
+                                                    methods.push_back(functionName.m_str);
+                                            }
+                                        }
+
                                         std::wstring key = BuildUdtKey(udt);
-                                        udtMap[key].push_back(UdtInfo(udt, path));
+                                        udtMap[key].push_back(UdtInfo(udt, path, methods));
                                     }
                                 }
                             }
