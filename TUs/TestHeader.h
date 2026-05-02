@@ -5,6 +5,7 @@
 //   - static constexpr / static const member value differences
 //   - static constexpr / consteval / constinit
 //   - typedefs
+//   - default template arguments
 // 
 // below here is untested (as yet)
 //   - constexpr / inline differences on member functions
@@ -77,7 +78,15 @@ SomeStructForTypedefTesting2
 #endif
 SameTypedefDifferentUnderlyingType;
 
+// Same template but different default template arguments
+#ifdef ONE
+template<typename T = char>
+#else
+template<typename T = long>
 #endif
+struct SameTemplateDifferentDefaultTemplateArguments {};
+
+#endif // cannot be seen by DIA or COFF
 
 
 
@@ -211,16 +220,12 @@ enum SameEnumButDifferentValues
 };
 
 
+
+
+
+
+
 #ifdef ALL_ODR_VIOLATIONS
-    15. Same template but different default template arguments
-    TU1.cpp
-    cpp
-    template<typename T = int>
-    struct S {};
-    TU2.cpp
-    cpp
-    template<typename T = long>
-    struct S {};   // ODR violation
     16. Same class but different alignment
     TU1.cpp
     cpp
