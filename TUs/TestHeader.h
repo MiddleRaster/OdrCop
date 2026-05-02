@@ -232,15 +232,19 @@ SameClassDifferentAlignment { int a; };
 #pragma warning(pop)
 
 
+// Same class but different virtual function table shape
+struct SameClassDifferentVirtualFunctionTableShape
+{
+#ifdef ONE
+    virtual void f() {}
+#endif
+};
+
+
+
+
 
 #ifdef ALL_ODR_VIOLATIONS
-    17. Same class but different virtual function table shape
-    TU1.cpp
-    cpp
-    struct S { virtual void f(); };
-    TU2.cpp
-    cpp
-    struct S {};   // ODR violation
     18. Same class but different final / override usage
     These change the virtual table.
 
