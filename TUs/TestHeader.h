@@ -297,18 +297,35 @@ struct SameClassDifferentVirtualnessOnFunction
 #endif
 };
 
-
-
+// Same class but different member static vs non‑static
+struct SameClassDifferentStaticOnDataMember
+{
+#ifdef ONE
+    static
+#endif
+    int a;
+};
+struct SameClassDifferentStaticConstOnDataMember
+{
+#ifdef ONE
+    static const
+#else
+    static
+#endif
+    int a;
+};
+struct SameClassDifferentStaticVolatileOnDataMember
+{
+#ifdef ONE
+    static volatile
+#else
+    static
+#endif
+    int a;
+};
 
 
 #ifdef ALL_ODR_VIOLATIONS
-    19. Same class but different member static vs non‑static
-    TU1.cpp
-    cpp
-    struct S { int a; };
-    TU2.cpp
-    cpp
-    struct S { static int a; };   // ODR violation
     20. Same class but different bitfield layout
     TU1.cpp
     cpp

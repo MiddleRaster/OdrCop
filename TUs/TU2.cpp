@@ -25,6 +25,9 @@ SameClassDifferentVirtualnessOnFunction           g_2_SameClassDifferentVirtualn
 //SameClassDifferentInlinenessOnFunction          g_2_SameClassDifferentInlinenessOnFunction;
 //SameClassDifferentConstexpressOnFunction        g_2_SameClassDifferentConstexpressOnFunction;
 //SameClassDifferentOverrideSpecifier             g_2_SameClassDifferentOverrideSpecifier;
+SameClassDifferentStaticOnDataMember              g_2_SameClassDifferentStaticOnDataMember;
+SameClassDifferentStaticConstOnDataMember         g_2_SameClassDifferentStaticConstOnDataMember;
+SameClassDifferentStaticVolatileOnDataMember      g_2_SameClassDifferentStaticVolatileOnDataMember;
 
 
 int g_2_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();

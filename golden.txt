@@ -92,6 +92,30 @@ ODR VIOLATION: SameClassDifferentAlignment
     kind=struct  size=8
     +0  int32_t  a
 
+ODR VIOLATION: SameClassDifferentStaticConstOnDataMember
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=1
+    static const   int32_t  a
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=1
+    static   int32_t  a
+
+ODR VIOLATION: SameClassDifferentStaticOnDataMember
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=1
+    static   int32_t  a
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=4
+    +0  int32_t  a
+
+ODR VIOLATION: SameClassDifferentStaticVolatileOnDataMember
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=1
+    static volatile  int32_t  a
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=1
+    static   int32_t  a
+
 ODR VIOLATION: SameClassDifferentVirtualFunctionNames
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=8
@@ -184,4 +208,4 @@ ODR VIOLATION: SameEnumButDifferentValues
     kind=enum
     the first few values are: A=1, B=3, 
 
-18 ODR violation(s) found.
+21 ODR violation(s) found.

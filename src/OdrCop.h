@@ -293,19 +293,18 @@ namespace Odr
         };
         class StaticMember : public MemberInfoBase<StaticMember>
         {
-            DWORD locationType;
-            BOOL  isConstant;
-            BOOL  isVolatile;
+            const DWORD locationType; // will be LocationType::LocIsStatic, but we knew that already from the DataKind
+            const BOOL  isConstant;
+            const BOOL  isVolatile;
         public:
-            StaticMember(std::wstring name, IDiaSymbol* pType, DWORD locationType, BOOL isConstant, BOOL isVolatile)
+            StaticMember(std::wstring name, IDiaSymbol* pType, DWORD locationType)
                 : MemberInfoBase(name,pType)
                 , locationType  (locationType)
-                , isConstant    (isConstant)
-                , isVolatile    (isVolatile)
+                , isConstant    (GetFromType(pType, &IDiaSymbol::get_constType))
+                , isVolatile    (GetFromType(pType, &IDiaSymbol::get_volatileType))
             {}
         private:
             friend MemberInfoBase<StaticMember>;
-
             bool IsEqualToImpl(const StaticMember& other) const
             {
                 if (locationType == other.locationType)
@@ -314,14 +313,14 @@ namespace Odr
                     return true;
                 return false;
             }
-            void PrintPrefix() const
+            void PrintPrefix() const { std::wcout << L"    static " << (isConstant ? L"const " : L"") << (isVolatile ? L"volatile" : L""); };
+            void PrintSuffix() const { std::wcout << L'\n'; }
+            static BOOL GetFromType(IDiaSymbol* sym, HRESULT(IDiaSymbol::* m)(BOOL*))
             {
-                std::wcout << L"   " << (isConstant ? L"const" : L"") << L" " << (isVolatile ? L"volatile" : L"");
-            };
-            void PrintSuffix() const
-            {
-                std::wcout << L"   locationType: " << locationType << L", isConstant: " << (isConstant ? L"true" : L"false") << L", isVolatile: " << (isVolatile ? L"true" : L"false");
-                std::wcout << L'\n';
+                CComPtr<IDiaSymbol> type;
+                if (SUCCEEDED(sym->get_type(&type)))
+                    return Get(type, m);
+                return FALSE;
             }
         };
 
@@ -444,9 +443,10 @@ namespace Odr
                     {
                         statics.push_back(StaticMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)),
                                                                       child, // let ctor do the IDiaSymbol::get_type call
-                                                                  Get(child, &IDiaSymbol::get_locationType),
-                                                                  Get(child, &IDiaSymbol::get_constType),
-                                                                  Get(child, &IDiaSymbol::get_volatileType)));
+                                                                  Get(child, &IDiaSymbol::get_locationType)
+                                                               // Get(child, &IDiaSymbol::get_constType),
+                                                               // Get(child, &IDiaSymbol::get_volatileType)
+                                                               ));
 
                     } else {
                         // add other DataKind types
