@@ -89,12 +89,29 @@ struct SameTemplateDifferentDefaultTemplateArguments {};
 // Same class but different noexcept on member functions
 struct SameClassDifferentNoExceptOnMethod
 {
-    void f()
+    void NoExceptMethod()
 #ifdef ONE
         noexcept
 #endif
-    {
-    }
+    {}
+};
+
+struct SameClassDifferentInlinenessOnFunction
+{
+#ifdef ONE
+                 inline  void InlineOrNot() {}
+#else
+    __declspec(noinline) void InlineOrNot() {}
+#endif
+};
+
+struct SameClassDifferentConstexpressOnFunction
+{
+#ifdef ONE
+    constexpr void ConstexpreOrNot() {}
+#else
+              void ConstexpreOrNot() {}
+#endif
 };
 
 #endif // cannot be seen by DIA or COFF
@@ -268,6 +285,7 @@ struct SameClassDifferentVirtualnessOnFunction
             void VirtualOrNot() {}
 #endif
 };
+
 
 
 
