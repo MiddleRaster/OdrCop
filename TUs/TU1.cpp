@@ -24,6 +24,7 @@ SameClassDifferentVirtualnessOnFunction           g_1_SameClassDifferentVirtualn
 //SameClassDifferentNoExceptOnMethod              g_1_SameClassDifferentNoExceptOnMethod;
 //SameClassDifferentInlinenessOnFunction          g_1_SameClassDifferentInlinenessOnFunction;
 //SameClassDifferentConstexpressOnFunction        g_1_SameClassDifferentConstexpressOnFunction;
+//SameClassDifferentOverrideSpecifier             g_1_SameClassDifferentOverrideSpecifier;
 
 
 int g_1_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();

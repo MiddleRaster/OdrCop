@@ -7,10 +7,9 @@
 //   - typedefs
 //   - default template arguments
 //   - noexcept differences
-// 
-// below here is untested (as yet)
 //   - constexpr / inline differences on member functions
 //   - Attribute differences (__declspec etc.)
+//   - override specifier
 
 #ifdef KNOWN_LIMITATIONS_OF_PDB_DIA
 
@@ -112,6 +111,18 @@ struct SameClassDifferentConstexpressOnFunction
 #else
               void ConstexpreOrNot() {}
 #endif
+};
+
+// Same class but different final / override usage
+// These change the virtual table.
+struct BaseForOverride { virtual void OverrideOrNot() {} };
+struct SameClassDifferentOverrideSpecifier : BaseForOverride
+{
+    void OverrideOrNot()
+#ifdef ONE
+    override
+#endif
+    {}
 };
 
 #endif // cannot be seen by DIA or COFF
@@ -289,18 +300,8 @@ struct SameClassDifferentVirtualnessOnFunction
 
 
 
-#ifdef ALL_ODR_VIOLATIONS
-    18. Same class but different final / override usage
-    These change the virtual table.
 
-    TU1.cpp
-    cpp
-    struct B { virtual void f(); };
-    struct S : B { void f() override; };
-    TU2.cpp
-    cpp
-    struct B { virtual void f(); };
-    struct S : B { void f(); };   // ODR violation
+#ifdef ALL_ODR_VIOLATIONS
     19. Same class but different member static vs non‑static
     TU1.cpp
     cpp
