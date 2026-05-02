@@ -325,6 +325,24 @@ namespace Odr
             }
         };
 
+        class MethodInfo
+        {
+            const std::wstring name;
+            const bool isVirtual;
+        public:
+            MethodInfo(const std::wstring& name, bool isVirtual) : name(name), isVirtual(isVirtual) {}
+            void Print() const { std::wcout << L"      " << (isVirtual ? L"virtual " : L"") << name << L'\n'; }
+            friend bool operator==(const MethodInfo& a, const MethodInfo& b) { return  a.IsEqualTo(b); }
+            friend bool operator!=(const MethodInfo& a, const MethodInfo& b) { return !a.IsEqualTo(b); }
+        private:
+            bool IsEqualTo(const MethodInfo& other) const
+            {
+                if (     name != other.name     ) return false;
+                if (isVirtual != other.isVirtual) return false;
+                return true;
+            }
+        };
+
         const std::wstring                 pdbPath;
         const std::wstring                 name;
         const ULONGLONG                    size;      // total size in bytes
@@ -335,16 +353,16 @@ namespace Odr
               std::vector<StaticMember >>             // static/constinit/consteval values
                                            members;
         const std::vector<std::wstring  >  baseNames; // base class names in order
-        const std::vector<std::wstring  >  methods;   // method names
+        const std::vector<MethodInfo    >  methods;   // method names, etc.
     public:
-        UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath, const std::vector<std::wstring>& methods) 
+        UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath) 
             : pdbPath  (pdbPath)
             , name(             BstrToWstr(Get(sym, &IDiaSymbol::get_name)))
             , size(                        Get(sym, &IDiaSymbol::get_length))
             , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
-            , members(GetMembers(sym))
+            , members  (GetMembers  (sym))
             , baseNames(GetBaseNames(sym))
-            , methods(methods)
+            , methods  (GetMethods  (sym))
         {}
         void Print() const
         {
@@ -363,8 +381,7 @@ namespace Odr
             if (methods.size() > 0)
             {
                 std::wcout << L"    methods:\n";
-                for (auto& m : methods)
-                    std::wcout << L"      " << m << L'\n';
+                for(auto& m : methods) m.Print();
             }
         }
         void PrintPdbPath() const { std::wcout << L"  [" << pdbPath << L"] (same as above)\n"; }
@@ -466,7 +483,6 @@ namespace Odr
             }
             return members;
         }
-
         static std::vector<std::wstring> GetBaseNames(IDiaSymbol* sym)
         {
             std::vector<std::wstring> baseNames;
@@ -490,6 +506,33 @@ namespace Odr
                 }
             }
             return baseNames;
+        }
+        static std::vector<MethodInfo> GetMethods(IDiaSymbol* parent)
+        {   // get method names attached to this udt, if any
+            std::vector<MethodInfo> methods;
+
+            CComPtr<IDiaEnumSymbols> functions;
+            if (SUCCEEDED(parent->findChildren(SymTagFunction, nullptr, nsNone, &functions)) && functions)
+            {
+                while (true)
+                {
+                    ULONG retrieved = 0;
+                    CComPtr<IDiaSymbol> function;
+                    if (FAILED(functions->Next(1, &function, &retrieved)) || retrieved == 0)
+                        break;
+
+                    CComBSTR functionName = Get(function, &IDiaSymbol::get_undecoratedName); // prefer this one
+                    if (functionName.m_str == NULL)
+                        // function->get_name(&functionName); // but use this one if need be
+                        functionName = Get(function, &IDiaSymbol::get_name); // but use this one if need be
+
+                    bool isVirtual = Get(function, &IDiaSymbol::get_virtual);
+
+                    if (functionName.m_str != NULL)
+                        methods.push_back({functionName.m_str, isVirtual});
+                }
+            }
+            return methods;
         }
     };
 
@@ -596,29 +639,8 @@ namespace Odr
                                     CComBSTR name;
                                     if (SUCCEEDED(udt->get_name(&name)) && name && name[0] != L'\0')
                                     {
-                                        // get method names attached to this udt, if any
-                                        std::vector<std::wstring> methods;
-
-                                        CComPtr<IDiaEnumSymbols> functions;
-                                        if (SUCCEEDED(udt->findChildren(SymTagFunction, nullptr, nsNone, &functions)) && functions)
-                                        {
-                                            while (true)
-                                            {
-                                                ULONG retrieved = 0;
-                                                CComPtr<IDiaSymbol> function;
-                                                if (FAILED(functions->Next(1, &function, &retrieved)) || retrieved == 0)
-                                                    break;
-
-                                                CComBSTR functionName = Get(function, &IDiaSymbol::get_undecoratedName); // prefer this one
-                                                if (functionName.m_str == NULL)
-                                                    function->get_name(&functionName); // but use this one if need be
-                                                if (functionName.m_str != NULL)
-                                                    methods.push_back(functionName.m_str);
-                                            }
-                                        }
-
                                         std::wstring key = BuildUdtKey(udt);
-                                        udtMap[key].push_back(UdtInfo(udt, path, methods));
+                                        udtMap[key].push_back(UdtInfo(udt, path));
                                     }
                                 }
                             }

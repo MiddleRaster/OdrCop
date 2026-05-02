@@ -249,7 +249,14 @@ struct SameClassDifferentVirtualFunctionNames
 #endif
 };
 
-
+struct SameClassDifferentVirtualnessOnFunction
+{
+#ifdef ONE
+    virtual void VirtualOrNot() {}
+#else
+            void VirtualOrNot() {}
+#endif
+};
 
 
 #ifdef ALL_ODR_VIOLATIONS

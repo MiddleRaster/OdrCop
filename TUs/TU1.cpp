@@ -20,6 +20,7 @@ StructVsClass                                     g_1_StructVsClass;
 SameClassDifferentAlignment                       g_1_SameClassDifferentAlignment;
 SameClassDifferentVirtualFunctionTableShape       g_1_SameClassDifferentVirtualFunctionTableShape;
 SameClassDifferentVirtualFunctionNames            g_1_SameClassDifferentVirtualFunctionNames;
+SameClassDifferentVirtualnessOnFunction           g_1_SameClassDifferentVirtualnessOnFunction;
 
 
 int g_1_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();
