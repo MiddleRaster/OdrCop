@@ -85,7 +85,7 @@ void PrintAccess(const std::wstring& tab, IDiaSymbol* sym) // Print(tab, item, &
     }
 }
 
-void PrintAllProps(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, std::set<DWORD>& visited)
+void PrintAllProps(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, std::set<DWORD>& /*visited*/)
 {
     std::wcout << tab << itemName << L":\n";
     tab += L"  ";
@@ -328,10 +328,36 @@ void PrintPropsAndRecurse(std::wstring tab, const std::wstring& itemName, IDiaSy
     if (!visited.insert(symIndexId).second)
         return; // seen already, don't recurse
 
+    // If this is a cv-qualified alias of another type, just note it and stop (otherwise we get a const version that almost identical to the non-const version)
+    DWORD unmodifiedTypeId = 0;
+    if (S_OK == item->get_unmodifiedTypeId(&unmodifiedTypeId) && unmodifiedTypeId != 0)
+    {
+        DWORD symTag = SymTagNull;
+        item->get_symTag(&symTag);
+        if (symTag == SymTagUDT)
+        {
+            if (visited.count(unmodifiedTypeId))
+            {
+                // non-const version already printed, safe to collapse this alias
+                auto [__, name] = Get(item, &IDiaSymbol::get_name);
+                std::wcout << tab << (name.empty() ? L"unnamed item" : name) << L": (cv-qualified alias of symIndexId " << unmodifiedTypeId << L")\n";
+                return;
+            } // else: non-const version not yet seen, fall through and print normally
+        }
+    }
+
+    // print all properties for this item
     PrintAllProps(tab, itemName, item, visited);
 
-    // now get all children and recurse on each
     tab += L"  ";
+
+    // print all properteris for the underlying type, if it exists
+    CComPtr<IDiaSymbol> type;
+    item->get_type(&type);
+    if (type)
+        PrintPropsAndRecurse(tab, Get(type, &IDiaSymbol::get_name).second, type, visited);
+
+    // now get all children and recurse on each
     HRESULT hr;
     CComPtr<IDiaEnumSymbols> children;
     if (S_OK == (hr = item->findChildren(SymTagNull, NULL, nsNone, &children)) && (children != nullptr))
@@ -352,7 +378,7 @@ void PrintPropsAndRecurse(std::wstring tab, const std::wstring& itemName, IDiaSy
     }
 }
 
-template<typename Recurse> void OutputSpecificItem(IDiaSymbol* child, const wchar_t* desiredItem, Recurse recurse)
+template<typename Recurse> void OutputSpecificItem(IDiaSymbol* child, const wchar_t* desiredItem, Recurse recurse, std::set<DWORD>& visited)
 {
     CComBSTR name;
     if ((S_OK == child->get_name(&name)) && name && name[0] != L'\0')
@@ -360,19 +386,17 @@ template<typename Recurse> void OutputSpecificItem(IDiaSymbol* child, const wcha
         if (std::wstring(desiredItem) == name.m_str)
         {
             // found it!
-            std::set<DWORD> visited;
             recurse(L"", desiredItem, child, visited);
         }
     }
 }
 
-template<typename Recurse> void OutputEvenUnnamed(IDiaSymbol* child, const wchar_t* desiredItem, Recurse recurse)
+template<typename Recurse> void OutputEvenUnnamed(IDiaSymbol* child, const wchar_t* /*desiredItem*/, Recurse recurse, std::set<DWORD>& visited)
 {
     CComBSTR name;
     if (S_OK != child->get_name(&name))
         name = L"unnamed item";
 
-    std::set<DWORD> visited;
     recurse(L"", name.m_str, child, visited);
 }
 
@@ -396,6 +420,8 @@ template<typename DoIt, typename Recurse> HRESULT ForEachSymbol(const std::files
                         CComPtr<IDiaEnumSymbols> children;
                         if (SUCCEEDED(hr = global->findChildren(SymTagNull, NULL, nsNone, &children)) && (children != nullptr))
                         {
+                            std::set<DWORD> visited;
+
                             while(true)
                             {
                                 ULONG fetched = 0;
@@ -403,7 +429,7 @@ template<typename DoIt, typename Recurse> HRESULT ForEachSymbol(const std::files
                                 if (FAILED(children->Next(1, &child, &fetched)) || fetched == 0)
                                     break;
 
-                                doIt(child, desiredItem, recurse);
+                                doIt(child, desiredItem, recurse, visited);
                             }
                         }
 
