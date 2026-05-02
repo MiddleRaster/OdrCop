@@ -443,10 +443,7 @@ namespace Odr
                     {
                         statics.push_back(StaticMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)),
                                                                       child, // let ctor do the IDiaSymbol::get_type call
-                                                                  Get(child, &IDiaSymbol::get_locationType)
-                                                               // Get(child, &IDiaSymbol::get_constType),
-                                                               // Get(child, &IDiaSymbol::get_volatileType)
-                                                               ));
+                                                                  Get(child, &IDiaSymbol::get_locationType)));
 
                     } else {
                         // add other DataKind types
