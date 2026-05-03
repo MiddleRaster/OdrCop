@@ -10,120 +10,130 @@
 //   - constexpr / inline differences on member functions
 //   - Attribute differences (__declspec etc.)
 //   - override specifier
+//   - friend specifier
 
 #ifdef KNOWN_LIMITATIONS_OF_PDB_DIA
 
-// Same class but different access specifiers
-struct SameClassDifferentAccessSpecifier
-{
-#ifdef ONE
-public:
-#else
-private:
-#endif
-    int a;
-};
+    // Same class but different access specifiers
+    struct SameClassDifferentAccessSpecifier
+    {
+    #ifdef ONE
+    public:
+    #else
+    private:
+    #endif
+        int a;
+    };
 
-// Same class but different default member initializers
-struct DifferentDefaultMemberInitializer
-{
-#ifdef ONE
-    int a = 1;
-#else
-    int a = 2;
-#endif
-};
+    // Same class but different default member initializers
+    struct DifferentDefaultMemberInitializer
+    {
+    #ifdef ONE
+        int a = 1;
+    #else
+        int a = 2;
+    #endif
+    };
 
-// Same class but different constexpr values
-struct DifferentConstexprValue
-{
-#ifdef ONE
-    static constexpr int v = 1;
-#else
-    static constexpr int v = 2;
-#endif
-};
+    // Same class but different constexpr values
+    struct DifferentConstexprValue
+    {
+    #ifdef ONE
+        static constexpr int v = 1;
+    #else
+        static constexpr int v = 2;
+    #endif
+    };
 
-// Same class but different constexpr / consteval / constinit
-// These affect linkage and initialization.
-struct DifferentConstInit
-{
-#ifdef ONE
-    static constinit int x;
-#else
-    static           int x;
-#endif
-};
+    // Same class but different constexpr / consteval / constinit
+    // These affect linkage and initialization.
+    struct DifferentConstInit
+    {
+    #ifdef ONE
+        static constinit int x;
+    #else
+        static           int x;
+    #endif
+    };
 
-// Same constexpr function but different bodies
-constexpr int SameConstexprFunctionDifferentBody()
-{
-#ifdef ONE
-    return 1;
-#else
-    return 2;
-#endif
-}
+    // Same constexpr function but different bodies
+    constexpr int SameConstexprFunctionDifferentBody()
+    {
+    #ifdef ONE
+        return 1;
+    #else
+        return 2;
+    #endif
+    }
 
 
-//Same typedef or using but different underlying type
-struct SomeStructForTypedefTesting1 { int x1; };
-struct SomeStructForTypedefTesting2 { int x2; };
-typedef
-#ifdef ONE
-SomeStructForTypedefTesting1
-#else
-SomeStructForTypedefTesting2
-#endif
-SameTypedefDifferentUnderlyingType;
+    //Same typedef or using but different underlying type
+    struct SomeStructForTypedefTesting1 { int x1; };
+    struct SomeStructForTypedefTesting2 { int x2; };
+    typedef
+    #ifdef ONE
+    SomeStructForTypedefTesting1
+    #else
+    SomeStructForTypedefTesting2
+    #endif
+    SameTypedefDifferentUnderlyingType;
 
-// Same template but different default template arguments
-#ifdef ONE
-template<typename T = char>
-#else
-template<typename T = long>
-#endif
-struct SameTemplateDifferentDefaultTemplateArguments {};
+    // Same template but different default template arguments
+    #ifdef ONE
+    template<typename T = char>
+    #else
+    template<typename T = long>
+    #endif
+    struct SameTemplateDifferentDefaultTemplateArguments {};
 
-// Same class but different noexcept on member functions
-struct SameClassDifferentNoExceptOnMethod
-{
-    void NoExceptMethod()
-#ifdef ONE
-        noexcept
-#endif
-    {}
-};
+    // Same class but different noexcept on member functions
+    struct SameClassDifferentNoExceptOnMethod
+    {
+        void NoExceptMethod()
+    #ifdef ONE
+            noexcept
+    #endif
+        {}
+    };
 
-struct SameClassDifferentInlinenessOnFunction
-{
-#ifdef ONE
-                 inline  void InlineOrNot() {}
-#else
-    __declspec(noinline) void InlineOrNot() {}
-#endif
-};
+    struct SameClassDifferentInlinenessOnFunction
+    {
+    #ifdef ONE
+                     inline  void InlineOrNot() {}
+    #else
+        __declspec(noinline) void InlineOrNot() {}
+    #endif
+    };
 
-struct SameClassDifferentConstexpressOnFunction
-{
-#ifdef ONE
-    constexpr void ConstexpreOrNot() {}
-#else
-              void ConstexpreOrNot() {}
-#endif
-};
+    struct SameClassDifferentConstexpressOnFunction
+    {
+    #ifdef ONE
+        constexpr void ConstexpreOrNot() {}
+    #else
+                  void ConstexpreOrNot() {}
+    #endif
+    };
 
-// Same class but different final / override usage
-// These change the virtual table.
-struct BaseForOverride { virtual void OverrideOrNot() {} };
-struct SameClassDifferentOverrideSpecifier : BaseForOverride
-{
-    void OverrideOrNot()
-#ifdef ONE
-    override
-#endif
-    {}
-};
+    // Same class but different final / override usage
+    // These change the virtual table.
+    struct BaseForOverride { virtual void OverrideOrNot() {} };
+    struct SameClassDifferentOverrideSpecifier : BaseForOverride
+    {
+        void OverrideOrNot()
+    #ifdef ONE
+        override
+    #endif
+        {}
+    };
+
+    // Same class but different friend declarations
+    struct SameClassDifferentFriendDeclaration
+    {
+    #ifdef ONE
+        friend int Friendly();
+    #endif
+    };
+    inline int Friendly() { return 1; };
 
 #endif // cannot be seen by DIA or COFF
 
@@ -371,23 +381,5 @@ struct SameClassDifferentPresenceOfAnonymousMembers
 
 
 #ifdef ALL_ODR_VIOLATIONS
-
-    22. Same class but different presence / absence of anonymous members
-    TU1.cpp
-    cpp
-    struct S { union { int a; }; };
-    TU2.cpp
-    cpp
-    struct S { union { int a; struct { int b; }; }; };   // ODR violation
-    23. Same class but different friend declarations
-    Yes, even this is an ODR violation.
-
-    TU1.cpp
-    cpp
-    struct S { friend void f(); };
-    TU2.cpp
-    cpp
-    struct S {};   // ODR violation
-
 
 #endif

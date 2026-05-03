@@ -31,12 +31,13 @@ SameClassDifferentStaticVolatileOnDataMember                 g_2_SameClassDiffer
 SameClassDifferentBitfieldLayout                             g_2_SameClassDifferentBitfieldLayout;
 SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion g_2_SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion;
 SameClassDifferentPresenceOfAnonymousMembers                 g_2_SameClassDifferentPresenceOfAnonymousMembers;
-
+//SameClassDifferentFriendDeclaration                        g_2_SameClassDifferentFriendDeclaration;
 
 
 int g_2_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();
 int g_2_call_SameFunctionTemplateSpecializationDifferentDefinitions = SameFunctionTemplateSpecializationDifferentDefinitions<int>();
 //int g_2_call_SameConstexprFunctionDifferentBody                   = SameConstexprFunctionDifferentBody();
+//int g_2_call_SameClassDifferentFriendDeclaration                  = Friendly();
 
 auto g_2_enum = SameEnumButDifferentValues::A;
 
