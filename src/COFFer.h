@@ -19,19 +19,22 @@ namespace Odr
     class FuncInfo
     {
         const std::wstring compiland;
-        const std::wstring functionName;
+        const std::wstring   decoratedName;
+        const std::wstring undecoratedName;
         const ULONGLONG bodyLength;
         const std::vector<BYTE> body;
     public:
-        FuncInfo(const std::wstring& compiland, const std::wstring& functionName, ULONGLONG bodyLength, const std::vector<BYTE>& body)
+        FuncInfo(const std::wstring& compiland, const std::wstring& decoratedName, const std::wstring& undecoratedName, ULONGLONG bodyLength, const std::vector<BYTE>& body)
             : compiland(compiland)
-            , functionName(functionName)
+            ,   decoratedName(  decoratedName)
+            , undecoratedName(undecoratedName)
             , bodyLength(bodyLength)
             , body(body)
         {}
         void Print() const
         {
             PrintCompilandPath();
+            std::wcout << L"    undecorated name:  " << undecoratedName << L'\n';
             std::wcout << L"    function body length: " << bodyLength << L'\n';
             std::wcout << L"    the first few bytes are: " << std::hex;
             auto count = 10<body.size() ? 10 : body.size();
@@ -47,10 +50,11 @@ namespace Odr
     private:
         bool IsEqualTo(const FuncInfo& other) const
         {
-         // if (compiland    != other.compiland)    return false; // compilands must be different for ODR violations
-            if (functionName != other.functionName) return false;
-            if (bodyLength   != other.bodyLength)   return false;
-            if (body         != other.body)         return false;
+         // if (compiland       != other.compiland)    return false; // compilands must be different for ODR violations
+            if (  decoratedName != other.  decoratedName) return false;
+            if (undecoratedName != other.undecoratedName) return false;
+            if (bodyLength      != other.bodyLength)      return false;
+            if (body            != other.body)            return false;
             return true;
         }
     };
@@ -174,50 +178,95 @@ namespace Odr
             }
 
             COFF coff(bytes);
+            auto sectionSyms = coff.BuildSymbolIndex();
+            std::map<SHORT, int> procCounter;
+
             for (IMAGE_SECTION_HEADER* sec : coff.debugS)
             {
-                const IMAGE_SECTION_HEADER* textSec = coff.FindTextSectionForDebugS(sec);
-                if (!textSec)
-                    continue;
-
                 DebugS ds(coff.Data(sec), coff.End(sec));
+
+                // build a relocation map for this .debug$S section
+                std::map<DWORD, SHORT> segRelocMap;
+                auto* relocs = reinterpret_cast<const IMAGE_RELOCATION*>(coff.base + sec->PointerToRelocations);
+                for (WORD r=0; r<sec->NumberOfRelocations; ++r)
+                {
+                    const IMAGE_RELOCATION& rel = relocs[r];
+                    const IMAGE_SYMBOL& sym     = coff.SymbolTable()[rel.SymbolTableIndex];
+                    if (sym.SectionNumber > 0)
+                        segRelocMap[rel.VirtualAddress] = sym.SectionNumber;
+                }
+
                 for (const PROCSYM32* proc : ds.GetProcs())
                 {
-                    std::wstring name(proc->name, proc->name + strlen((const char*)proc->name));
+                    // compute the reloc offset of the `seg` field:
+                    DWORD procOffsetInSection = static_cast<DWORD>(reinterpret_cast<const BYTE*>(proc) - coff.Data(sec));
 
-                    const BYTE* funcBytes = coff.base + textSec->PointerToRawData + proc->off;
-                    funcMap[name].push_back(FuncInfo(objPath, name, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len)));
+                    // In PROCSYM32, `seg` is at offsetof(PROCSYM32, seg) from the record start, but the record start (q) is offset from section data:
+                    DWORD segFieldOffset = procOffsetInSection + offsetof(PROCSYM32, seg);
+
+                    auto relIt = segRelocMap.find(segFieldOffset);
+                    if (relIt == segRelocMap.end())
+                        continue; // no relocation = can't resolve
+
+                    SHORT actualSection                 = relIt->second; // now this is a valid 1-based section index
+                    const IMAGE_SECTION_HEADER* textSec = coff.sections[actualSection - 1];
+
+                    int idx    = procCounter[actualSection]++;
+                    auto& syms = sectionSyms[actualSection];
+                    if (idx >= (int)syms.size())
+                        continue;
+
+                    DWORD     resolvedOff = syms[idx].first;
+                    std::string decorated = syms[idx].second;
+                    const BYTE* funcBytes = coff.base + textSec->PointerToRawData + resolvedOff;
+                    std::wstring   decoratedName(decorated.begin(), decorated.end());
+                    std::wstring undecoratedName(proc->name, proc->name + std::strlen((const char*)proc->name));
+                    funcMap[decoratedName].push_back(FuncInfo(objPath, decoratedName, undecoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len)));
                 }
             }
         }
     private:
-        const IMAGE_SYMBOL* SymbolTable() const
+        static std::string GetSymbolName(const IMAGE_SYMBOL& sym, const BYTE* stringTableBase)
         {
-            return reinterpret_cast<const IMAGE_SYMBOL*>(base + coffHdr->PointerToSymbolTable);
+            if (sym.N.Name.Short != 0)
+            {   // Short name (<= 8 bytes, not null-terminated if exactly 8)
+                char buf[9] = {};
+                memcpy(buf, sym.N.ShortName, 8);
+                return std::string(buf);
+            }
+            else
+            {   // Long name via string table
+                DWORD offset = sym.N.Name.Long;
+                const char* str = reinterpret_cast<const char*>(stringTableBase + offset);
+                return std::string(str);
+            }
         }
-        const IMAGE_SECTION_HEADER* FindTextSectionForDebugS(const IMAGE_SECTION_HEADER* debugSSec) const
+        auto BuildSymbolIndex() const
         {
-            if (debugSSec->NumberOfRelocations == 0)
-                return nullptr;
-
-            const IMAGE_RELOCATION* relocs = reinterpret_cast<const IMAGE_RELOCATION*>(base + debugSSec->PointerToRelocations);
+            std::map<SHORT, std::vector<std::pair<DWORD, std::string>>> sectionSyms;
 
             const IMAGE_SYMBOL* symTab = SymbolTable();
-            for (WORD i=0; i<debugSSec->NumberOfRelocations; ++i)
-            {
-                const IMAGE_RELOCATION& rel = relocs[i];
-                const IMAGE_SYMBOL    & sym = symTab[rel.SymbolTableIndex];
-                      SHORT           secNo = sym.SectionNumber; // 1-based
-                if (secNo < 1 || secNo>(SHORT)sections.size())
-                    continue;
+            const BYTE* stringTable = reinterpret_cast<const BYTE*>(symTab + coffHdr->NumberOfSymbols);
 
-                IMAGE_SECTION_HEADER* candidate = sections[secNo-1];
-                char name[9] = {};
-                memcpy(name, candidate->Name, 8);
-                if (strncmp(name, ".text", 5) == 0)
-                    return candidate;
+            DWORD i=0;
+            while (i < coffHdr->NumberOfSymbols)
+            {
+                const IMAGE_SYMBOL& sym = symTab[i];
+                if (sym.StorageClass == IMAGE_SYM_CLASS_EXTERNAL && sym.SectionNumber > 0)
+                {
+                    std::string name = GetSymbolName(sym, stringTable);
+                    sectionSyms[sym.SectionNumber].push_back({sym.Value, std::move(name)});
+                }
+
+                i += 1+sym.NumberOfAuxSymbols; // critical
             }
-            return nullptr;
+
+            // sort each section's list by offset
+            for (auto& [sec, vec] : sectionSyms)
+                std::sort(vec.begin(), vec.end());
+
+            return sectionSyms;
         }
+        const IMAGE_SYMBOL* SymbolTable() const { return reinterpret_cast<const IMAGE_SYMBOL*>(base + coffHdr->PointerToSymbolTable); }
     };
 }

@@ -42,3 +42,6 @@ int g_2_call_SameFunctionTemplateSpecializationDifferentDefinitions = SameFuncti
 auto g_2_enum = SameEnumButDifferentValues::A;
 
 //SameTypedefDifferentUnderlyingType g_2_sameTypedefDifferentUnderlyingType{};
+
+int AnOverloadInTU2(void)   { return 0; }
+int AnOverloadInTU2(char a) { return sizeof(a); }
