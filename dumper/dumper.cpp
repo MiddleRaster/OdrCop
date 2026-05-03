@@ -322,13 +322,13 @@ void PrintAllProps(std::wstring tab, const std::wstring& itemName, IDiaSymbol* i
 #endif
 }
 
-void PrintPropsAndRecurse(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, std::set<DWORD>& visited)
+void PrintPropsAndRecurse(IDiaSession* session, std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, std::set<DWORD>& visited)
 {
     auto [_, symIndexId] = Get(item, &IDiaSymbol::get_symIndexId);
     if (!visited.insert(symIndexId).second)
         return; // seen already, don't recurse
 
-    // If this is a cv-qualified alias of another type, just note it and stop (otherwise we get a const version that almost identical to the non-const version)
+    // If this is a cv-qualified alias of another type, recurse on the unmodifed type first, and don't print props for this one (it's just the cv-qualifed duplicate)
     DWORD unmodifiedTypeId = 0;
     if (S_OK == item->get_unmodifiedTypeId(&unmodifiedTypeId) && unmodifiedTypeId != 0)
     {
@@ -336,13 +336,11 @@ void PrintPropsAndRecurse(std::wstring tab, const std::wstring& itemName, IDiaSy
         item->get_symTag(&symTag);
         if (symTag == SymTagUDT)
         {
-            if (visited.count(unmodifiedTypeId))
-            {
-                // non-const version already printed, safe to collapse this alias
-                auto [__, name] = Get(item, &IDiaSymbol::get_name);
-                std::wcout << tab << (name.empty() ? L"unnamed item" : name) << L": (cv-qualified alias of symIndexId " << unmodifiedTypeId << L")\n";
-                return;
-            } // else: non-const version not yet seen, fall through and print normally
+            visited.insert(symIndexId);
+            CComPtr<IDiaSymbol> unmodified;
+            if (S_OK == session->symbolById(unmodifiedTypeId, &unmodified))
+                PrintPropsAndRecurse(session, tab, itemName, unmodified, visited);
+            return;
         }
     }
 
@@ -351,11 +349,11 @@ void PrintPropsAndRecurse(std::wstring tab, const std::wstring& itemName, IDiaSy
 
     tab += L"  ";
 
-    // print all properteris for the underlying type, if it exists
+    // print all properties for the underlying type, if it exists
     CComPtr<IDiaSymbol> type;
     item->get_type(&type);
     if (type)
-        PrintPropsAndRecurse(tab, Get(type, &IDiaSymbol::get_name).second, type, visited);
+        PrintPropsAndRecurse(session, tab, Get(type, &IDiaSymbol::get_name).second, type, visited);
 
     // now get all children and recurse on each
     HRESULT hr;
@@ -373,12 +371,12 @@ void PrintPropsAndRecurse(std::wstring tab, const std::wstring& itemName, IDiaSy
             if (S_FALSE == child->get_name(&name) || !name || name[0] == L'\0')
                 name = L"unnamed item";
 
-            PrintPropsAndRecurse(tab, name.m_str, child, visited);
+            PrintPropsAndRecurse(session, tab, name.m_str, child, visited);
         }
     }
 }
 
-template<typename Recurse> void OutputSpecificItem(IDiaSymbol* child, const wchar_t* desiredItem, Recurse recurse, std::set<DWORD>& visited)
+void OutputSpecificItem(IDiaSession* session, IDiaSymbol* child, const wchar_t* desiredItem, std::set<DWORD>& visited)
 {
     CComBSTR name;
     if ((S_OK == child->get_name(&name)) && name && name[0] != L'\0')
@@ -386,21 +384,21 @@ template<typename Recurse> void OutputSpecificItem(IDiaSymbol* child, const wcha
         if (std::wstring(desiredItem) == name.m_str)
         {
             // found it!
-            recurse(L"", desiredItem, child, visited);
+            PrintPropsAndRecurse(session, L"", desiredItem, child, visited);
         }
     }
 }
 
-template<typename Recurse> void OutputEvenUnnamed(IDiaSymbol* child, const wchar_t* /*desiredItem*/, Recurse recurse, std::set<DWORD>& visited)
+void OutputEvenUnnamed(IDiaSession* session, IDiaSymbol* child, const wchar_t* /*desiredItem*/, std::set<DWORD>& visited)
 {
     CComBSTR name;
     if (S_OK != child->get_name(&name))
         name = L"unnamed item";
 
-    recurse(L"", name.m_str, child, visited);
+    PrintPropsAndRecurse(session, L"", name.m_str, child, visited);
 }
 
-template<typename DoIt, typename Recurse> HRESULT ForEachSymbol(const std::filesystem::path& path, const wchar_t* desiredItem, DoIt doIt, Recurse recurse)
+template<typename DoIt> HRESULT ForEachSymbol(const std::filesystem::path& path, const wchar_t* desiredItem, DoIt doIt)
 {
     CoInitialize(nullptr);
 
@@ -429,7 +427,7 @@ template<typename DoIt, typename Recurse> HRESULT ForEachSymbol(const std::files
                                 if (FAILED(children->Next(1, &child, &fetched)) || fetched == 0)
                                     break;
 
-                                doIt(child, desiredItem, recurse, visited);
+                                doIt(session, child, desiredItem, visited);
                             }
                         }
 
@@ -461,10 +459,10 @@ int wmain(int argc, wchar_t** argv)
 
     if (argc == 2) {   // dump all IDiaSymbol names in .pdb file
         std::wcout << L"Dumping all types in " << root << L'\n';
-        ForEachSymbol(root, nullptr, OutputEvenUnnamed<decltype(PrintPropsAndRecurse)*>,  PrintPropsAndRecurse);
+        ForEachSymbol(root, nullptr, OutputEvenUnnamed);
     } else {
         std::wcout << L"Dumping " << argv[2] << L" and sub-elements in " << root << L'\n';
-        ForEachSymbol(root, argv[2], OutputSpecificItem<decltype(PrintPropsAndRecurse)*>, PrintPropsAndRecurse);
+        ForEachSymbol(root, argv[2], OutputSpecificItem);
     }
 
     return 0;
