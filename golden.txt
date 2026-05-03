@@ -84,6 +84,40 @@ ODR VIOLATION: DifferentVolatileDataMember
     methods:
       void DifferentVolatileDataMember()
 
+ODR VIOLATION: SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=8
+    +0  int32_t  a
+    +0  int32_t  x
+    +4  int32_t  b
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=8
+    +0  int32_t  b
+    +0  int32_t  x
+    +4  int32_t  a
+
+ODR VIOLATION: SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion::<unnamed-tag>::<unnamed-tag>[struct][size=8]
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=8
+    +0  int32_t  a
+    +4  int32_t  b
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=8
+    +0  int32_t  b
+    +4  int32_t  a
+
+ODR VIOLATION: SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion::<unnamed-tag>[union][size=8]
+  [TUs\x64\Debug\TU1.pdb]
+    kind=union  size=8
+    +0  int32_t  a
+    +0  int32_t  x
+    +4  int32_t  b
+  [TUs\x64\Debug\TU2.pdb]
+    kind=union  size=8
+    +0  int32_t  b
+    +0  int32_t  x
+    +4  int32_t  a
+
 ODR VIOLATION: SameClassDifferentAlignment
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
@@ -218,4 +252,4 @@ ODR VIOLATION: SameEnumButDifferentValues
     kind=enum
     the first few values are: A=1, B=3, 
 
-22 ODR violation(s) found.
+25 ODR violation(s) found.

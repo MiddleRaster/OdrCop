@@ -335,15 +335,28 @@ struct SameClassDifferentBitfieldLayout
 #endif
 };
 
+#pragma warning(push)
+#pragma warning(disable: 4201)
+// Same class but different member order inside anonymous struct / union
+struct SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion
+{
+    union
+    {
+        struct
+        {
+#ifdef ONE
+            int a; int b;
+#else
+            int b; int a;
+#endif
+        };
+        int x;
+    };
+};
+#pragma warning(pop)
 
 #ifdef ALL_ODR_VIOLATIONS
-    21. Same class but different member order inside anonymous struct / union
-    TU1.cpp
-    cpp
-    struct S { union { struct { int a; int b; }; int x; }; };
-    TU2.cpp
-    cpp
-    struct S { union { struct { int b; int a; }; int x; }; };   // ODR violation
+
     22. Same class but different presence / absence of anonymous members
     TU1.cpp
     cpp
