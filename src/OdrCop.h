@@ -263,7 +263,7 @@ namespace Odr
             void PrintSuffix() const
             {
                 if (bitSize)
-                    std::wcout << L"  :" << bitSize << L"@bit" << bitPos;
+                    std::wcout << L"  : " << bitSize << L" bits at bit " << bitPos;
                 std::wcout << L'\n';
             }
             bool IsEqualToImpl(const InstanceMember& other) const

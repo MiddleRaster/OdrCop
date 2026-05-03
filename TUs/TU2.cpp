@@ -28,6 +28,7 @@ SameClassDifferentVirtualnessOnFunction           g_2_SameClassDifferentVirtualn
 SameClassDifferentStaticOnDataMember              g_2_SameClassDifferentStaticOnDataMember;
 SameClassDifferentStaticConstOnDataMember         g_2_SameClassDifferentStaticConstOnDataMember;
 SameClassDifferentStaticVolatileOnDataMember      g_2_SameClassDifferentStaticVolatileOnDataMember;
+SameClassDifferentBitfieldLayout                  g_2_SameClassDifferentBitfieldLayout;
 
 
 int g_2_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();

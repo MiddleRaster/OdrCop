@@ -325,14 +325,18 @@ struct SameClassDifferentStaticVolatileOnDataMember
 };
 
 
+// Same class but different bitfield layout
+struct SameClassDifferentBitfieldLayout
+{
+#ifdef ONE
+    unsigned a : 3; unsigned b : 5; 
+#else
+    unsigned a : 4; unsigned b : 4;
+#endif
+};
+
+
 #ifdef ALL_ODR_VIOLATIONS
-    20. Same class but different bitfield layout
-    TU1.cpp
-    cpp
-    struct S { unsigned a : 3; unsigned b : 5; };
-    TU2.cpp
-    cpp
-    struct S { unsigned a : 4; unsigned b : 4; };   // ODR violation
     21. Same class but different member order inside anonymous struct / union
     TU1.cpp
     cpp

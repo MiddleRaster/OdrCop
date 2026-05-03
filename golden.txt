@@ -92,6 +92,16 @@ ODR VIOLATION: SameClassDifferentAlignment
     kind=struct  size=8
     +0  int32_t  a
 
+ODR VIOLATION: SameClassDifferentBitfieldLayout
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=4
+    +0  uint32_t  a  : 3 bits at bit 0
+    +0  uint32_t  b  : 5 bits at bit 3
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=4
+    +0  uint32_t  a  : 4 bits at bit 0
+    +0  uint32_t  b  : 4 bits at bit 4
+
 ODR VIOLATION: SameClassDifferentStaticConstOnDataMember
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
@@ -208,4 +218,4 @@ ODR VIOLATION: SameEnumButDifferentValues
     kind=enum
     the first few values are: A=1, B=3, 
 
-21 ODR violation(s) found.
+22 ODR violation(s) found.
