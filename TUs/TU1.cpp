@@ -30,6 +30,7 @@ SameClassDifferentStaticConstOnDataMember                    g_1_SameClassDiffer
 SameClassDifferentStaticVolatileOnDataMember                 g_1_SameClassDifferentStaticVolatileOnDataMember;
 SameClassDifferentBitfieldLayout                             g_1_SameClassDifferentBitfieldLayout;
 SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion g_1_SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion;
+SameClassDifferentPresenceOfAnonymousMembers                 g_1_SameClassDifferentPresenceOfAnonymousMembers;
 
 
 int g_1_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();

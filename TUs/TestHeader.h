@@ -353,7 +353,22 @@ struct SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion
         int x;
     };
 };
+// Same class but different presence / absence of anonymous members
+struct SameClassDifferentPresenceOfAnonymousMembers
+{
+    union
+    { 
+        int a;
+#ifdef ONE
+        struct
+        {
+            int b;
+        };
+#endif
+    };
+};
 #pragma warning(pop)
+
 
 #ifdef ALL_ODR_VIOLATIONS
 

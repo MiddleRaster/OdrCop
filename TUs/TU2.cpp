@@ -30,6 +30,7 @@ SameClassDifferentStaticConstOnDataMember                    g_2_SameClassDiffer
 SameClassDifferentStaticVolatileOnDataMember                 g_2_SameClassDifferentStaticVolatileOnDataMember;
 SameClassDifferentBitfieldLayout                             g_2_SameClassDifferentBitfieldLayout;
 SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion g_2_SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion;
+SameClassDifferentPresenceOfAnonymousMembers                 g_2_SameClassDifferentPresenceOfAnonymousMembers;
 
 
 
