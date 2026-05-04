@@ -2,6 +2,14 @@ Loading: "TUs\\x64\\Debug\\dllmain.pdb"
 Loading: "TUs\\x64\\Debug\\TU1.pdb"
 Loading: "TUs\\x64\\Debug\\TU2.pdb"
 
+ODR VIOLATION: BaseClassesInDifferentOrder
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=1
+    bases: Base1 Base2
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=1
+    bases: Base2 Base1
+
 ODR VIOLATION: DifferentBaseClass
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
@@ -274,4 +282,4 @@ ODR VIOLATION: SameEnumButDifferentValues
     kind=enum
     the first few values are: A=1, B=3, 
 
-27 ODR violation(s) found.
+28 ODR violation(s) found.
