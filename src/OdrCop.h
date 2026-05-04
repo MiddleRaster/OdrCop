@@ -373,7 +373,7 @@ namespace Odr
             , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
             , members  (GetMembers  (sym))
             , baseNames(GetBaseNames(sym))
-            , methods  (GetMethods  (sym))
+            , methods  (GetMethods  (sym, name))
         {}
         void Print() const
         {
@@ -516,7 +516,7 @@ namespace Odr
             }
             return baseNames;
         }
-        static std::vector<MethodInfo> GetMethods(IDiaSymbol* parent)
+        static std::vector<MethodInfo> GetMethods(IDiaSymbol* parent, const std::wstring& className)
         {   // get method names attached to this udt, if any
             std::vector<MethodInfo> methods;
 
@@ -538,7 +538,17 @@ namespace Odr
                     bool isVirtual = Get(function, &IDiaSymbol::get_virtual);
 
                     if (functionName.m_str != NULL)
-                        methods.push_back({functionName.m_str, isVirtual});
+                    {
+                        // strip off classname from fully qualified method names
+                        std::wstring methodName(functionName.m_str);
+
+                        std::wstring prefix = className + L"::";
+                        size_t       pos;
+                        while ((pos = methodName.find(prefix)) != std::wstring::npos)
+                            methodName.erase(pos, prefix.size());
+
+                        methods.push_back({methodName, isVirtual});
+                    }
                 }
             }
             return MethodInfo::MakeSortedCopy(methods);
