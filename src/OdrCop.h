@@ -635,7 +635,22 @@ namespace Odr
 
                                     CComBSTR name;
                                     if (SUCCEEDED(udt->get_name(&name)) && name && name[0] != L'\0')
-                                    {
+                                    {   /*
+                                        Lambda closure types are never ODR‑relevant
+                                            A lambda’s closure type :
+                                                is unnamed
+                                                is unique per expression
+                                                is unique per TU
+                                                is not required to match across TUs
+                                                is not required to have stable layout
+                                                is not governed by the ODR at all
+                                        Therefore, comparing lambda closure types across TUs is meaningless.
+                                            It will always produce false positives.
+                                            Suppressing them is not a heuristic — it is the correct interpretation of the C++ standard.
+                                        */
+                                        if (std::wstring(name.m_str).find(L"<lambda_") != std::wstring::npos)
+                                            continue;
+
                                         std::wstring key = BuildUdtKey(udt);
                                         udtMap[key].push_back(UdtInfo(udt, path));
                                     }

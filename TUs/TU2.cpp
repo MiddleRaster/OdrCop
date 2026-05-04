@@ -45,3 +45,9 @@ auto g_2_enum = SameEnumButDifferentValues::A;
 
 int AnOverloadInTU2(void)   { return 0; }
 int AnOverloadInTU2(char a) { return sizeof(a); }
+
+template<class T> auto f() { return [](T* /*p*/) { /* ... */ }; }
+auto g_2_f_int   = f<int  >();
+auto g_2_f_char  = f<char >();
+auto g_2_f_short = f<short>();
+auto g_2_f_long  = f<long >();
