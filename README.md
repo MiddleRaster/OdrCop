@@ -13,6 +13,8 @@ Build your .dll or .exe with whatever options you like except that the following
 
 Pass one or more paths to folders of .obj and .pdb files (N.B.: the tool will recurse into subfolders)
 
+> **Important:** Do not pass the linker-generated .pdb file (e.g. `MyProject.pdb` in `x64\Debug\`) to OdrCop. The linker-generated .pdb reflects post-linking transformations (COMDAT folding, dead code elimination) that distort type info and produce false positives. Only pass the compiler-generated per-TU PDBs produced by `/Fd`.
+
 ## How it works
 
 For user defined types, I use the DIA SDK to read the .pdb file. DIA is all COM objects so make sure you have done "regsvr32 msdiaL40.dll" on your machine.  
