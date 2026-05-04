@@ -331,6 +331,18 @@ namespace Odr
         public:
             MethodInfo(const std::wstring& name, bool isVirtual) : name(name), isVirtual(isVirtual) {}
             void Print() const { std::wcout << L"      " << (isVirtual ? L"virtual " : L"") << name << L'\n'; }
+            static std::vector<MethodInfo> MakeSortedCopy(std::vector<MethodInfo> methods)
+            {   // all this to avoid removing 'const' from my data-members
+                std::vector<size_t> indices(methods.size());
+                std::iota(indices.begin(), indices.end(), 0);
+                std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) { return methods[a].name < methods[b].name; });
+
+                std::vector<MethodInfo> result;
+                result.reserve(methods.size());
+                for (size_t i : indices)
+                    result.push_back(methods[i]);   // copy-constructs, no assignment needed
+                return result;
+            }
             friend bool operator==(const MethodInfo& a, const MethodInfo& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const MethodInfo& a, const MethodInfo& b) { return !a.IsEqualTo(b); }
         private:
@@ -526,7 +538,7 @@ namespace Odr
                         methods.push_back({functionName.m_str, isVirtual});
                 }
             }
-            return methods;
+            return MethodInfo::MakeSortedCopy(methods);
         }
     };
 
