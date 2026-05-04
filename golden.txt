@@ -29,12 +29,12 @@ ODR VIOLATION: DifferentConstDataMember
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
     +0 const  int32_t  a
-    methods:
+    1 method:
       void DifferentConstDataMember()
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
     +0  int32_t  a
-    methods:
+    1 method:
       void DifferentConstDataMember()
 
 ODR VIOLATION: DifferentDataMemberType
@@ -84,12 +84,12 @@ ODR VIOLATION: DifferentVolatileDataMember
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
     +0 volatile  int32_t  a
-    methods:
+    1 method:
       void DifferentVolatileDataMember()
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
     +0  int32_t  a
-    methods:
+    1 method:
       void DifferentVolatileDataMember()
 
 ODR VIOLATION: SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion
@@ -189,7 +189,7 @@ ODR VIOLATION: SameClassDifferentStaticVolatileOnDataMember
 ODR VIOLATION: SameClassDifferentVirtualFunctionNames
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=8
-    methods:
+    6 methods:
       struct SameClassDifferentVirtualFunctionNames & const operator=(const struct SameClassDifferentVirtualFunctionNames & const)
       struct SameClassDifferentVirtualFunctionNames & const operator=(struct SameClassDifferentVirtualFunctionNames *)
       virtual void Foo()
@@ -199,7 +199,7 @@ ODR VIOLATION: SameClassDifferentVirtualFunctionNames
   [TUs\x64\Debug\TU1.pdb] (same as above)
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
-    methods:
+    6 methods:
       struct SameClassDifferentVirtualFunctionNames & const operator=(const struct SameClassDifferentVirtualFunctionNames & const)
       struct SameClassDifferentVirtualFunctionNames & const operator=(struct SameClassDifferentVirtualFunctionNames *)
       virtual void Bar()
@@ -211,7 +211,7 @@ ODR VIOLATION: SameClassDifferentVirtualFunctionNames
 ODR VIOLATION: SameClassDifferentVirtualFunctionTableShape
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=8
-    methods:
+    6 methods:
       struct SameClassDifferentVirtualFunctionTableShape & const operator=(const struct SameClassDifferentVirtualFunctionTableShape & const)
       struct SameClassDifferentVirtualFunctionTableShape & const operator=(struct SameClassDifferentVirtualFunctionTableShape *)
       void SameClassDifferentVirtualFunctionTableShape()
@@ -225,7 +225,7 @@ ODR VIOLATION: SameClassDifferentVirtualFunctionTableShape
 ODR VIOLATION: SameClassDifferentVirtualnessOnFunction
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=8
-    methods:
+    6 methods:
       struct SameClassDifferentVirtualnessOnFunction & const operator=(const struct SameClassDifferentVirtualnessOnFunction & const)
       struct SameClassDifferentVirtualnessOnFunction & const operator=(struct SameClassDifferentVirtualnessOnFunction *)
       void SameClassDifferentVirtualnessOnFunction()
@@ -235,7 +235,7 @@ ODR VIOLATION: SameClassDifferentVirtualnessOnFunction
   [TUs\x64\Debug\TU1.pdb] (same as above)
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
-    methods:
+    1 method:
       void VirtualOrNot()
 
 ODR VIOLATION: SameMemberTypesDifferentOrder

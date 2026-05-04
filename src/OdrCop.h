@@ -391,7 +391,10 @@ namespace Odr
 
             if (methods.size() > 0)
             {
-                std::wcout << L"    methods:\n";
+                if (methods.size() == 1)
+                    std::wcout << L"    1 method:\n";
+                else 
+                    std::wcout << L"    " << methods.size() << L" methods:\n";
                 for(auto& m : methods) m.Print();
             }
         }
