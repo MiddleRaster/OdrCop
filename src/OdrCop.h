@@ -364,7 +364,8 @@ namespace Odr
               std::vector<StaticMember >>             // static/constinit/consteval values
                                            members;
         const std::vector<std::wstring  >  baseNames; // base class names in order
-        const std::vector<MethodInfo    >  methods;   // method names, etc.
+        const std::pair<std::vector<MethodInfo>,
+                        std::vector<MethodInfo>> methodsAndCtors; // method and ctor names
     public:
         UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath) 
             : pdbPath  (pdbPath)
@@ -373,7 +374,7 @@ namespace Odr
             , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
             , members  (GetMembers  (sym))
             , baseNames(GetBaseNames(sym))
-            , methods  (GetMethods  (sym, name))
+            , methodsAndCtors(GetMethods(sym, name))
         {}
         void Print() const
         {
@@ -389,6 +390,17 @@ namespace Odr
             for (auto& c : std::get<1>(members)) c.Print();
             for (auto& s : std::get<2>(members)) s.Print();
 
+            const auto& ctors = std::get<1>(methodsAndCtors);
+            if (ctors.size() > 0)
+            {
+                if (ctors.size() == 1)
+                    std::wcout << L"    1 ctor:\n";
+                else
+                    std::wcout << L"    " << ctors.size() << L" ctors:\n";
+                for (auto& c : ctors) c.Print();
+
+            }
+            const auto& methods = std::get<0>(methodsAndCtors);
             if (methods.size() > 0)
             {
                 if (methods.size() == 1)
@@ -406,13 +418,14 @@ namespace Odr
     private:
         bool IsEqualTo(const UdtInfo& other) const
         {
-            if (                size != other.size                ) return false;
-            if (             udtKind != other.udtKind             ) return false;
-            if (           baseNames != other.baseNames           ) return false;
-            if (std::get<0>(members) != std::get<0>(other.members)) return false;
-            if (std::get<1>(members) != std::get<1>(other.members)) return false;
-            if (std::get<2>(members) != std::get<2>(other.members)) return false;
-            if (             methods != other.methods             ) return false;
+            if (                        size != other.size                        ) return false;
+            if (                     udtKind != other.udtKind                     ) return false;
+            if (                   baseNames != other.baseNames                   ) return false;
+            if (       std ::get<0>(members) != std::get<0>(other.members)        ) return false;
+            if (        std::get<1>(members) != std::get<1>(other.members)        ) return false;
+            if (        std::get<2>(members) != std::get<2>(other.members)        ) return false;
+         // if (std::get<1>(methodsAndCtors) != std::get<1>(other.methodsAndCtors)) return false; // all ctors may or may not be emitted: C++20 modules have them, TUs may not. Not an ODR violation
+            if (std::get<0>(methodsAndCtors) != std::get<0>(other.methodsAndCtors)) return false;
             return true;
         }
         const wchar_t* UdtKindToString() const
@@ -516,9 +529,9 @@ namespace Odr
             }
             return baseNames;
         }
-        static std::vector<MethodInfo> GetMethods(IDiaSymbol* parent, const std::wstring& className)
-        {   // get method names attached to this udt, if any
-            std::vector<MethodInfo> methods;
+        static std::pair<std::vector<MethodInfo>,std::vector<MethodInfo>> GetMethods(IDiaSymbol* parent, const std::wstring& className)
+        {   // get method and ctor names attached to this udt, if any
+            std::vector<MethodInfo> methods, ctors;
 
             CComPtr<IDiaEnumSymbols> functions;
             if (SUCCEEDED(parent->findChildren(SymTagFunction, nullptr, nsNone, &functions)) && functions)
@@ -547,11 +560,22 @@ namespace Odr
                         while ((pos = methodName.find(prefix)) != std::wstring::npos)
                             methodName.erase(pos, prefix.size());
 
-                        methods.push_back({methodName, isVirtual});
+                        // follow the type to see if this method is a ctor
+                        if (TRUE == GetFromType(function, &IDiaSymbol::get_constructor))
+                              ctors.push_back({methodName, isVirtual}); // isVirtual had better be false.
+                        else
+                            methods.push_back({methodName, isVirtual});
                     }
                 }
             }
-            return MethodInfo::MakeSortedCopy(methods);
+            return {MethodInfo::MakeSortedCopy(methods), ctors};
+        }
+        static BOOL GetFromType(IDiaSymbol* sym, HRESULT(IDiaSymbol::* m)(BOOL*))
+        {
+            CComPtr<IDiaSymbol> type;
+            if (SUCCEEDED(sym->get_type(&type)))
+                return Get(type, m);
+            return FALSE;
         }
     };
 
