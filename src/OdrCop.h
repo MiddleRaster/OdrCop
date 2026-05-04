@@ -673,6 +673,9 @@ namespace Odr
                                         if (std::wstring(name.m_str).find(L"<lambda_") != std::wstring::npos)
                                             continue;
 
+                                        if (TRUE == Get(udt, &IDiaSymbol::get_exportIsForwarder))
+                                            continue; // this is a forward reference, always has size 0 which causes false positives
+
                                         std::wstring key = BuildUdtKey(udt);
                                         udtMap[key].push_back(UdtInfo(udt, path));
                                     }
