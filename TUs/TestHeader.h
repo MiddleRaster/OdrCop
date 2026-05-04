@@ -185,6 +185,15 @@ struct DifferentBases :
 #endif
 {};
 
+struct BaseClassesInDifferentOrder
+#ifdef ONE
+    : Base1, Base2
+#else
+    : Base2, Base1
+#endif
+{};
+
+
 // Same class but different member types
 struct DifferentDataMemberType
 {

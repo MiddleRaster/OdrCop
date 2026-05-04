@@ -32,6 +32,7 @@ SameClassDifferentBitfieldLayout                             g_1_SameClassDiffer
 SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion g_1_SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion;
 SameClassDifferentPresenceOfAnonymousMembers                 g_1_SameClassDifferentPresenceOfAnonymousMembers;
 //SameClassDifferentFriendDeclaration                        g_1_SameClassDifferentFriendDeclaration;
+BaseClassesInDifferentOrder                                  g_1_BaseClassesInDifferentOrder;
 
 
 int g_1_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();

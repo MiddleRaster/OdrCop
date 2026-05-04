@@ -391,16 +391,13 @@ namespace Odr
     private:
         bool IsEqualTo(const UdtInfo& other) const
         {
-            if (                         size != other.size                         ) return false;
-            if (                      udtKind != other.udtKind                      ) return false;
-            if (                    baseNames != other.baseNames                    ) return false;
-            if (  std::get<0>(members).size() != std::get<0>(other.members).size()  ) return false;
-            if (  std::get<1>(members).size() != std::get<1>(other.members).size()  ) return false;
-            if (  std::get<2>(members).size() != std::get<2>(other.members).size()  ) return false;
-            if(!std::ranges::equal(std::get<0>(members), std::get<0>(other.members))) return false;
-            if(!std::ranges::equal(std::get<1>(members), std::get<1>(other.members))) return false;
-            if(!std::ranges::equal(std::get<2>(members), std::get<2>(other.members))) return false;
-            if(!std::ranges::equal(            methods,              other.methods) ) return false;
+            if (                size != other.size                ) return false;
+            if (             udtKind != other.udtKind             ) return false;
+            if (           baseNames != other.baseNames           ) return false;
+            if (std::get<0>(members) != std::get<0>(other.members)) return false;
+            if (std::get<1>(members) != std::get<1>(other.members)) return false;
+            if (std::get<2>(members) != std::get<2>(other.members)) return false;
+            if (             methods != other.methods             ) return false;
             return true;
         }
         const wchar_t* UdtKindToString() const
