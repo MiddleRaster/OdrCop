@@ -293,13 +293,12 @@ namespace Odr
         };
         class StaticMember : public MemberInfoBase<StaticMember>
         {
-            const DWORD locationType; // will be LocationType::LocIsStatic, but we knew that already from the DataKind
+         // const DWORD locationType; // will be LocationType::LocIsStatic OR LocationType::LocIsConstant, which looks like a difference but isn't
             const BOOL  isConstant;
             const BOOL  isVolatile;
         public:
-            StaticMember(std::wstring name, IDiaSymbol* pType, DWORD locationType)
+            StaticMember(std::wstring name, IDiaSymbol* pType)
                 : MemberInfoBase(name,pType)
-                , locationType  (locationType)
                 , isConstant    (GetFromType(pType, &IDiaSymbol::get_constType))
                 , isVolatile    (GetFromType(pType, &IDiaSymbol::get_volatileType))
             {}
@@ -307,9 +306,8 @@ namespace Odr
             friend MemberInfoBase<StaticMember>;
             bool IsEqualToImpl(const StaticMember& other) const
             {
-                if (locationType == other.locationType)
-                if (isConstant   == other.isConstant  )
-                if (isVolatile   == other.isVolatile  )
+                if (isConstant == other.isConstant)
+                if (isVolatile == other.isVolatile)
                     return true;
                 return false;
             }
@@ -466,9 +464,7 @@ namespace Odr
                     }
                     else if (DataIsStaticMember == static_cast<DataKind>(dataKind))
                     {
-                        statics.push_back(StaticMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)),
-                                                                      child, // let ctor do the IDiaSymbol::get_type call
-                                                                  Get(child, &IDiaSymbol::get_locationType)));
+                        statics.push_back(StaticMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)), child));
 
                     } else {
                         // add other DataKind types
