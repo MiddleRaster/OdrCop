@@ -262,21 +262,21 @@ ODR VIOLATION: ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHX
   [TUs\x64\Debug\TU1.obj]
     undecorated name:  SameFunctionTemplateSpecializationDifferentDefinitions<int>
     function body length: 9
-    the first few bytes are: 40 57 b8 01 00 00 00 5f c3 
+    bytes at the first mismatch are: 40 57 b8 01 00 00 00 5f c3 
   [TUs\x64\Debug\TU2.obj]
     undecorated name:  SameFunctionTemplateSpecializationDifferentDefinitions<int>
     function body length: 9
-    the first few bytes are: 40 57 b8 02 00 00 00 5f c3 
+    bytes at the first mismatch are: 40 57 b8 02 00 00 00 5f c3 
 
 ODR VIOLATION: ?FunctionsMustBeBitwiseIdentical@@YAHXZ
   [TUs\x64\Debug\TU1.obj]
     undecorated name:  FunctionsMustBeBitwiseIdentical
     function body length: 9
-    the first few bytes are: 40 57 b8 01 00 00 00 5f c3 
+    bytes at the first mismatch are: 40 57 b8 01 00 00 00 5f c3 
   [TUs\x64\Debug\TU2.obj]
     undecorated name:  FunctionsMustBeBitwiseIdentical
     function body length: 9
-    the first few bytes are: 40 57 b8 02 00 00 00 5f c3 
+    bytes at the first mismatch are: 40 57 b8 02 00 00 00 5f c3 
 
 ODR VIOLATION: SameEnumButDifferentValues
   [TUs\x64\Debug\TU1.pdb]

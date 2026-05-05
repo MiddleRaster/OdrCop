@@ -789,14 +789,14 @@ namespace Odr
         int ReportViolations() const
         {
             int
-            violationCount  = ReportMapViolations( udtMap, [](const auto&  d) {  d.PrintPdbPath();       });
-            violationCount += ReportMapViolations(funcMap, [](const auto& fi) { fi.PrintCompilandPath(); });
-            violationCount += ReportMapViolations(enumMap, [](const auto&   ) {                          });
+            violationCount  = ReportMapViolations( udtMap, [](const auto&  d) {  d.PrintPdbPath();       }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
+            violationCount += ReportMapViolations(funcMap, [](const auto& fi) { fi.PrintCompilandPath(); }, [](const auto& f1, const auto& f2) -> int { return f1.MismatchIndex(f2); }, [](const auto& f, int m) { f.PrintMismatch(m); });
+            violationCount += ReportMapViolations(enumMap, [](const auto&   ) {                          }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
             return violationCount;
         }
 
     private:
-        template<typename Map, typename PrintPath> static int ReportMapViolations(Map& map, PrintPath printPath)
+        template<typename Map, typename PrintPath, typename GetMismatchIndex, typename PrintMismatch> static int ReportMapViolations(Map& map, PrintPath printPath, GetMismatchIndex&& getMismatchIndex, PrintMismatch&& printMismatch)
         {
             int violationCount = 0;
             for (auto& [name, items] : map)
@@ -807,6 +807,14 @@ namespace Odr
                 if (std::all_of(items.begin() + 1, items.end(), [&](const auto& x) { return x == items[0]; }))
                     continue;
 
+                // find mismatch index
+                int mismatch = -1;
+                for (size_t m=1; m<items.size(); ++m)
+                {
+                    if (-1 != (mismatch = getMismatchIndex(items[0], items[m])))
+                        break;
+                }
+
                 ++violationCount;
                 std::wcout << L"ODR VIOLATION: " << name << L'\n';
 
@@ -815,6 +823,7 @@ namespace Odr
                 {
                     if (printed[i]) continue;
                     items[i].Print();
+                    printMismatch(items[i], mismatch);
                     printed[i] = true;
 
                     for (size_t j=i+1; j<items.size(); ++j)

@@ -14,6 +14,13 @@
 
 #include "cvinfo.h"
 
+inline auto MyMin(auto a, auto b) // stupid windows.h macro gets in the way
+{
+    if (a < b)
+        return a;
+    return b;
+}
+
 namespace Odr
 {
     class FuncInfo
@@ -36,14 +43,32 @@ namespace Odr
             PrintCompilandPath();
             std::wcout << L"    undecorated name:  " << undecoratedName << L'\n';
             std::wcout << L"    function body length: " << bodyLength << L'\n';
-            std::wcout << L"    the first few bytes are: " << std::hex;
-            auto count = 10<body.size() ? 10 : body.size();
-            for(auto i=0; i<count; ++i)
-                std::wcout << std::setfill(L'0') << std::setw(2) << body[i] << L' ';
-
-            std::wcout << std::dec << L'\n';
+            // actual bytes are printed in PrintMismatch, below
         }
         void PrintCompilandPath() const { std::wcout << L"  [" << compiland << L"]\n"; }
+        void PrintMismatch(int mismatch) const
+        {
+            std::wcout << L"    bytes at the first mismatch are: " << std::hex;
+            int i = mismatch - 9;
+            if (i < 0)
+                i = 0;
+            auto end = (int)MyMin((size_t)10, body.size());
+
+            for(; i<=mismatch; ++i)
+                std::wcout << std::setfill(L'0') << std::setw(2) << body[i] << L' ';
+            for (; i<end; ++i)
+                std::wcout << std::setfill(L'0') << std::setw(2) << body[i] << L' ';
+            std::wcout << std::dec << L'\n';
+        }
+        int MismatchIndex(const FuncInfo& other) const
+        {
+            int end = (int)MyMin(body.size(), other.body.size());
+            for(int i=0; i<end; ++i) {
+                if (body[i] != other.body[i])
+                    return i;
+            }
+            return -1;
+        }
 
         friend bool operator==(const FuncInfo& a, const FuncInfo& b) { return  a.IsEqualTo(b); }
         friend bool operator!=(const FuncInfo& a, const FuncInfo& b) { return !a.IsEqualTo(b); }
