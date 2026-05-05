@@ -571,11 +571,47 @@ namespace Odr
                         while ((pos = methodName.find(prefix)) != std::wstring::npos)
                             methodName.erase(pos, prefix.size());
 
+                        struct Trim
+                        {
+                            /*
+                               The following code is to handle a peculiarity of linker-generated .pdb files (which the users are NOT supposed to pass in).
+                               What can happen is that when the linker does its work, it ends up reporting that some methods, even virtual ones, are static
+                               and even ctors are sometimes marked as static.
+
+                               So, to keep people from thinking my tool is reporting nonsense, I'll trim off the static keyword when:
+                               1. the method is virtual
+                               2. it's a constructor
+                               3. it has a "this" pointer
+                            */
+                            static std::wstring Static(const std::wstring& aMethodName, bool isVirtualOrCtor, IDiaSymbol* function)
+                            {
+                                if (!aMethodName.starts_with(L"static "))
+                                    return aMethodName;
+
+                                if (isVirtualOrCtor == false)
+                                {
+                                    CComPtr<IDiaEnumSymbols> children;
+                                    function->findChildren(SymTagData, L"this", nsNone, &children);
+                                    if (children)
+                                    {
+                                        LONG count = 0;
+                                        children->get_Count(&count);
+                                        if (count == 0) // no this pointer => truly static
+                                            return aMethodName;
+                                    } else
+                                        return aMethodName;
+                                }
+
+                                std::wstring trimmed(aMethodName);
+                                return trimmed.erase(0, 7); // remove leading "static " which is 7 wide characters
+                            }
+                        };
+
                         // follow the type to see if this method is a ctor
                         if (TRUE == GetFromType(function, &IDiaSymbol::get_constructor))
-                              ctors.push_back({methodName, isVirtual}); // isVirtual had better be false.
+                              ctors.push_back({Trim::Static(methodName, true,      function), false});
                         else
-                            methods.push_back({methodName, isVirtual});
+                            methods.push_back({Trim::Static(methodName, isVirtual, function), isVirtual});
                     }
                 }
             }
