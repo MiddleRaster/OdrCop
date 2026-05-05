@@ -69,9 +69,10 @@ namespace Odr
                 std::wcout << L"  " << typeName << L"  " << name;
                 static_cast<const Derived*>(this)->PrintSuffix();
             }
+            std::wstring GetName() const { return name; }
+
             friend bool operator==(const Derived& a, const Derived& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const Derived& a, const Derived& b) { return !a.IsEqualTo(b); }
-
         private:
             static bool isAnonymous(const std::wstring& name)
             {
@@ -409,6 +410,20 @@ namespace Odr
             }
         }
         void PrintPdbPath() const { std::wcout << L"  [" << pdbPath << L"] (same as above)\n"; }
+        std::wstring GetFirstMemberName() const
+        {
+            if (std::get<0>(members).size() > 0)
+            {
+                std::wstring smallest = (std::get<0>(members))[0].GetName();
+                for (auto& m : std::get<0>(members))
+                {
+                    if (smallest > m.GetName())
+                        smallest = m.GetName();
+                }
+                return smallest;
+            }
+            return L"";
+        }
 
         friend bool operator==(const UdtInfo& a, const UdtInfo& b) { return  a.IsEqualTo(b); }
         friend bool operator!=(const UdtInfo& a, const UdtInfo& b) { return !a.IsEqualTo(b); }
@@ -696,8 +711,9 @@ namespace Odr
                                         if (TRUE == Get(udt, &IDiaSymbol::get_exportIsForwarder))
                                             continue; // this is a forward reference, always has size 0 which causes false positives
 
-                                        std::wstring key = BuildUdtKey(udt);
-                                        udtMap[key].push_back(UdtInfo(udt, path));
+                                        UdtInfo udtInfo(udt, path);
+                                        std::wstring key = BuildUdtKey(udt, udtInfo.GetFirstMemberName());
+                                        udtMap[key].push_back(udtInfo);
                                     }
                                 }
                             }
@@ -776,7 +792,7 @@ namespace Odr
             return violationCount;
         }
 
-        static std::wstring BuildUdtKey(IDiaSymbol* sym)
+        static std::wstring BuildUdtKey(IDiaSymbol* sym, const std::wstring& firstMemberName)
         {
             CComBSTR name;
             sym->get_name(&name);
@@ -814,6 +830,8 @@ namespace Odr
                                            kind == UdtClass  ? L"class" :
                                                                L"struct") + L"]";
                 key += L"[size=" + std::to_wstring(size)                  + L"]";
+                if (firstMemberName != L"")
+                    key += L"[first=" + firstMemberName                   + L"]";
             }
             return key;
         }
