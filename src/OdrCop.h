@@ -709,7 +709,7 @@ namespace Odr
                                             continue;
 
                                         if (TRUE == Get(udt, &IDiaSymbol::get_exportIsForwarder))
-                                            continue; // this is a forward reference, always has size 0 which causes false positives
+                                            continue; // this is a forward declaration, always has size 0 which causes false positives
 
                                         UdtInfo udtInfo(udt, path);
                                         std::wstring key = BuildUdtKey(udt, udtInfo.GetFirstMemberName());
@@ -728,6 +728,9 @@ namespace Odr
                                     CComPtr<IDiaSymbol> sym;
                                     if (FAILED(enums->Next(1, &sym, &fetched)) || fetched == 0)
                                         break;
+
+                                    if (TRUE == Get(sym, &IDiaSymbol::get_exportIsForwarder))
+                                        continue; // this is a forward declaration; always has no enum values, causing false positives
 
                                     CComBSTR name;
                                     if (SUCCEEDED(sym->get_name(&name)) && name && name[0] != L'\0')
