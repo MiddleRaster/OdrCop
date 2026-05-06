@@ -40,32 +40,57 @@ namespace Odr
         {}
         void Print() const
         {
-            PrintCompilandPath();
+            std::wcout << L"  [" << compiland << L"]\n";
             std::wcout << L"    undecorated name:  " << undecoratedName << L'\n';
             std::wcout << L"    function body length: " << bodyLength << L'\n';
             // actual bytes are printed in PrintMismatch, below
         }
-        void PrintCompilandPath() const { std::wcout << L"  [" << compiland << L"]\n"; }
+        void PrintCompilandPath() const { std::wcout << L"  [" << compiland << L"] (same as above)\n"; }
         void PrintMismatch(int mismatch) const
         {
+#ifdef WANT_ALL_BYTES
+            (void)mismatch;
+            std::wcout << L"    all bytes: " << std::hex;
+            for(auto b : body)
+                std::wcout << std::setfill(L'0') << std::setw(2) << b << L' ';
+            std::wcout << std::dec << L'\n';
+#else
             std::wcout << L"    bytes at the first mismatch are: " << std::hex;
-            int i = mismatch - 9;
+            int i = mismatch - 10;
             if (i < 0)
                 i = 0;
-            auto end = (int)MyMin((size_t)10, body.size());
+            auto end = (int)MyMin((size_t)(11 + mismatch), body.size());
 
             for(; i<=mismatch; ++i)
                 std::wcout << std::setfill(L'0') << std::setw(2) << body[i] << L' ';
             for (; i<end; ++i)
                 std::wcout << std::setfill(L'0') << std::setw(2) << body[i] << L' ';
             std::wcout << std::dec << L'\n';
+#endif         
         }
         int MismatchIndex(const FuncInfo& other) const
-        {
-            int end = (int)MyMin(body.size(), other.body.size());
-            for(int i=0; i<end; ++i) {
-                if (body[i] != other.body[i])
-                    return i;
+        {   // find first mismatch that is not a NOP (0x90)
+            constexpr BYTE NOP{0x90};
+
+            size_t thisEnd =       body.size();
+            size_t thatEnd = other.body.size();
+            size_t thisCounter = 0;
+            size_t thatCounter = 0;
+            for (;(thisCounter < thisEnd) && (thatCounter < thatEnd);)
+            {
+                if (body[thisCounter] == other.body[thatCounter])
+                {
+                    ++thisCounter;
+                    ++thatCounter;
+                    continue;
+                }
+
+                // got a mismatch. Check to see if it's a NOP
+                if (      body[thisCounter] == NOP) { ++thisCounter; continue; }
+                if (other.body[thatCounter] == NOP) { ++thatCounter; continue; }
+
+                // an actual mismatch
+                return (int)((thisCounter + thatCounter)/2); // this will fail if there are many more NOPs in one of the bodies, but it'll most likely be in range
             }
             return -1;
         }
@@ -75,11 +100,10 @@ namespace Odr
     private:
         bool IsEqualTo(const FuncInfo& other) const
         {
-         // if (compiland       != other.compiland)    return false; // compilands must be different for ODR violations
-            if (  decoratedName != other.  decoratedName) return false;
-            if (undecoratedName != other.undecoratedName) return false;
-            if (bodyLength      != other.bodyLength)      return false;
-            if (body            != other.body)            return false;
+         // if (compiland            != other.compiland      ) return false; // compilands must be different for ODR violations
+            if (  decoratedName      != other.  decoratedName) return false;
+            if (undecoratedName      != other.undecoratedName) return false;
+            if (MismatchIndex(other) != -1                   ) return false;
             return true;
         }
     };
