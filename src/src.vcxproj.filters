@@ -29,5 +29,11 @@
     <ClInclude Include="COFFer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EnumInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UdtInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
