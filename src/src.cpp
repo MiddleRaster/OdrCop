@@ -8,12 +8,19 @@ int wmain(int argc, wchar_t** argv)
 {
     if (argc < 2)
     {
-        std::wcout << L"Usage: OdrCop <folder of .obj/.pdb files> [more folders ...] where each .obj/.pdb is built with /Zi, /Fd\"blah.pdb\" and /Ob0\n";
+        std::wcout << L"Usage: OdrCop [/exclude-stdlib] <folder of .obj/.pdb files> [more folders ...] where each .obj/.pdb is built with /Zi, /Fd\"blah.pdb\" and /Ob0\n";
+        std::wcout << L"               /exclude-stdlib - excludes all standard library types and functions.\n";
+        std::wcout << L"                                 Useful for modules, which are built differently from your own .cpp files\n";
         return -1;
     }
 
+    // find optional /exclude-stdlib switch first
+    bool excludeStdlib = false;
+    if (std::wstring(argv[1]) == L"/exclude-stdlib")
+        excludeStdlib = true;
+
     std::vector<std::filesystem::path> pdbs;
-    for (int i=1; i<argc; ++i)
+    for (int i=1+(excludeStdlib?1:0); i<argc; ++i)
     {
         std::filesystem::path root = argv[i];
 
@@ -44,7 +51,7 @@ int wmain(int argc, wchar_t** argv)
     for(auto& pdbPath : pdbs)
     {
         std::wcout << L"Loading: " << pdbPath << L'\n';
-        HRESULT hr = odrCop.LoadPdb(pdbPath);
+        HRESULT hr = odrCop.LoadPdb(pdbPath, excludeStdlib);
         if (FAILED(hr))
             std::wcerr << L"Failed to load: " << pdbPath << L" with HRESULT: 0x" << std::hex << hr << std::dec << L'\n';
     }

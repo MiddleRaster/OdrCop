@@ -52,3 +52,6 @@ auto g_2_f_int   = f<int  >();
 auto g_2_f_char  = f<char >();
 auto g_2_f_short = f<short>();
 auto g_2_f_long  = f<long >();
+
+#include <string>
+std::wstring ReturningAnStlTypeIsNotExcludedWhenUsingSwitch() { return L"hi"; }

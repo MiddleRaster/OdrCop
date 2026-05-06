@@ -700,7 +700,7 @@ namespace Odr
         Cop() { CoInitialize(nullptr); }
        ~Cop() { CoUninitialize(); }
 
-        HRESULT LoadPdb(const std::wstring& path)
+        HRESULT LoadPdb(const std::wstring& path, bool excludeStdlib)
         {
             HRESULT hr;
 
@@ -747,6 +747,10 @@ namespace Odr
                                         if (Get(udt, &IDiaSymbol::get_scoped)) // this may not be the right way to see if my type is defined locally
                                             continue;                          // in a function or a block but everything else the LLMs suggested failed.
 
+                                        if (excludeStdlib == true)
+                                            if (std::wstring(name.m_str).starts_with(L"std::"))
+                                                continue;
+
                                         if (TRUE == Get(udt, &IDiaSymbol::get_exportIsForwarder))
                                             continue; // this is a forward declaration, always has size 0 which causes false positives
 
@@ -774,6 +778,10 @@ namespace Odr
                                     CComBSTR name;
                                     if (SUCCEEDED(sym->get_name(&name)) && name && name[0] != L'\0')
                                     {
+                                        if (excludeStdlib == true)
+                                            if (std::wstring(name.m_str).starts_with(L"std::"))
+                                                continue;
+
                                         std::wstring key(name);
                                         enumMap[key].push_back(EnumInfo(sym, path));
                                     }
@@ -781,7 +789,7 @@ namespace Odr
                             }
 
                             // Functions
-                            COFF::Read(path, funcMap);
+                            COFF::Read(path, excludeStdlib, funcMap);
 
                         } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                     }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';

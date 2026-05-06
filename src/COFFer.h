@@ -207,7 +207,7 @@ namespace Odr
     public:
         const BYTE* Data(const IMAGE_SECTION_HEADER* sec) const { return base + sec->PointerToRawData; }
         const BYTE* End (const IMAGE_SECTION_HEADER* sec) const { return base + sec->PointerToRawData + sec->SizeOfRawData; }
-        static void Read(const std::wstring& pdbPath, std::map<std::wstring, std::vector<FuncInfo>>& funcMap)
+        static void Read(const std::wstring& pdbPath, bool excludeStdlib, std::map<std::wstring, std::vector<FuncInfo>>& funcMap)
         {
             auto objPath = pdbPath.substr(0, pdbPath.rfind(L'.')) + L".obj";
             DWORD size;
@@ -270,6 +270,13 @@ namespace Odr
                     const BYTE* funcBytes = coff.base + textSec->PointerToRawData + resolvedOff;
                     std::wstring   decoratedName(decorated.begin(), decorated.end());
                     std::wstring undecoratedName(proc->name, proc->name + std::strlen((const char*)proc->name));
+
+                    if (excludeStdlib == true)
+                    {   // return values are not included in undecoratedName so this check is sufficient
+                        if (undecoratedName.starts_with(L"std::"))
+                            continue;
+                    }
+
                     funcMap[decoratedName].push_back(FuncInfo(objPath, decoratedName, undecoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len)));
                 }
             }
