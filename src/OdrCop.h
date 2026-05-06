@@ -715,75 +715,72 @@ namespace Odr
                         CComPtr<IDiaSymbol> global;
                         if (SUCCEEDED(hr = session->get_globalScope(&global)))
                         {
-                            // UDTs
-                            CComPtr<IDiaEnumSymbols> udts;
-                            if (SUCCEEDED(hr = global->findChildren(SymTagUDT, nullptr, nsNone, &udts)))
+                            CComPtr<IDiaEnumSymbols> syms;
+                            if (SUCCEEDED(hr = global->findChildren(SymTagNull, nullptr, nsNone, &syms)))
                             {
                                 while(true)
                                 {
                                     ULONG fetched = 0;
-                                    CComPtr<IDiaSymbol> udt;
-                                    if (FAILED(udts->Next(1, &udt, &fetched)) || fetched == 0)
-                                        break;
-
-                                    CComBSTR name;
-                                    if (SUCCEEDED(udt->get_name(&name)) && name && name[0] != L'\0')
-                                    {   /*
-                                        Lambda closure types are never ODR‑relevant
-                                            A lambda’s closure type :
-                                                is unnamed
-                                                is unique per expression
-                                                is unique per TU
-                                                is not required to match across TUs
-                                                is not required to have stable layout
-                                                is not governed by the ODR at all
-                                        Therefore, comparing lambda closure types across TUs is meaningless.
-                                            It will always produce false positives.
-                                            Suppressing them is not a heuristic — it is the correct interpretation of the C++ standard.
-                                        */
-                                        if (std::wstring(name.m_str).find(L"<lambda_") != std::wstring::npos)
-                                            continue;
-
-                                        if (Get(udt, &IDiaSymbol::get_scoped)) // this may not be the right way to see if my type is defined locally
-                                            continue;                          // in a function or a block but everything else the LLMs suggested failed.
-
-                                        if (excludeStdlib == true)
-                                            if (std::wstring(name.m_str).starts_with(L"std::"))
-                                                continue;
-
-                                        if (TRUE == Get(udt, &IDiaSymbol::get_exportIsForwarder))
-                                            continue; // this is a forward declaration, always has size 0 which causes false positives
-
-                                        UdtInfo udtInfo(udt, path);
-                                        std::wstring key = BuildUdtKey(udt, udtInfo.GetFirstMemberName());
-                                        udtMap[key].push_back(udtInfo);
-                                    }
-                                }
-                            }
-
-                            // enums
-                            CComPtr<IDiaEnumSymbols> enums;
-                            if (SUCCEEDED(hr = global->findChildren(SymTagEnum, NULL, nsNone, &enums)))
-                            {
-                                while (true)
-                                {
-                                    ULONG fetched = 0;
                                     CComPtr<IDiaSymbol> sym;
-                                    if (FAILED(enums->Next(1, &sym, &fetched)) || fetched == 0)
+                                    if (FAILED(syms->Next(1, &sym, &fetched)) || fetched == 0)
                                         break;
 
                                     if (TRUE == Get(sym, &IDiaSymbol::get_exportIsForwarder))
-                                        continue; // this is a forward declaration; always has no enum values, causing false positives
+                                        continue; // this is a forward declaration; never part of ODR violations
 
-                                    CComBSTR name;
-                                    if (SUCCEEDED(sym->get_name(&name)) && name && name[0] != L'\0')
+                                    CComBSTR name     = Get(sym, &IDiaSymbol::get_name);
+                                    if (excludeStdlib == true)
+                                        if (std::wstring(name.m_str).starts_with(L"std::"))
+                                            continue;
+
+                                    enum SymTagEnum tag = static_cast<enum SymTagEnum>(Get(sym, &IDiaSymbol::get_symTag));
+                                    switch(tag)
                                     {
-                                        if (excludeStdlib == true)
-                                            if (std::wstring(name.m_str).starts_with(L"std::"))
-                                                continue;
+                                    case SymTagEnum::SymTagUDT:
+                                        if (name && name[0] != L'\0')
+                                        {
+                                            /*
+                                            Lambda closure types are never ODR‑relevant
+                                                A lambda’s closure type :
+                                                    is unnamed
+                                                    is unique per expression
+                                                    is unique per TU
+                                                    is not required to match across TUs
+                                                    is not required to have stable layout
+                                                    is not governed by the ODR at all
+                                            Therefore, comparing lambda closure types across TUs is meaningless.
+                                                It will always produce false positives.
+                                                Suppressing them is not a heuristic — it is the correct interpretation of the C++ standard.
+                                            */
+                                            if (std::wstring(name).find(L"<lambda_") != std::wstring::npos)
+                                                break;
 
-                                        std::wstring key(name);
-                                        enumMap[key].push_back(EnumInfo(sym, path));
+                                            if (Get(sym, &IDiaSymbol::get_scoped)) // this may not be the right way to see if my type is defined locally
+                                                break;                             // in a function or a block but everything else the LLMs suggested failed.
+
+                                            if (TRUE == Get(sym, &IDiaSymbol::get_exportIsForwarder))
+                                                break; // this is a forward declaration, always has size 0 which causes false positives
+
+                                            UdtInfo udtInfo(sym, path);
+                                            std::wstring key = BuildUdtKey(sym, udtInfo.GetFirstMemberName());
+                                            udtMap[key].push_back(udtInfo);
+                                        }
+                                        break;
+                                    case (enum SymTagEnum)::SymTagEnum:
+                                        if (SUCCEEDED(name && name[0] != L'\0'))
+                                        {
+                                            std::wstring key(name);
+                                            enumMap[key].push_back(EnumInfo(sym, path));
+                                        }
+                                        break;
+                                    case SymTagEnum::SymTagTypedef:
+                                    //  std::wcout << L"got a typedef: " << name.m_str << L'\n';
+                                        break;
+                                    case SymTagEnum::SymTagData:
+                                    //  std::wcout << L"got an anonymous data type: " << name.m_str << L'\n';
+                                        break;
+                                    default:
+                                        break;
                                     }
                                 }
                             }
@@ -853,9 +850,8 @@ namespace Odr
 
         static std::wstring BuildUdtKey(IDiaSymbol* sym, const std::wstring& firstMemberName)
         {
-            CComBSTR name;
-            sym->get_name(&name);
-            std::wstring key(name ? name.m_str : L"");
+            CComBSTR name = Get(sym, &IDiaSymbol::get_name);
+            std::wstring key(name.m_str);
 
             if (key.find(L"<unnamed") != std::wstring::npos)
             {
@@ -883,6 +879,48 @@ namespace Odr
                 N.B.: it could still fail, if the two types were the same size. Appending the name of the first data-member would solve this last problem.
                 */
 
+                /*
+                another example is "<unnamed-type-u>" which even after appending extra uniqueness info, generates this ODR violation:
+                ODR VIOLATION: <unnamed-type-u>[struct][size=8][first=HighPart]
+                      [TUs\x64\Debug\dllmain.pdb]
+                        kind=struct  size=8
+                        +0  unsigned long  LowPart
+                        +4           long  HighPart
+                      [TUs\x64\Debug\dllmain.pdb]
+                        kind=struct  size=8
+                        +0  unsigned long  LowPart
+                        +4  unsigned long  HighPart
+
+                In real life, this is merely an anonymous struct inside an outer struct/class/union, like LARGE_INTEGER or ULARGE_INTEGER.
+                E.g.,
+                    typedef union _LARGE_INTEGER {
+                        struct {
+                            DWORD LowPart;
+                            LONG HighPart;
+                        } DUMMYSTRUCTNAME;
+                        struct {
+                            DWORD LowPart;
+                            LONG HighPart;
+                        } u;
+                        LONGLONG QuadPart;
+                    } LARGE_INTEGER;
+                and
+                    typedef union _ULARGE_INTEGER {
+                        struct {
+                            DWORD LowPart;
+                            DWORD HighPart;
+                        } DUMMYSTRUCTNAME;
+                        struct {
+                            DWORD LowPart;
+                            DWORD HighPart;
+                        } u;
+                        ULONGLONG QuadPart;
+                    } ULARGE_INTEGER;
+                */
+
+                if (key.starts_with(L"<unnamed-type"))
+                    key = QualifiedName(sym); // get the outer union/struct/class name (go all the way up)
+
                 ULONGLONG size = Get(sym, &IDiaSymbol::get_length);
                 DWORD     kind = Get(sym, &IDiaSymbol::get_udtKind);
                 key += L"[" + std::wstring(kind == UdtUnion  ? L"union" :
@@ -891,8 +929,30 @@ namespace Odr
                 key += L"[size=" + std::to_wstring(size)                  + L"]";
                 if (firstMemberName != L"")
                     key += L"[first=" + firstMemberName                   + L"]";
+
+                return key;
             }
-            return key;
+            return QualifiedName(sym);
+        }
+        static std::wstring QualifiedName(IDiaSymbol* sym)
+        {
+            std::wstring name;
+
+            CComBSTR bstrName;
+            if (SUCCEEDED(sym->get_name(&bstrName)) && bstrName)
+                name = bstrName;
+            else
+                name = L"<unnamed>";
+
+            CComPtr<IDiaSymbol> parent;
+            if (SUCCEEDED(sym->get_classParent(&parent)) && parent)
+            {
+                DWORD parentTag = SymTagNull;
+                parent->get_symTag(&parentTag);
+                if (parentTag == SymTagUDT || parentTag == SymTagEnum)
+                    return QualifiedName(parent) + L"::" + name;
+            }
+            return name;
         }
     };
 }
