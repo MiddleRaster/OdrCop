@@ -29,6 +29,14 @@ jobs:
     
     steps:
     - uses: actions/checkout@v5
+
+    - name: Install ATL component
+      shell: cmd
+      run: |
+        "C:\Program Files\Microsoft Visual Studio\18\Enterprise\Common7\IDE\VSWixBootstrapper\vs_setup.exe" modify ^
+            --installPath "C:\Program Files\Microsoft Visual Studio\18\Enterprise" ^
+            --add Microsoft.VisualStudio.Component.VC.ATL ^
+            --quiet --norestart
     
     - name: Register DIA SDK
       shell: pwsh
