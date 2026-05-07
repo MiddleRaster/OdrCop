@@ -302,7 +302,7 @@ namespace Odr
                 std::wcout << L"      " << ToString(access) << L": " 
                            << (isStatic   ? L"static "  : L"") 
                            << (isVirtual  ? L"virtual " : L"")
-                           << name << L' '
+                           << name                          << L" "
                            << (isNoExcept ? L"noexcept ": L"")
                            << L'\n'; 
             }
