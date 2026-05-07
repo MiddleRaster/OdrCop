@@ -25,9 +25,9 @@ namespace Odr
         {
             std::wcout << L"  [" << pdbPath << L"]\n";
             std::wcout << L"    kind=enum\n";
-            std::wcout << L"    the first few values are: ";
+            std::wcout << L"    the enum values are: ";
             
-            for(size_t i=0; i<min(values.size(),10); ++i)
+            for(size_t i=0; i<values.size(); ++i)
                 std::wcout << values[i].first << L"=" << values[i].second << L", ";
             std::wcout << L'\n';
         }

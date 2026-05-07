@@ -282,10 +282,10 @@ ODR VIOLATION: ?FunctionsMustBeBitwiseIdentical@@YAHXZ
 ODR VIOLATION: SameEnumButDifferentValues
   [TUs\x64\Debug\TU1.pdb]
     kind=enum
-    the first few values are: A=1, B=2, 
+    the enum values are: A=1, B=2, 
   [TUs\x64\Debug\TU2.pdb]
     kind=enum
-    the first few values are: A=1, B=3, 
+    the enum values are: A=1, B=3, 
 
 ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
   [TUs\x64\Debug\TU1.pdb]
