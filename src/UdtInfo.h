@@ -287,13 +287,14 @@ namespace Odr
             }
         };
 
-        class MethodInfo
+        class MethodInfo : private ToStringBase
         {
             const std::wstring name;
             const bool isVirtual;
+            const CV_access_e access;    // private/protected/public
         public:
-            MethodInfo(const std::wstring& name, bool isVirtual) : name(name), isVirtual(isVirtual) {}
-            void Print() const { std::wcout << L"      " << (isVirtual ? L"virtual " : L"") << name << L'\n'; }
+            MethodInfo(const std::wstring& name, bool isVirtual, CV_access_e access) : name(name), isVirtual(isVirtual), access(access) {}
+            void Print() const { std::wcout << L"      " << ToString(access) << L": " << (isVirtual ? L"virtual " : L"") << name << L'\n'; }
             static std::vector<MethodInfo> MakeSortedCopy(std::vector<MethodInfo> methods)
             {   // all this to avoid removing 'const' from my data-members
                 std::vector<size_t> indices(methods.size());
@@ -313,6 +314,7 @@ namespace Odr
             {
                 if (     name != other.name     ) return false;
                 if (isVirtual != other.isVirtual) return false;
+                if (   access != other.access   ) return false;
                 return true;
             }
         };
@@ -546,7 +548,8 @@ namespace Odr
                         // function->get_name(&functionName); // but use this one if need be
                         functionName = Get(function, &IDiaSymbol::get_name); // but use this one if need be
 
-                    bool isVirtual = Get(function, &IDiaSymbol::get_virtual);
+                    bool isVirtual     =                          Get(function, &IDiaSymbol::get_virtual);
+                    CV_access_e access = static_cast<CV_access_e>(Get(function, &IDiaSymbol::get_access));
 
                     if (functionName.m_str != NULL)
                     {
@@ -596,9 +599,9 @@ namespace Odr
 
                         // follow the type to see if this method is a ctor
                         if (TRUE == GetFromType(function, &IDiaSymbol::get_constructor))
-                              ctors.push_back({Trim::Static(methodName, true,      function), false});
+                              ctors.push_back({Trim::Static(methodName, true,      function), false,     access});
                         else
-                            methods.push_back({Trim::Static(methodName, isVirtual, function), isVirtual});
+                            methods.push_back({Trim::Static(methodName, isVirtual, function), isVirtual, access});
                     }
                 }
             }

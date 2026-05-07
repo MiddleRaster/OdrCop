@@ -36,6 +36,7 @@ BaseClassesInDifferentOrder                                  g_2_BaseClassesInDi
 EnclosingTypedefDefinition                                   g_2_EnclosingTypedefDefinition;
 SameClassDifferentDataMemberAccessSpecifier                  g_2_SameClassDifferentDataMemberAccessSpecifier;
 DifferentAccessSpecifiersOnBaseClass                         g_2_DifferentAccessSpecifiersOnBaseClass;
+DifferentAccessSpecifiersOnMethod                            g_2_DifferentAccessSpecifiersOnMethod;
 
 
 

@@ -189,6 +189,15 @@ struct DifferentAccessSpecifiersOnBaseClass :
 Base1
 {};
 
+struct DifferentAccessSpecifiersOnMethod
+{
+#ifdef ONE
+public:
+#else
+private:
+#endif
+    void Foo() {}
+};
 
 
 // Same class but different member types
