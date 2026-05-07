@@ -287,4 +287,12 @@ ODR VIOLATION: SameEnumButDifferentValues
     kind=enum
     the first few values are: A=1, B=3, 
 
-28 ODR violation(s) found.
+ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
+  [TUs\x64\Debug\TU1.pdb]
+    kind=typedef
+    underlying type: SomeStructForTypedefTesting1
+  [TUs\x64\Debug\TU2.pdb]
+    kind=typedef
+    underlying type: SomeStructForTypedefTesting2
+
+29 ODR violation(s) found.

@@ -159,6 +159,7 @@
     <ClInclude Include="DiaGetters.h" />
     <ClInclude Include="EnumInfo.h" />
     <ClInclude Include="OdrCop.h" />
+    <ClInclude Include="TDefInfo.h" />
     <ClInclude Include="UdtInfo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

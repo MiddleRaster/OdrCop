@@ -33,7 +33,7 @@ SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion g_2_SameClassButDif
 SameClassDifferentPresenceOfAnonymousMembers                 g_2_SameClassDifferentPresenceOfAnonymousMembers;
 //SameClassDifferentFriendDeclaration                        g_2_SameClassDifferentFriendDeclaration;
 BaseClassesInDifferentOrder                                  g_2_BaseClassesInDifferentOrder;
-
+EnclosingTypedefDefinition                                   g_2_EnclosingTypedefDefinition;
 
 int g_2_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();
 int g_2_call_SameFunctionTemplateSpecializationDifferentDefinitions = SameFunctionTemplateSpecializationDifferentDefinitions<int>();
@@ -41,8 +41,6 @@ int g_2_call_SameFunctionTemplateSpecializationDifferentDefinitions = SameFuncti
 //int g_2_call_SameClassDifferentFriendDeclaration                  = Friendly();
 
 auto g_2_enum = SameEnumButDifferentValues::A;
-
-//SameTypedefDifferentUnderlyingType g_2_sameTypedefDifferentUnderlyingType{};
 
 int AnOverloadInTU2(void)   { return 0; }
 int AnOverloadInTU2(char a) { return sizeof(a); }

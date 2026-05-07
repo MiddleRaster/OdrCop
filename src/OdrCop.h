@@ -14,6 +14,7 @@
 
 #include "UdtInfo.h"
 #include "EnumInfo.h"
+#include "TDefInfo.h"
 #include "COFFer.h"
 
 namespace Odr
@@ -23,6 +24,7 @@ namespace Odr
         std::map<std::wstring, std::vector<UdtInfo >>  udtMap; // user-defined types
         std::map<std::wstring, std::vector<EnumInfo>> enumMap; // enums
         std::map<std::wstring, std::vector<FuncInfo>> funcMap; // functions
+        std::map<std::wstring, std::vector<TDefInfo>> tdefMap; // typedefs
 
     public:
         Cop() { CoInitialize(nullptr); }
@@ -56,10 +58,12 @@ namespace Odr
                                     if (TRUE == Get(sym, &IDiaSymbol::get_exportIsForwarder))
                                         continue; // this is a forward declaration; never part of ODR violations
 
-                                    CComBSTR name     = Get(sym, &IDiaSymbol::get_name);
+                                    CComBSTR name = Get(sym, &IDiaSymbol::get_name);
+
                                     if (excludeStdlib == true)
-                                        if (std::wstring(name.m_str).starts_with(L"std::"))
-                                            continue;
+                                    if (name && name[0] != L'\0')
+                                    if (std::wstring(name).starts_with(L"std::"))
+                                        continue;
 
                                     enum SymTagEnum tag = static_cast<enum SymTagEnum>(Get(sym, &IDiaSymbol::get_symTag));
                                     switch(tag)
@@ -95,14 +99,22 @@ namespace Odr
                                         }
                                         break;
                                     case (enum SymTagEnum)::SymTagEnum:
-                                        if (SUCCEEDED(name && name[0] != L'\0'))
+                                        if (name && name[0] != L'\0')
                                         {
                                             std::wstring key(name);
                                             enumMap[key].push_back(EnumInfo(sym, path));
                                         }
                                         break;
                                     case SymTagEnum::SymTagTypedef:
-                                    //  std::wcout << L"got a typedef: " << name.m_str << L'\n';
+                                        if (name && name[0] != L'\0')
+                                        {
+                                            std::wstring key(QualifiedName(sym));
+                                            if (excludeStdlib == true)
+                                                if (std::wstring(key).starts_with(L"std::"))
+                                                    break;
+
+                                            tdefMap[key].push_back(TDefInfo(std::wstring(name), sym, path));
+                                        }
                                         break;
                                     case SymTagEnum::SymTagData:
                                     //  std::wcout << L"got an anonymous data type: " << name.m_str << L'\n';
@@ -128,6 +140,7 @@ namespace Odr
             violationCount  = ReportMapViolations( udtMap, [](const auto&  d) {  d.PrintPdbPath();       }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
             violationCount += ReportMapViolations(funcMap, [](const auto& fi) { fi.PrintCompilandPath(); }, [](const auto& f1, const auto& f2) -> int { return f1.MismatchIndex(f2); }, [](const auto& f, int m) { f.PrintMismatch(m); });
             violationCount += ReportMapViolations(enumMap, [](const auto&   ) {                          }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
+            violationCount += ReportMapViolations(tdefMap, [](const auto&  t) {  t.PrintPdbPath();       }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
             return violationCount;
         }
 

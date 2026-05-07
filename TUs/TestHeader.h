@@ -66,18 +66,6 @@
     #endif
     }
 
-
-    //Same typedef or using but different underlying type
-    struct SomeStructForTypedefTesting1 { int x1; };
-    struct SomeStructForTypedefTesting2 { int x2; };
-    typedef
-    #ifdef ONE
-    SomeStructForTypedefTesting1
-    #else
-    SomeStructForTypedefTesting2
-    #endif
-    SameTypedefDifferentUnderlyingType;
-
     // Same template but different default template arguments
     #ifdef ONE
     template<typename T = char>
@@ -389,6 +377,16 @@ struct SameClassDifferentPresenceOfAnonymousMembers
 #pragma warning(pop)
 
 
-#ifdef ALL_ODR_VIOLATIONS
-
+//Same typedef or using but different underlying type
+struct SomeStructForTypedefTesting1 { int x1; };
+struct SomeStructForTypedefTesting2 { int x2; };
+struct EnclosingTypedefDefinition
+{
+    typedef
+#ifdef ONE
+    SomeStructForTypedefTesting1
+#else
+    SomeStructForTypedefTesting2
 #endif
+    SameTypedefDifferentUnderlyingType;
+};
