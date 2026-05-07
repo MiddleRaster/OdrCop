@@ -24,6 +24,9 @@
     <ClCompile Include="TU2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RegressionTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestHeader.h">

@@ -160,6 +160,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="RegressionTests.cpp" />
     <ClCompile Include="TU1.cpp" />
     <ClCompile Include="TU2.cpp" />
   </ItemGroup>
