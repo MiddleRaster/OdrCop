@@ -17,7 +17,7 @@ Pass one or more paths to folders of .obj and .pdb files (N.B.: the tool will re
 
 ## How it works
 
-For user defined types, I use the DIA SDK to read the .pdb file. DIA is all COM objects so make sure you have done "regsvr32 msdiaL40.dll" on your machine.  
+For user defined types, I use the DIA SDK to read the .pdb file. DIA is all COM objects so make sure you have done "regsvr32 msdia140.dll" on your machine.  
 For functions, I wrote my own COFF reader, which reads right from the .obj files (I can't use DIA because the linker throws away too much information about inlines).  
 
 The output looks something like this, for a ```struct DifferentBases```, a ```struct DifferentConstDataMember``` and a function named ```FunctionsMustBeBitwiseIdentical```:
