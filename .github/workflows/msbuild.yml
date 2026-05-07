@@ -30,16 +30,10 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
-    - name: Find VS installer
-      shell: pwsh
-      run: |
-        Get-ChildItem "C:\Program Files\Microsoft Visual Studio\18\Enterprise" -Recurse -Filter "vs_setup.exe" | Select-Object FullName
-        Get-ChildItem "C:\Program Files (x86)\Microsoft Visual Studio\Installer" | Select-Object FullName
-
     - name: Install ATL component
       shell: cmd
       run: |
-        "C:\Program Files\Microsoft Visual Studio\18\Enterprise\Common7\IDE\VSWixBootstrapper\vs_setup.exe" modify ^
+        "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify ^
             --installPath "C:\Program Files\Microsoft Visual Studio\18\Enterprise" ^
             --add Microsoft.VisualStudio.Component.VC.ATL ^
             --quiet --norestart
