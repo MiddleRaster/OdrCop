@@ -89,10 +89,7 @@ namespace Odr
 
                                             if (Get(sym, &IDiaSymbol::get_scoped)) // this may not be the right way to see if my type is defined locally
                                                 break;                             // in a function or a block but everything else the LLMs suggested failed.
-
-                                            if (TRUE == Get(sym, &IDiaSymbol::get_exportIsForwarder))
-                                                break; // this is a forward declaration, always has size 0 which causes false positives
-
+                                            
                                             UdtInfo udtInfo(sym, path);
                                             std::wstring key = BuildUdtKey(sym, udtInfo.GetFirstMemberName());
                                             udtMap[key].push_back(udtInfo);
