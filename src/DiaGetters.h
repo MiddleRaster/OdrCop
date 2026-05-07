@@ -30,4 +30,11 @@ namespace Odr
             return L"?";
         return std::wstring(value.bstrVal);
     }
+
+    template <typename C, typename R, typename T> T GetN(ATL::CComPtr<C>& sym, R(C::* m)(T*))
+    {
+        T value{};
+        (sym->*m)(&value);
+        return value;
+    }
 }

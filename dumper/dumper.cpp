@@ -85,6 +85,18 @@ void PrintAccess(const std::wstring& tab, IDiaSymbol* sym) // Print(tab, item, &
     }
 }
 
+template <typename C, typename R, typename T> std::pair<HRESULT, T> GetN(C* sym, R(C::* m)(T*))
+{
+    T value{};
+    HRESULT hr = (sym->*m)(&value);
+    return {hr, value};
+}
+template <typename T> void Print(const std::wstring& tab, const std::pair<HRESULT,T>& value, const std::wstring& propName)
+{
+    if (value.first == S_OK)
+        std::wcout << tab << propName << L": " << value.second << L'\n';
+}
+
 void PrintAllProps(std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, std::set<DWORD>& /*visited*/)
 {
     std::wcout << tab << itemName << L":\n";
@@ -320,6 +332,77 @@ void PrintAllProps(std::wstring tab, const std::wstring& itemName, IDiaSymbol* i
         /* [in] */ DWORD undecorateOptions,
         /* [out] */ BSTR * name) = 0;
 #endif
+    
+    CComPtr<IDiaSymbol2> item2;
+    item->QueryInterface<IDiaSymbol2>(&item2);
+    if (item2) {
+        Print(tab, GetN(item2.p, &IDiaSymbol2::get_isObjCClass   ), L"isObjCClass"   );
+        Print(tab, GetN(item2.p, &IDiaSymbol2::get_isObjCCategory), L"isObjCCategory");
+        Print(tab, GetN(item2.p, &IDiaSymbol2::get_isObjCProtocol), L"isObjCProtocol");
+    }
+    CComPtr<IDiaSymbol3> item3;
+    item->QueryInterface<IDiaSymbol3>(&item3);
+    if (item3)
+    {
+        Print(tab, GetN(item3.p, &IDiaSymbol3::get_inlinee  ), L"inlinee");
+        Print(tab, GetN(item3.p, &IDiaSymbol3::get_inlineeId), L"inlineeId");
+    }
+    CComPtr<IDiaSymbol4> item4;
+    item->QueryInterface<IDiaSymbol4>(&item4);
+    if (item4)
+    {
+        Print(tab, GetN(item4.p, &IDiaSymbol4::get_noexcept), L"noexcept");
+    }
+    CComPtr<IDiaSymbol5> item5;
+    item->QueryInterface<IDiaSymbol5>(&item5);
+    if (item5)
+    {
+        Print(tab, GetN(item5.p, &IDiaSymbol5::get_hasAbsoluteAddress), L"hasAbsoluteAddress");
+    }
+    CComPtr<IDiaSymbol6> item6;
+    item->QueryInterface<IDiaSymbol6>(&item6);
+    if (item6)
+    {
+        Print(tab, GetN(item6.p, &IDiaSymbol6::get_isStaticMemberFunc), L"isStaticMemberFunc");
+    }
+    CComPtr<IDiaSymbol7> item7;
+    item->QueryInterface<IDiaSymbol7>(&item7);
+    if (item7)
+    {
+        Print(tab, GetN(item7.p, &IDiaSymbol7::get_isSignRet), L"isSignRet");
+    }
+    CComPtr<IDiaSymbol8> item8;
+    item->QueryInterface<IDiaSymbol8>(&item8);
+    if (item8)
+    {
+        Print(tab, GetN(item8.p, &IDiaSymbol8::get_coroutineKind),           L"coroutineKind");
+        Print(tab, GetN(item8.p, &IDiaSymbol8::get_associatedSymbolKind),    L"associatedSymbolKind");
+        Print(tab, GetN(item8.p, &IDiaSymbol8::get_associatedSymbolSection), L"associatedSymbolSection");
+        Print(tab, GetN(item8.p, &IDiaSymbol8::get_associatedSymbolOffset),  L"associatedSymbolOffset");
+        Print(tab, GetN(item8.p, &IDiaSymbol8::get_associatedSymbolRva),     L"associatedSymbolRva");
+        Print(tab, GetN(item8.p, &IDiaSymbol8::get_associatedSymbolAddr),    L"associatedSymbolAddr");
+    }
+    CComPtr<IDiaSymbol9> item9;
+    item->QueryInterface<IDiaSymbol9>(&item9);
+    if (item9)
+    {
+        Print(tab, GetN(item9.p, &IDiaSymbol9::get_framePadSize),   L"framePadSize");
+        Print(tab, GetN(item9.p, &IDiaSymbol9::get_framePadOffset), L"framePadOffset");
+        Print(tab, GetN(item9.p, &IDiaSymbol9::get_isRTCs),         L"isRTCs");
+    }
+    CComPtr<IDiaSymbol10> item10;
+    item->QueryInterface<IDiaSymbol10>(&item10);
+    if (item10)
+    {
+        // HRESULT IDiaSymbol10::get_sourceLink(DWORD cb, DWORD * pcb, BYTE * pb);
+    }
+    CComPtr<IDiaSymbol11> item11;
+    item->QueryInterface<IDiaSymbol11>(&item11);
+    if (item11)
+    {
+        // HRESULT IDiaSymbol11:get_discriminatedUnionTag(IDiaSymbol * *ppTagType, DWORD * pTagOffset, struct DiaTagValue* pTagMask);
+        // HRESULT IDiaSymbol11:get_tagRanges(DWORD count, DWORD * pcRangeValues, struct DiaTagValue* rangeValues) = 0;
+    }
 }
 
 void PrintPropsAndRecurse(IDiaSession* session, std::wstring tab, const std::wstring& itemName, IDiaSymbol* item, std::set<DWORD>& visited)

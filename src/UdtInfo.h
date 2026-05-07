@@ -557,11 +557,11 @@ namespace Odr
                     bool isVirtual     =                          Get(function, &IDiaSymbol::get_virtual);
                     CV_access_e access = static_cast<CV_access_e>(Get(function, &IDiaSymbol::get_access));
                     bool isStatic      = false;
-                    CComPtr<IDiaSymbol> type;
-                    if (SUCCEEDED(function->get_type(&type)))
                     {
-                        CComPtr<IDiaSymbol> thisPointer  = Get(type, &IDiaSymbol::get_objectPointerType);
-                        isStatic       =    thisPointer == nullptr;
+                        CComPtr<IDiaSymbol6> function6;
+                        function->QueryInterface<IDiaSymbol6>(&function6);
+                        if (function6)
+                            isStatic   = !!GetN(function6, &IDiaSymbol6::get_isStaticMemberFunc); // could also query type's objectPointerType's nullness
                     }
 
                     if (functionName.m_str != NULL)
