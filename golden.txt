@@ -6,25 +6,33 @@ Loading: "TUs\\x64\\Debug\\TU2.pdb"
 ODR VIOLATION: BaseClassesInDifferentOrder
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    bases: Base1 Base2
+    bases: public Base1, public Base2
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
-    bases: Base2 Base1
+    bases: public Base2, public Base1
+
+ODR VIOLATION: DifferentAccessSpecifiersOnBaseClass
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=1
+    bases: public Base1
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=1
+    bases: private Base1
 
 ODR VIOLATION: DifferentBaseClass
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    bases: Base1
+    bases: public Base1
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
 
 ODR VIOLATION: DifferentBases
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    bases: Base1
+    bases: public Base1
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
-    bases: Base2
+    bases: public Base2
 
 ODR VIOLATION: DifferentConstDataMember
   [TUs\x64\Debug\TU1.pdb]
@@ -303,4 +311,4 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-30 ODR violation(s) found.
+31 ODR violation(s) found.

@@ -35,7 +35,7 @@ SameClassDifferentPresenceOfAnonymousMembers                 g_2_SameClassDiffer
 BaseClassesInDifferentOrder                                  g_2_BaseClassesInDifferentOrder;
 EnclosingTypedefDefinition                                   g_2_EnclosingTypedefDefinition;
 SameClassDifferentDataMemberAccessSpecifier                  g_2_SameClassDifferentDataMemberAccessSpecifier;
-
+DifferentAccessSpecifiersOnBaseClass                         g_2_DifferentAccessSpecifiersOnBaseClass;
 
 
 

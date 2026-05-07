@@ -180,6 +180,16 @@ struct BaseClassesInDifferentOrder
 #endif
 {};
 
+struct DifferentAccessSpecifiersOnBaseClass :
+#ifdef ONE
+    public
+#else
+    private
+#endif
+Base1
+{};
+
+
 
 // Same class but different member types
 struct DifferentDataMemberType

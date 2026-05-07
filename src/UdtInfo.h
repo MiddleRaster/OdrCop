@@ -160,7 +160,20 @@ namespace Odr
             }
         };
 
-        class InstanceMember : public MemberInfoBase<InstanceMember>
+        struct ToStringBase
+        {
+            static std::wstring ToString(CV_access_e access)
+            {
+                switch(access)
+                {
+                case CV_private  : return L"private";   break;
+                case CV_protected: return L"protected"; break;
+                case CV_public   : return L"public";    break;
+                default          : return L"impossible access type"; break;
+                }
+            }
+        };
+        class InstanceMember : public MemberInfoBase<InstanceMember>, private ToStringBase
         {
             const LONG        offset;    // byte offset within UDT
             const ULONGLONG   bitSize;   // 0 means "not a bitfield"
@@ -171,26 +184,7 @@ namespace Odr
 
             InstanceMember(IDiaSymbol* child, const std::wstring& name, LONG offset, ULONGLONG bitSize,   DWORD bitPos,    BOOL bConst,       BOOL bVolatile, CV_access_e access)
                                        : MemberInfoBase(name, child), offset(offset),  bitSize(bitSize), bitPos(bitPos), bConst(bConst), bVolatile(bVolatile),     access(access)
-            {
-                //    auto lt = Get(child, &IDiaSymbol::get_locationType);
-                //    switch(lt)
-                //    {
-                //    case LocationType::LocIsNull            : std::wcout << L"locationType is " << L"LocIsNull            " << L"\n"; break;
-                //    case LocationType::LocIsStatic          : std::wcout << L"locationType is " << L"LocIsStatic          " << L"\n"; break;
-                //    case LocationType::LocIsTLS             : std::wcout << L"locationType is " << L"LocIsTLS             " << L"\n"; break;
-                //    case LocationType::LocIsRegRel          : std::wcout << L"locationType is " << L"LocIsRegRel          " << L"\n"; break;
-                //    case LocationType::LocIsThisRel         : std::wcout << L"locationType is " << L"LocIsThisRel         " << L"\n"; break;
-                //    case LocationType::LocIsEnregistered    : std::wcout << L"locationType is " << L"LocIsEnregistered    " << L"\n"; break;
-                //    case LocationType::LocIsBitField        : std::wcout << L"locationType is " << L"LocIsBitField        " << L"\n"; break;
-                //    case LocationType::LocIsSlot            : std::wcout << L"locationType is " << L"LocIsSlot            " << L"\n"; break;
-                //    case LocationType::LocIsIlRel           : std::wcout << L"locationType is " << L"LocIsIlRel           " << L"\n"; break;
-                //    case LocationType::LocInMetaData        : std::wcout << L"locationType is " << L"LocInMetaData        " << L"\n"; break;
-                //    case LocationType::LocIsConstant        : std::wcout << L"locationType is " << L"LocIsConstant        " << L"\n"; break;
-                //    case LocationType::LocIsRegRelAliasIndir: std::wcout << L"locationType is " << L"LocIsRegRelAliasIndir" << L"\n"; break;
-                //    case LocationType::LocTypeMax           : std::wcout << L"locationType is " << L"LocTypeMax           " << L"\n"; break;
-                //    };
-            }
-
+            {}
         public:
             static InstanceMember Make(IDiaSymbol* child)
             {
@@ -228,7 +222,7 @@ namespace Odr
             }
             void PrintPrefix() const
             {
-                std::wcout << L"    +" << offset << ToString(access) << (bConst ? L" const" : L"") << (bVolatile ? L" volatile" : L"");
+                std::wcout << L"    +" << offset << L' ' << ToString(access) << (bConst ? L" const" : L"") << (bVolatile ? L" volatile" : L"");
             }
             void PrintSuffix() const
             {
@@ -246,16 +240,6 @@ namespace Odr
                 if (bVolatile != other.bVolatile) return false;
                 if (access    != other.access   ) return false;
                 return true;
-            }
-            static std::wstring ToString(CV_access_e access)
-            {
-                switch(access)
-                {
-                case CV_private  : return L" private";   break;
-                case CV_protected: return L" protected"; break;
-                case CV_public   : return L" public";    break;
-                default          : return L" impossible access type"; break;
-                }
             }
         };
 
@@ -333,6 +317,25 @@ namespace Odr
             }
         };
 
+        class BaseInfo : private ToStringBase
+        {
+            const std::wstring name;
+            const CV_access_e access;    // private/protected/public
+        public:
+            BaseInfo(const std::wstring& name, CV_access_e access) : name(name), access(access) {}
+            void Print() const { std::wcout << L' ' << ToString(access) << L" " << name; }
+
+            friend bool operator==(const BaseInfo& a, const BaseInfo& b) { return  a.IsEqualTo(b); }
+            friend bool operator!=(const BaseInfo& a, const BaseInfo& b) { return !a.IsEqualTo(b); }
+        private:
+            bool IsEqualTo(const BaseInfo& other) const
+            {
+                if (  name != other.name  ) return false;
+                if (access != other.access) return false;
+                return true;
+            }
+        };
+
         const std::wstring                 pdbPath;
         const std::wstring                 name;
         const ULONGLONG                    size;      // total size in bytes
@@ -342,27 +345,31 @@ namespace Odr
               std::vector<ConstantMember>,            // constexpr/const static values
               std::vector<StaticMember >>             // static/constinit/consteval values
                                            members;
-        const std::vector<std::wstring  >  baseNames; // base class names in order
+        const std::vector<BaseInfo>        bases;     // base class names+access in order
         const std::pair<std::vector<MethodInfo>,
                         std::vector<MethodInfo>> methodsAndCtors; // method and ctor names
     public:
         UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath) 
-            : pdbPath  (pdbPath)
+            : pdbPath(pdbPath)
             , name(             BstrToWstr(Get(sym, &IDiaSymbol::get_name)))
             , size(                        Get(sym, &IDiaSymbol::get_length))
             , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
-            , members  (GetMembers  (sym))
-            , baseNames(GetBaseNames(sym))
-            , methodsAndCtors(GetMethods(sym, name))
+            , members(              GetMembers(sym))
+            , bases(               GetBaseInfo(sym))
+            , methodsAndCtors(      GetMethods(sym, name))
         {}
         void Print() const
         {
             std::wcout << L"  [" << pdbPath << L"]\n";
             std::wcout << L"    kind=" << UdtKindToString() << L"  size=" << size << L'\n';
-            if (!baseNames.empty())
+            if (!bases.empty())
             {
                 std::wcout << L"    bases:";
-                for (auto& b : baseNames) std::wcout << L" " << b;
+                for(auto i=0; i<bases.size(); ++i)
+                {
+                    if (i != 0) std::wcout << L',';
+                    bases[i].Print();
+                }
                 std::wcout << L'\n';
             }
             for (auto& i : std::get<0>(members)) i.Print();
@@ -413,7 +420,7 @@ namespace Odr
         {
             if (                        size != other.size                        ) return false;
             if (                     udtKind != other.udtKind                     ) return false;
-            if (                   baseNames != other.baseNames                   ) return false;
+            if (                       bases != other.bases                       ) return false;
             if (       std ::get<0>(members) != std::get<0>(other.members)        ) return false;
             if (        std::get<1>(members) != std::get<1>(other.members)        ) return false;
             if (        std::get<2>(members) != std::get<2>(other.members)        ) return false;
@@ -496,9 +503,9 @@ namespace Odr
             }
             return members;
         }
-        static std::vector<std::wstring> GetBaseNames(IDiaSymbol* sym)
+        static std::vector<BaseInfo> GetBaseInfo(IDiaSymbol* sym)
         {
-            std::vector<std::wstring> baseNames;
+            std::vector<BaseInfo> baseInfos;
 
             // base classes
             CComPtr<IDiaEnumSymbols> bases;
@@ -514,11 +521,11 @@ namespace Odr
                     CComPtr<IDiaSymbol> baseType;
                     if (SUCCEEDED(base->get_type(&baseType)))
                     {
-                        baseNames.push_back(BstrToWstr(Get(baseType, &IDiaSymbol::get_name)));
+                        baseInfos.push_back(BaseInfo(BstrToWstr(Get(baseType, &IDiaSymbol::get_name)), static_cast<CV_access_e>(Get(base, &IDiaSymbol::get_access))));
                     }
                 }
             }
-            return baseNames;
+            return baseInfos;
         }
         static std::pair<std::vector<MethodInfo>,std::vector<MethodInfo>> GetMethods(IDiaSymbol* parent, const std::wstring& className)
         {   // get method and ctor names attached to this udt, if any
