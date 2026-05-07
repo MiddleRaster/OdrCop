@@ -38,6 +38,7 @@ SameClassDifferentDataMemberAccessSpecifier                  g_1_SameClassDiffer
 DifferentAccessSpecifiersOnBaseClass                         g_1_DifferentAccessSpecifiersOnBaseClass;
 DifferentAccessSpecifiersOnMethod                            g_1_DifferentAccessSpecifiersOnMethod;
 StaticFunctionOrMethod                                       g_1_StaticFunctionOrMethod;
+BaseClassVirtualOrNot                                        g_1_BaseClassVirtualOrNot;
 
 
 

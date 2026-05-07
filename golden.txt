@@ -3,6 +3,22 @@ Loading: "TUs\\x64\\Debug\\RegressionTests.pdb"
 Loading: "TUs\\x64\\Debug\\TU1.pdb"
 Loading: "TUs\\x64\\Debug\\TU2.pdb"
 
+ODR VIOLATION: BaseClassVirtualOrNot
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=8
+    bases: public virtual Base1
+    3 ctors:
+      public: void BaseClassVirtualOrNot(struct BaseClassVirtualOrNot *)
+      public: void BaseClassVirtualOrNot(const struct BaseClassVirtualOrNot & const)
+      public: void BaseClassVirtualOrNot()
+    2 methods:
+      public: struct BaseClassVirtualOrNot & const operator=(const struct BaseClassVirtualOrNot & const)
+      public: struct BaseClassVirtualOrNot & const operator=(struct BaseClassVirtualOrNot *)
+  [TUs\x64\Debug\TU1.pdb] (same as above)
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=1
+    bases: public Base1
+
 ODR VIOLATION: BaseClassesInDifferentOrder
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
@@ -331,4 +347,4 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-33 ODR violation(s) found.
+34 ODR violation(s) found.

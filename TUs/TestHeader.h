@@ -113,14 +113,6 @@
 #endif // cannot be seen by DIA or COFF
 
 
-struct StaticFunctionOrMethod
-{
-#ifdef ONE
-    static
-#endif
-    void Foo() {}
-};
-
 struct DifferentSizedMember
 {
 #ifdef ONE
@@ -184,6 +176,13 @@ struct BaseClassesInDifferentOrder
 #else
     : Base2, Base1
 #endif
+{};
+
+struct BaseClassVirtualOrNot :
+#ifdef ONE
+virtual
+#endif
+Base1
 {};
 
 struct DifferentAccessSpecifiersOnBaseClass :
@@ -326,6 +325,14 @@ struct SameClassDifferentVirtualnessOnFunction
 #else
             void VirtualOrNot() {}
 #endif
+};
+
+struct StaticFunctionOrMethod
+{
+#ifdef ONE
+    static
+#endif
+        void Foo() {}
 };
 
 // Same class but different member static vs non‑static

@@ -324,18 +324,20 @@ namespace Odr
         class BaseInfo : private ToStringBase
         {
             const std::wstring name;
-            const CV_access_e access;    // private/protected/public
+            const CV_access_e  access;    // private/protected/public
+            const bool         isVirtual;
         public:
-            BaseInfo(const std::wstring& name, CV_access_e access) : name(name), access(access) {}
-            void Print() const { std::wcout << L' ' << ToString(access) << L" " << name; }
+            BaseInfo(const std::wstring& name, CV_access_e access, bool isVirtual) : name(name), access(access), isVirtual(isVirtual) {}
+            void Print() const { std::wcout << L' ' << ToString(access) << L" " << (isVirtual ? L"virtual " : L"") << name; }
 
             friend bool operator==(const BaseInfo& a, const BaseInfo& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const BaseInfo& a, const BaseInfo& b) { return !a.IsEqualTo(b); }
         private:
             bool IsEqualTo(const BaseInfo& other) const
             {
-                if (  name != other.name  ) return false;
-                if (access != other.access) return false;
+                if (     name != other.name     ) return false;
+                if (   access != other.access   ) return false;
+                if (isVirtual != other.isVirtual) return false;
                 return true;
             }
         };
@@ -525,7 +527,9 @@ namespace Odr
                     CComPtr<IDiaSymbol> baseType;
                     if (SUCCEEDED(base->get_type(&baseType)))
                     {
-                        baseInfos.push_back(BaseInfo(BstrToWstr(Get(baseType, &IDiaSymbol::get_name)), static_cast<CV_access_e>(Get(base, &IDiaSymbol::get_access))));
+                        baseInfos.push_back(BaseInfo(BstrToWstr(Get(baseType, &IDiaSymbol::get_name)),
+                            static_cast<CV_access_e>(Get(base, &IDiaSymbol::get_access)),
+                                                  (!!Get(base, &IDiaSymbol::get_virtualBaseClass))));
                     }
                 }
             }
