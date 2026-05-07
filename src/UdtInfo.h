@@ -33,7 +33,7 @@ namespace Odr
             void Print() const
             {
                 static_cast<const Derived*>(this)->PrintPrefix();
-                std::wcout << L"  " << typeName << L"  " << name;
+                std::wcout << L" " << typeName << L" " << name;
                 static_cast<const Derived*>(this)->PrintSuffix();
             }
             std::wstring GetName() const { return name; }
@@ -162,14 +162,15 @@ namespace Odr
 
         class InstanceMember : public MemberInfoBase<InstanceMember>
         {
-            const LONG      offset;    // byte offset within UDT
-            const ULONGLONG bitSize;   // 0 means "not a bitfield"
-            const DWORD     bitPos;    // valid only when bitSize != 0
-            const BOOL      bConst;    // is "const"
-            const BOOL      bVolatile; // is "volatile"
+            const LONG        offset;    // byte offset within UDT
+            const ULONGLONG   bitSize;   // 0 means "not a bitfield"
+            const DWORD       bitPos;    // valid only when bitSize != 0
+            const BOOL        bConst;    // is "const"
+            const BOOL        bVolatile; // is "volatile"
+            const CV_access_e access;    // private/protected/public
 
-            InstanceMember(IDiaSymbol* child, const std::wstring& name, LONG offset, ULONGLONG bitSize,   DWORD bitPos,    BOOL bConst,       BOOL bVolatile)
-                                       : MemberInfoBase(name, child), offset(offset),  bitSize(bitSize), bitPos(bitPos), bConst(bConst), bVolatile(bVolatile)
+            InstanceMember(IDiaSymbol* child, const std::wstring& name, LONG offset, ULONGLONG bitSize,   DWORD bitPos,    BOOL bConst,       BOOL bVolatile, CV_access_e access)
+                                       : MemberInfoBase(name, child), offset(offset),  bitSize(bitSize), bitPos(bitPos), bConst(bConst), bVolatile(bVolatile),     access(access)
             {
                 //    auto lt = Get(child, &IDiaSymbol::get_locationType);
                 //    switch(lt)
@@ -193,14 +194,15 @@ namespace Odr
         public:
             static InstanceMember Make(IDiaSymbol* child)
             {
-                auto name      = BstrToWstr(Get(child, &IDiaSymbol::get_name));
-                auto offset    =            Get(child, &IDiaSymbol::get_offset);
-                auto bitSize   =            Get(child, &IDiaSymbol::get_length);
-                auto bitPos    =            Get(child, &IDiaSymbol::get_bitPosition);
-                BOOL bConst    =    GetFromType(child, &IDiaSymbol::get_constType);
-                BOOL bVolatile =    GetFromType(child, &IDiaSymbol::get_volatileType);
+                auto name          =               BstrToWstr(Get(child, &IDiaSymbol::get_name));
+                auto offset        =                          Get(child, &IDiaSymbol::get_offset);
+                auto bitSize       =                          Get(child, &IDiaSymbol::get_length);
+                auto bitPos        =                          Get(child, &IDiaSymbol::get_bitPosition);
+                BOOL bConst        =                  GetFromType(child, &IDiaSymbol::get_constType);
+                BOOL bVolatile     =                  GetFromType(child, &IDiaSymbol::get_volatileType);
+                CV_access_e access = static_cast<CV_access_e>(Get(child, &IDiaSymbol::get_access));
 
-                return InstanceMember{child, name, offset, bitSize, bitPos, bConst, bVolatile};
+                return InstanceMember{child, name, offset, bitSize, bitPos, bConst, bVolatile, access};
             }
             static std::vector<InstanceMember> MakeSortedCopy(std::vector<InstanceMember>& members)
             {
@@ -226,7 +228,7 @@ namespace Odr
             }
             void PrintPrefix() const
             {
-                std::wcout << L"    +" << offset << (bConst ? L" const" : L"") << (bVolatile ? L" volatile" : L"");
+                std::wcout << L"    +" << offset << ToString(access) << (bConst ? L" const" : L"") << (bVolatile ? L" volatile" : L"");
             }
             void PrintSuffix() const
             {
@@ -242,7 +244,18 @@ namespace Odr
                     bitPos    != other.bitPos   ) return false;
                 if (bConst    != other.bConst   ) return false;
                 if (bVolatile != other.bVolatile) return false;
+                if (access    != other.access   ) return false;
                 return true;
+            }
+            static std::wstring ToString(CV_access_e access)
+            {
+                switch(access)
+                {
+                case CV_private  : return L" private";   break;
+                case CV_protected: return L" protected"; break;
+                case CV_public   : return L" public";    break;
+                default          : return L" impossible access type"; break;
+                }
             }
         };
 

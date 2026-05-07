@@ -1,6 +1,5 @@
 // Some things are not recorded in the PDB debug info, making some ODR violations undetecable by DIA.
 // Here are some known undetectable ODR violations:
-//   - Access specifier differences (public/private/protected)
 //   - Default argument differences
 //   - static constexpr / static const member value differences
 //   - static constexpr / consteval / constinit
@@ -13,17 +12,6 @@
 //   - friend specifier
 
 #ifdef KNOWN_LIMITATIONS_OF_PDB_DIA
-
-    // Same class but different access specifiers
-    struct SameClassDifferentAccessSpecifier
-    {
-    #ifdef ONE
-    public:
-    #else
-    private:
-    #endif
-        int a;
-    };
 
     // Same class but different default member initializers
     struct DifferentDefaultMemberInitializer
@@ -161,6 +149,17 @@ struct DifferentTypeOfDataMembers
 #else
     unsigned a;
 #endif
+};
+
+// Same class but different data-member access specifiers
+struct SameClassDifferentDataMemberAccessSpecifier
+{
+#ifdef ONE
+public:
+#else
+private:
+#endif
+    int a;
 };
 
 struct Base1 {};

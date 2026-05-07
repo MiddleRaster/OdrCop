@@ -29,163 +29,171 @@ ODR VIOLATION: DifferentBases
 ODR VIOLATION: DifferentConstDataMember
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
-    +0 const  int32_t  a
+    +0 public const int32_t a
     1 ctor:
       void DifferentConstDataMember()
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
-    +0  int32_t  a
+    +0 public int32_t a
     1 ctor:
       void DifferentConstDataMember()
 
 ODR VIOLATION: DifferentDataMemberType
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    +0  char  a
+    +0 public char a
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
-    +0  long  a
+    +0 public long a
 
 ODR VIOLATION: DifferentDataMembers
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
-    +0  int32_t  a
+    +0 public int32_t a
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
-    +0  int32_t  a
-    +4  int32_t  b
+    +0 public int32_t a
+    +4 public int32_t b
 
 ODR VIOLATION: DifferentOrderOfDataMembers
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=8
-    +0  int32_t  a
-    +4  int32_t  b
+    +0 public int32_t a
+    +4 public int32_t b
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
-    +0  int32_t  b
-    +4  int32_t  a
+    +0 public int32_t b
+    +4 public int32_t a
 
 ODR VIOLATION: DifferentSizedMember
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    +0  char  a
+    +0 public char a
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
-    +0  wchar_t*  a
+    +0 public wchar_t* a
 
 ODR VIOLATION: DifferentTypeOfDataMembers
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
-    +0  int32_t  a
+    +0 public int32_t a
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
-    +0  uint32_t  a
+    +0 public uint32_t a
 
 ODR VIOLATION: DifferentVolatileDataMember
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
-    +0 volatile  int32_t  a
+    +0 public volatile int32_t a
     1 ctor:
       void DifferentVolatileDataMember()
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
-    +0  int32_t  a
+    +0 public int32_t a
     1 ctor:
       void DifferentVolatileDataMember()
 
 ODR VIOLATION: SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=8
-    +0  int32_t  a
-    +0  int32_t  x
-    +4  int32_t  b
+    +0 public int32_t a
+    +0 public int32_t x
+    +4 public int32_t b
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
-    +0  int32_t  b
-    +0  int32_t  x
-    +4  int32_t  a
+    +0 public int32_t b
+    +0 public int32_t x
+    +4 public int32_t a
 
 ODR VIOLATION: SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion::<unnamed-tag>::<unnamed-tag>[struct][size=8][first=a]
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=8
-    +0  int32_t  a
-    +4  int32_t  b
+    +0 public int32_t a
+    +4 public int32_t b
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
-    +0  int32_t  b
-    +4  int32_t  a
+    +0 public int32_t b
+    +4 public int32_t a
 
 ODR VIOLATION: SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion::<unnamed-tag>[union][size=8][first=a]
   [TUs\x64\Debug\TU1.pdb]
     kind=union  size=8
-    +0  int32_t  a
-    +0  int32_t  x
-    +4  int32_t  b
+    +0 public int32_t a
+    +0 public int32_t x
+    +4 public int32_t b
   [TUs\x64\Debug\TU2.pdb]
     kind=union  size=8
-    +0  int32_t  b
-    +0  int32_t  x
-    +4  int32_t  a
+    +0 public int32_t b
+    +0 public int32_t x
+    +4 public int32_t a
 
 ODR VIOLATION: SameClassDifferentAlignment
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
-    +0  int32_t  a
+    +0 public int32_t a
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
-    +0  int32_t  a
+    +0 public int32_t a
 
 ODR VIOLATION: SameClassDifferentBitfieldLayout
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
-    +0  uint32_t  a  : 3 bits at bit 0
-    +0  uint32_t  b  : 5 bits at bit 3
+    +0 public uint32_t a  : 3 bits at bit 0
+    +0 public uint32_t b  : 5 bits at bit 3
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
-    +0  uint32_t  a  : 4 bits at bit 0
-    +0  uint32_t  b  : 4 bits at bit 4
+    +0 public uint32_t a  : 4 bits at bit 0
+    +0 public uint32_t b  : 4 bits at bit 4
+
+ODR VIOLATION: SameClassDifferentDataMemberAccessSpecifier
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=4
+    +0 public int32_t a
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=4
+    +0 private int32_t a
 
 ODR VIOLATION: SameClassDifferentPresenceOfAnonymousMembers
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
-    +0  int32_t  a
-    +0  int32_t  b
+    +0 public int32_t a
+    +0 public int32_t b
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
-    +0  int32_t  a
+    +0 public int32_t a
 
 ODR VIOLATION: SameClassDifferentPresenceOfAnonymousMembers::<unnamed-tag>[union][size=4][first=a]
   [TUs\x64\Debug\TU1.pdb]
     kind=union  size=4
-    +0  int32_t  a
-    +0  int32_t  b
+    +0 public int32_t a
+    +0 public int32_t b
   [TUs\x64\Debug\TU2.pdb]
     kind=union  size=4
-    +0  int32_t  a
+    +0 public int32_t a
 
 ODR VIOLATION: SameClassDifferentStaticConstOnDataMember
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    static const   int32_t  a
+    static const  int32_t a
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
-    static   int32_t  a
+    static  int32_t a
 
 ODR VIOLATION: SameClassDifferentStaticOnDataMember
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    static   int32_t  a
+    static  int32_t a
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
-    +0  int32_t  a
+    +0 public int32_t a
 
 ODR VIOLATION: SameClassDifferentStaticVolatileOnDataMember
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    static volatile  int32_t  a
+    static volatile int32_t a
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
-    static   int32_t  a
+    static  int32_t a
 
 ODR VIOLATION: SameClassDifferentVirtualFunctionNames
   [TUs\x64\Debug\TU1.pdb]
@@ -246,12 +254,12 @@ ODR VIOLATION: SameClassDifferentVirtualnessOnFunction
 ODR VIOLATION: SameMemberTypesDifferentOrder
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=8
-    +0  int32_t  a
-    +4  char  b
+    +0 public int32_t a
+    +4 public char b
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
-    +0  char  b
-    +4  int32_t  a
+    +0 public char b
+    +4 public int32_t a
 
 ODR VIOLATION: StructVsClass
   [TUs\x64\Debug\TU1.pdb]
@@ -295,4 +303,4 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-29 ODR violation(s) found.
+30 ODR violation(s) found.

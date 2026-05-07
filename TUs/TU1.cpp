@@ -34,6 +34,8 @@ SameClassDifferentPresenceOfAnonymousMembers                 g_1_SameClassDiffer
 //SameClassDifferentFriendDeclaration                        g_1_SameClassDifferentFriendDeclaration;
 BaseClassesInDifferentOrder                                  g_1_BaseClassesInDifferentOrder;
 EnclosingTypedefDefinition                                   g_1_EnclosingTypedefDefinition;
+SameClassDifferentDataMemberAccessSpecifier                  g_1_SameClassDifferentDataMemberAccessSpecifier;
+
 
 
 int g_1_call_FunctionsMustBeBitwiseIdentical                        = FunctionsMustBeBitwiseIdentical();
