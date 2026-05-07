@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "DiaGetters.h"
+
 namespace Odr
 {
     class EnumInfo

@@ -8,6 +8,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "DiaGetters.h"
+
 namespace Odr
 {
     class UdtInfo

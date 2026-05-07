@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClInclude Include="COFFer.h" />
     <ClInclude Include="cvinfo.h" />
+    <ClInclude Include="DiaGetters.h" />
     <ClInclude Include="EnumInfo.h" />
     <ClInclude Include="OdrCop.h" />
     <ClInclude Include="UdtInfo.h" />
