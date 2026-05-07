@@ -181,7 +181,7 @@ void PrintAllProps(std::wstring tab, const std::wstring& itemName, IDiaSymbol* i
     Print              (tab, item, &IDiaSymbol::get_machineType,                             L"machineType");
     Print              (tab, item, &IDiaSymbol::get_oemId,                                   L"oemId");
     Print              (tab, item, &IDiaSymbol::get_oemSymbolId,                             L"oemSymbolId");
-    Print              (tab, item, &IDiaSymbol::get_objectPointerType,                       L"get_objectPointerType");
+    Print              (tab, item, &IDiaSymbol::get_objectPointerType,                       L"objectPointerType");
     Print              (tab, item, &IDiaSymbol::get_noReturn,                                L"noReturn");
     Print              (tab, item, &IDiaSymbol::get_customCallingConvention,                 L"customCallingConvention");
     Print              (tab, item, &IDiaSymbol::get_noInline,                                L"noInline");

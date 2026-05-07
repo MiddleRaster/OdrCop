@@ -291,10 +291,11 @@ namespace Odr
         {
             const std::wstring name;
             const bool isVirtual;
+            const bool isStatic;
             const CV_access_e access;    // private/protected/public
         public:
-            MethodInfo(const std::wstring& name, bool isVirtual, CV_access_e access) : name(name), isVirtual(isVirtual), access(access) {}
-            void Print() const { std::wcout << L"      " << ToString(access) << L": " << (isVirtual ? L"virtual " : L"") << name << L'\n'; }
+            MethodInfo(const std::wstring& name, bool isVirtual, bool isStatic, CV_access_e access) : name(name), isVirtual(isVirtual), isStatic(isStatic), access(access) {}
+            void Print() const { std::wcout << L"      " << ToString(access) << L": " << (isStatic ? L"static " : L"") << (isVirtual ? L"virtual " : L"") << name << L'\n'; }
             static std::vector<MethodInfo> MakeSortedCopy(std::vector<MethodInfo> methods)
             {   // all this to avoid removing 'const' from my data-members
                 std::vector<size_t> indices(methods.size());
@@ -314,6 +315,7 @@ namespace Odr
             {
                 if (     name != other.name     ) return false;
                 if (isVirtual != other.isVirtual) return false;
+                if  (isStatic != other.isStatic ) return false;
                 if (   access != other.access   ) return false;
                 return true;
             }
@@ -550,6 +552,13 @@ namespace Odr
 
                     bool isVirtual     =                          Get(function, &IDiaSymbol::get_virtual);
                     CV_access_e access = static_cast<CV_access_e>(Get(function, &IDiaSymbol::get_access));
+                    bool isStatic      = false;
+                    CComPtr<IDiaSymbol> type;
+                    if (SUCCEEDED(function->get_type(&type)))
+                    {
+                        CComPtr<IDiaSymbol> thisPointer  = Get(type, &IDiaSymbol::get_objectPointerType);
+                        isStatic       =    thisPointer == nullptr;
+                    }
 
                     if (functionName.m_str != NULL)
                     {
@@ -599,9 +608,9 @@ namespace Odr
 
                         // follow the type to see if this method is a ctor
                         if (TRUE == GetFromType(function, &IDiaSymbol::get_constructor))
-                              ctors.push_back({Trim::Static(methodName, true,      function), false,     access});
+                              ctors.push_back({Trim::Static(methodName, true,      function), false,     isStatic, access});
                         else
-                            methods.push_back({Trim::Static(methodName, isVirtual, function), isVirtual, access});
+                            methods.push_back({Trim::Static(methodName, isVirtual, function), isVirtual, isStatic, access}); // isVirtual and isStatic had better not both be true
                     }
                 }
             }

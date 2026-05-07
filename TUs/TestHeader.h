@@ -3,7 +3,6 @@
 //   - Default argument differences
 //   - static constexpr / static const member value differences
 //   - static constexpr / consteval / constinit
-//   - typedefs
 //   - default template arguments
 //   - noexcept differences
 //   - constexpr / inline differences on member functions
@@ -114,6 +113,13 @@
 #endif // cannot be seen by DIA or COFF
 
 
+struct StaticFunctionOrMethod
+{
+#ifdef ONE
+    static
+#endif
+    void Foo() {}
+};
 
 struct DifferentSizedMember
 {

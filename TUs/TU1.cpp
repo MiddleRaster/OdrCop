@@ -37,6 +37,7 @@ EnclosingTypedefDefinition                                   g_1_EnclosingTypede
 SameClassDifferentDataMemberAccessSpecifier                  g_1_SameClassDifferentDataMemberAccessSpecifier;
 DifferentAccessSpecifiersOnBaseClass                         g_1_DifferentAccessSpecifiersOnBaseClass;
 DifferentAccessSpecifiersOnMethod                            g_1_DifferentAccessSpecifiersOnMethod;
+StaticFunctionOrMethod                                       g_1_StaticFunctionOrMethod;
 
 
 
