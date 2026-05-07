@@ -4,7 +4,6 @@
 //   - static constexpr / static const member value differences
 //   - static constexpr / consteval / constinit
 //   - default template arguments
-//   - noexcept differences
 //   - constexpr / inline differences on member functions
 //   - Attribute differences (__declspec etc.)
 //   - override specifier
@@ -61,16 +60,6 @@
     #endif
     struct SameTemplateDifferentDefaultTemplateArguments {};
 
-    // Same class but different noexcept on member functions
-    struct SameClassDifferentNoExceptOnMethod
-    {
-        void NoExceptMethod()
-    #ifdef ONE
-            noexcept
-    #endif
-        {}
-    };
-
     struct SameClassDifferentInlinenessOnFunction
     {
     #ifdef ONE
@@ -112,6 +101,16 @@
 
 #endif // cannot be seen by DIA or COFF
 
+
+// Same class but different noexcept on member functions
+struct SameClassDifferentNoExceptOnMethod
+{
+    void NoExceptMethod()
+#ifdef ONE
+        noexcept
+#endif
+    {}
+};
 
 struct DifferentSizedMember
 {

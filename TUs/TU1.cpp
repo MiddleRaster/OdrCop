@@ -21,7 +21,7 @@ SameClassDifferentAlignment                                  g_1_SameClassDiffer
 SameClassDifferentVirtualFunctionTableShape                  g_1_SameClassDifferentVirtualFunctionTableShape;
 SameClassDifferentVirtualFunctionNames                       g_1_SameClassDifferentVirtualFunctionNames;
 SameClassDifferentVirtualnessOnFunction                      g_1_SameClassDifferentVirtualnessOnFunction;
-//SameClassDifferentNoExceptOnMethod                         g_1_SameClassDifferentNoExceptOnMethod;
+SameClassDifferentNoExceptOnMethod                           g_1_SameClassDifferentNoExceptOnMethod;
 //SameClassDifferentInlinenessOnFunction                     g_1_SameClassDifferentInlinenessOnFunction;
 //SameClassDifferentConstexpressOnFunction                   g_1_SameClassDifferentConstexpressOnFunction;
 //SameClassDifferentOverrideSpecifier                        g_1_SameClassDifferentOverrideSpecifier;
