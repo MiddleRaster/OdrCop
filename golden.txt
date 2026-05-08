@@ -320,9 +320,6 @@ ODR VIOLATION: StructContainingPointerToDifferentTypes
     kind=struct  size=8
     +0 public char* ptr
   [TUs\x64\Debug\TU2.pdb]
-    kind=struct  size=4
-    +0 public DifferentTypeOfDataMembers ptr
-  [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
     +0 public DifferentTypeOfDataMembers* ptr
 
