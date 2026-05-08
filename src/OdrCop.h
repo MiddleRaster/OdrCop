@@ -98,8 +98,8 @@ namespace Odr
                                     case (enum SymTagEnum)::SymTagEnum:
                                         if (name && name[0] != L'\0')
                                         {
-                                            std::wstring key(name);
-                                            enumMap[key].push_back(EnumInfo(sym, path));
+                                            std::wstring key(QualifiedName(sym));
+                                            enumMap[key].push_back(EnumInfo(path, key, sym));
                                         }
                                         break;
                                     case SymTagEnum::SymTagTypedef:
@@ -112,9 +112,6 @@ namespace Odr
 
                                             tdefMap[key].push_back(TDefInfo(std::wstring(name), sym, path));
                                         }
-                                        break;
-                                    case SymTagEnum::SymTagData:
-                                    //  std::wcout << L"got an anonymous data type: " << name.m_str << L'\n';
                                         break;
                                     default:
                                         break;

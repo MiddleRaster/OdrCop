@@ -41,6 +41,7 @@ StaticFunctionOrMethod                                       g_1_StaticFunctionO
 BaseClassVirtualOrNot                                        g_1_BaseClassVirtualOrNot;
 StructContainingPointerToDifferentTypes                      g_1_StructContainingPointerToDifferentTypes;
 //DataMemberIsStaticConstOrStaticConstexpr                   g_1_DataMemberIsStaticConstOrStaticConstexpr;
+NamelessEnum<int>::Inner<char>                               g_1_instance;
 
 
 

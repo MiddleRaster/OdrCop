@@ -444,3 +444,15 @@ struct EnclosingTypedefDefinition
 #endif
     SameTypedefDifferentUnderlyingType;
 };
+
+
+template<typename Outer>
+struct NamelessEnum
+{
+    template<typename T>
+    struct Inner
+    {
+        enum { value = sizeof(T) == sizeof(char) ? 1 : 0 };
+    };
+};
+

@@ -17,9 +17,7 @@ namespace Odr
         const std::wstring name;
         const std::vector<std::pair<std::wstring,std::wstring>> values; // eg, pairs of {A,1}, {B,2}, etc.
     public:
-        EnumInfo(IDiaSymbol* sym, const std::wstring& pdbPath) : pdbPath(pdbPath)
-                                                               , name(BstrToWstr(Get(sym, &IDiaSymbol::get_name)))
-                                                               , values(MakeVectorOfEnumValues(sym))
+        EnumInfo(const std::wstring& pdbPath, const std::wstring& name, IDiaSymbol* sym) : pdbPath(pdbPath), name(name), values(MakeVectorOfEnumValues(sym))
         {}
         void Print() const
         {
