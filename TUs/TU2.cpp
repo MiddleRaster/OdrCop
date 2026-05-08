@@ -40,6 +40,7 @@ DifferentAccessSpecifiersOnMethod                            g_2_DifferentAccess
 StaticFunctionOrMethod                                       g_2_StaticFunctionOrMethod;
 BaseClassVirtualOrNot                                        g_2_BaseClassVirtualOrNot;
 StructContainingPointerToDifferentTypes                      g_2_StructContainingPointerToDifferentTypes;
+//DataMemberIsStaticConstOrStaticConstexpr                   g_2_DataMemberIsStaticConstOrStaticConstexpr;
 
 
 

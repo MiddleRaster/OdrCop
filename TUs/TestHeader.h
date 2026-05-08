@@ -52,13 +52,26 @@
     #endif
     }
 
+    struct DataMemberIsStaticConstOrStaticConstexpr
+    {
+    #ifdef ONE
+        static const
+    #else
+        static constexpr
+    #endif
+            int a = 1;
+    };
+
     // Same template but different default template arguments
     #ifdef ONE
     template<typename T = char>
     #else
     template<typename T = long>
     #endif
-    struct SameTemplateDifferentDefaultTemplateArguments {};
+    struct SameTemplateDifferentDefaultTemplateArguments
+    {
+        T value;
+    };
 
     struct SameClassDifferentInlinenessOnFunction
     {
@@ -361,6 +374,7 @@ struct SameClassDifferentStaticConstOnDataMember
 #endif
     int a;
 };
+
 struct SameClassDifferentStaticVolatileOnDataMember
 {
 #ifdef ONE
