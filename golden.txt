@@ -315,6 +315,17 @@ ODR VIOLATION: StaticFunctionOrMethod
     1 method:
       public: void Foo() 
 
+ODR VIOLATION: StructContainingPointerToDifferentTypes
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=8
+    +0 public char* ptr
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=4
+    +0 public DifferentTypeOfDataMembers ptr
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=8
+    +0 public DifferentTypeOfDataMembers* ptr
+
 ODR VIOLATION: StructVsClass
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
@@ -357,4 +368,4 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-35 ODR violation(s) found.
+36 ODR violation(s) found.
