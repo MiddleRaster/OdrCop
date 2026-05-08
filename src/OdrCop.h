@@ -89,8 +89,8 @@ namespace Odr
 
                                             if (Get(sym, &IDiaSymbol::get_scoped)) // this may not be the right way to see if my type is defined locally
                                                 break;                             // in a function or a block but everything else the LLMs suggested failed.
-                                            
-                                            UdtInfo udtInfo(sym, path);
+
+                                            UdtInfo udtInfo(sym, path, QualifiedName(sym));
                                             std::wstring key = BuildUdtKey(sym, udtInfo.GetFirstMemberName());
                                             udtMap[key].push_back(udtInfo);
                                         }

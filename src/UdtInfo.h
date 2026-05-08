@@ -366,9 +366,9 @@ namespace Odr
         const std::pair<std::vector<MethodInfo>,
                         std::vector<MethodInfo>> methodsAndCtors; // method and ctor names
     public:
-        UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath) 
+        UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath, const std::wstring& name) 
             : pdbPath(pdbPath)
-            , name(             BstrToWstr(Get(sym, &IDiaSymbol::get_name)))
+            , name   (name)
             , size(                        Get(sym, &IDiaSymbol::get_length))
             , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
             , members(              GetMembers(sym))
@@ -560,10 +560,9 @@ namespace Odr
                     if (FAILED(functions->Next(1, &function, &retrieved)) || retrieved == 0)
                         break;
 
-                    CComBSTR functionName = Get(function, &IDiaSymbol::get_undecoratedName); // prefer this one
+                    CComBSTR functionName  = Get(function, &IDiaSymbol::get_undecoratedName); // prefer this one
                     if (functionName.m_str == NULL)
-                        // function->get_name(&functionName); // but use this one if need be
-                        functionName = Get(function, &IDiaSymbol::get_name); // but use this one if need be
+                        functionName       = Get(function, &IDiaSymbol::get_name); // but use this one if need be
 
                     bool isVirtual     =                          Get(function, &IDiaSymbol::get_virtual);
                     CV_access_e access = static_cast<CV_access_e>(Get(function, &IDiaSymbol::get_access));
