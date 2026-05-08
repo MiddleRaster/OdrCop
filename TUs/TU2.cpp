@@ -39,6 +39,7 @@ DifferentAccessSpecifiersOnBaseClass                         g_2_DifferentAccess
 DifferentAccessSpecifiersOnMethod                            g_2_DifferentAccessSpecifiersOnMethod;
 StaticFunctionOrMethod                                       g_2_StaticFunctionOrMethod;
 BaseClassVirtualOrNot                                        g_2_BaseClassVirtualOrNot;
+StructContainingPointerToDifferentTypes                      g_2_StructContainingPointerToDifferentTypes;
 
 
 

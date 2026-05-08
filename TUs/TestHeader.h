@@ -148,6 +148,16 @@ struct DifferentTypeOfDataMembers
 #endif
 };
 
+struct StructContainingPointerToDifferentTypes
+{
+#ifdef ONE
+    char
+#else
+    DifferentTypeOfDataMembers
+#endif
+    * ptr;
+};
+
 // Same class but different data-member access specifiers
 struct SameClassDifferentDataMemberAccessSpecifier
 {
