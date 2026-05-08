@@ -30,14 +30,6 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
-    - name: Install ATL component
-      shell: cmd
-      run: |
-        "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify ^
-            --installPath "C:\Program Files\Microsoft Visual Studio\18\Enterprise" ^
-            --add Microsoft.VisualStudio.Component.VC.ATL ^
-            --quiet --norestart
-    
     - name: Register DIA SDK
       shell: pwsh
       run: |
@@ -50,11 +42,6 @@ jobs:
       run: |
         reg query HKCR\CLSID\{e6756135-1e65-4d17-8576-610761398c3c} /s
 
-    - name: Check DIA DLL version
-      shell: pwsh
-      run: |
-        (Get-Item "C:\Program Files\Microsoft Visual Studio\18\Enterprise\DIA SDK\bin\amd64\msdia140.dll").VersionInfo.FileVersion
-    
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.3
     
