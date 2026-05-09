@@ -87,7 +87,7 @@ namespace Tests {
     namespace T2 {
         namespace { struct Helper { int x; ~Helper(){} }; }
         struct Public { Helper h; };
-        Public t2_instance;
+        Public g_1_t2_instance;
     }
 
 #ifdef NOT_YET
