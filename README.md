@@ -59,25 +59,28 @@ ODR VIOLATION: FunctionsMustBeBitwiseIdentical
 
 Some things are not recorded in the PDB debug info, making some ODR violations undetectable by DIA.
 
-Here are some known undetectable ODR violations that I've tested:
-   - Access specifier differences (public/private/protected)
-   - Default argument differences
-   - static constexpr / static const member value differences
-   - static constexpr / consteval / constinit
+Here are some known undetectable ODR violations:
+  - Default argument differences
+  - static constexpr / static const member value differences
+  - static constexpr / consteval / constinit
+  - default template arguments
+  - constexpr / inline differences on member functions
+  - Attribute differences (__declspec etc.)
+  - override specifier
+  - friend specifier
 
-Below here are supposedly undetectable by DIA, but I haven't tested (yet):
-   - constexpr / inline differences on member functions
-   - noexcept differences
-   - Attribute differences (__declspec etc.)
+Also, the MSVC toolset is remarkably inconsistent on when it puts "noexcept" on compiler-generated special members, generating false positives.  
+The solution is to explicitly write your own, for example with "noexcept = default;" or "= delete;" as needed.  
+Note that you'll probably need the whole suite per the "Rule of 5."  
+
+It could also happen in the STL code, especially in the STL modules.  
+Since you can't change STL code, I've provided a switch that skips over any "std::" types, **/exclude-stdlib**.  
 
 ## Known limitations of my COFF reader
 
 I'm currently comparing function bodies byte-by-byte on the codegen, so it's not a *symantic* ODR check.  
 For example,
 ```inline void Foo() { return 2+2; }``` vs ```inline void Foo() { return 4; }``` is an ODR violation, but the codegen is identical, so I can't tell.
-
-Other things are just not implemented yet:  
-Relocation canonicalization:  external symbols, for example, are not fixed up (like the linker does).  
 
 ## Final notes
 See ```TUs\TestHeader.h``` for a list of ODR violations I haven't tested/implemented yet.  
