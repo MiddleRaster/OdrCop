@@ -19,7 +19,7 @@ namespace Odr
     public:
         EnumInfo(const std::wstring& pdbPath, const std::wstring& name, IDiaSymbol* sym) : pdbPath(pdbPath), name(name), values(MakeVectorOfEnumValues(sym))
         {}
-        void Print() const
+        void Print(int /*depth*/) const
         {
             std::wcout << L"  [" << pdbPath << L"]\n";
             std::wcout << L"    kind=enum\n";

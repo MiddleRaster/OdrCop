@@ -90,9 +90,14 @@ namespace Odr
                                             if (Get(sym, &IDiaSymbol::get_scoped)) // this may not be the right way to see if my type is defined locally
                                                 break;                             // in a function or a block but everything else the LLMs suggested failed.
 
-                                            UdtInfo udtInfo(sym, path, QualifiedName(sym));
+                                            std::wstring qualifiedName = QualifiedName(sym);
+                                            // Anonymous-namespace types are TU-unique; never compare at top level
+                                            if (qualifiedName.find(L"`anonymous-namespace'") != std::wstring::npos)
+                                                break;
+
+                                            UdtInfo udtInfo(session, sym, path, qualifiedName);
                                             std::wstring key = BuildUdtKey(sym, udtInfo.GetFirstMemberName());
-                                            udtMap[key].push_back(udtInfo);
+                                            udtMap[key].push_back(std::move(udtInfo));
                                         }
                                         break;
                                     case (enum SymTagEnum)::SymTagEnum:
@@ -165,7 +170,7 @@ namespace Odr
                 for (size_t i=0; i<items.size(); ++i)
                 {
                     if (printed[i]) continue;
-                    items[i].Print();
+                    items[i].Print(0);
                     printMismatch(items[i], mismatch);
                     printed[i] = true;
 

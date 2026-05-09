@@ -38,7 +38,7 @@ namespace Odr
             , bodyLength(bodyLength)
             , body(body)
         {}
-        void Print() const
+        void Print(int /*depth*/) const
         {
             std::wcout << L"  [" << compiland << L"]\n";
             std::wcout << L"    undecorated name:  " << undecoratedName << L'\n';

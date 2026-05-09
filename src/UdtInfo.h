@@ -14,33 +14,101 @@ namespace Odr
 {
     class UdtInfo
     {
+        static std::wstring Indent(int depth) { return std::wstring(depth*4, L' '); }
+
         template <typename Derived>
         class MemberInfoBase
         {
-            const std::wstring name;
-            const std::wstring typeName;
+            const std::wstring       name;
+            const std::wstring       typeName;
+            std::unique_ptr<UdtInfo> nestedUdt; // populated only for anonymous-namespace UDT members
         public:
-            MemberInfoBase(const std::wstring& name, IDiaSymbol* sym) : name(name), typeName(resolveTypeName(Get(sym, &IDiaSymbol::get_type))) {}
+            MemberInfoBase(IDiaSession* session, const std::wstring& name, IDiaSymbol* sym, const std::wstring& pdbPath)
+                : name(name)
+                , typeName (resolveTypeName (Get(sym, &IDiaSymbol::get_type)))
+                , nestedUdt(resolveNestedUdt(session, Get(sym, &IDiaSymbol::get_type), L"   I'm nested: " + pdbPath))
+            {}
+            MemberInfoBase(MemberInfoBase&&) = default;
             bool IsEqualTo(const Derived& other) const
             {
                 if (name     != other.name    ) return false;
                 if (typeName != other.typeName)
                     if (!(isAnonymous(typeName) && isAnonymous(other.typeName)))
                         return false;
-                    // else treat as equal
+
+                // If both sides have a nested UDT, compare it structurally
+                if     ( nestedUdt ||  other.nestedUdt) {
+                    if (!nestedUdt || !other.nestedUdt)
+                        return false;
+                    if (*nestedUdt != *other.nestedUdt)
+                        return false;
+                }
                 return static_cast<const Derived*>(this)->IsEqualToImpl(other);
             }
-            void Print() const
+            void Print(int depth) const
             {
-                static_cast<const Derived*>(this)->PrintPrefix();
+                std::wstring indent = Indent(depth);
+
+                static_cast<const Derived*>(this)->PrintPrefix(depth);
                 std::wcout << L" " << typeName << L" " << name;
-                static_cast<const Derived*>(this)->PrintSuffix();
+                static_cast<const Derived*>(this)->PrintSuffix(depth);
+
+                if (nestedUdt)
+                    nestedUdt->Print(depth+1);
             }
             std::wstring GetName() const { return name; }
 
             friend bool operator==(const Derived& a, const Derived& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const Derived& a, const Derived& b) { return !a.IsEqualTo(b); }
         private:
+            static std::unique_ptr<UdtInfo> resolveNestedUdt(IDiaSession* session, IDiaSymbol* type, const std::wstring& pdbPath)
+            {
+                if (!type || !session)
+                    return nullptr;
+
+                if (SymTagUDT != static_cast<enum SymTagEnum>(Get(type, &IDiaSymbol::get_symTag)))
+                    return nullptr;
+
+                // Only recurse into anonymous-namespace UDTs;
+                std::wstring name = BstrToWstr(Get(type, &IDiaSymbol::get_name));
+                if (name.find(L"anonymous-namespace'") == std::wstring::npos)
+                    return nullptr;
+
+                // Check if this is already the defining symbol
+                if (!Get(type, &IDiaSymbol::get_exportIsForwarder))
+                    return std::make_unique<UdtInfo>(session, type, pdbPath, name);
+
+                // It's a forwarder — search the lexical parent scope for the defining symbol
+                //CComPtr<IDiaSymbol> lexParent;
+                //if (FAILED(type->get_lexicalParent(&lexParent)) || !lexParent)
+                //    return nullptr;
+                DWORD lexParentId = Get(type, &IDiaSymbol::get_lexicalParentId);
+                CComPtr<IDiaSymbol> lexParent;
+                if (FAILED(session->symbolById(lexParentId, &lexParent)) || !lexParent)
+                    return nullptr;
+
+                // trying tail end of the name as the name
+                std::wstring tail = name;
+                size_t pos = name.rfind(L"::");
+                if (pos != std::wstring::npos)
+                    tail = name.substr(pos + 2);
+
+                CComPtr<IDiaEnumSymbols> found;
+                if (FAILED(lexParent->findChildren(SymTagUDT, /*name*/ tail.c_str(), nsCaseSensitive, &found)) || !found)
+                    return nullptr;
+                while (true)
+                {
+                    ULONG fetched = 0;
+                    CComPtr<IDiaSymbol> candidate;
+                    if (FAILED(found->Next(1, &candidate, &fetched)) || fetched == 0)
+                        break;
+
+                    if (!Get(candidate, &IDiaSymbol::get_exportIsForwarder))
+                        return std::make_unique<UdtInfo>(session, candidate, pdbPath, name);
+                }
+                return nullptr;
+            }
+
             static bool isAnonymous(const std::wstring& name)
             {
                 // Extract tail after last "::"
@@ -182,11 +250,18 @@ namespace Odr
             const BOOL        bVolatile; // is "volatile"
             const CV_access_e access;    // private/protected/public
 
-            InstanceMember(IDiaSymbol* child, const std::wstring& name, LONG offset, ULONGLONG bitSize,   DWORD bitPos,    BOOL bConst,       BOOL bVolatile, CV_access_e access)
-                                       : MemberInfoBase(name, child), offset(offset),  bitSize(bitSize), bitPos(bitPos), bConst(bConst), bVolatile(bVolatile),     access(access)
+            InstanceMember(IDiaSession* session, IDiaSymbol* child, const std::wstring& name, const std::wstring& pdbPath, LONG offset, ULONGLONG bitSize,   DWORD bitPos,    BOOL bConst,       BOOL bVolatile, CV_access_e access)
+                : MemberInfoBase(session, name, child, pdbPath)
+                , offset   (offset)
+                , bitSize  (bitSize)
+                , bitPos   (bitPos)
+                , bConst   (bConst)
+                , bVolatile(bVolatile)
+                , access   (access)
             {}
         public:
-            static InstanceMember Make(IDiaSymbol* child)
+            InstanceMember(InstanceMember&&) = default;
+            static InstanceMember Make(IDiaSession* session, IDiaSymbol* child, const std::wstring& pdbPath)
             {
                 auto name          =               BstrToWstr(Get(child, &IDiaSymbol::get_name));
                 auto offset        =                          Get(child, &IDiaSymbol::get_offset);
@@ -196,7 +271,7 @@ namespace Odr
                 BOOL bVolatile     =                  GetFromType(child, &IDiaSymbol::get_volatileType);
                 CV_access_e access = static_cast<CV_access_e>(Get(child, &IDiaSymbol::get_access));
 
-                return InstanceMember{child, name, offset, bitSize, bitPos, bConst, bVolatile, access};
+                return InstanceMember{session, child, name, pdbPath, offset, bitSize, bitPos, bConst, bVolatile, access};
             }
             static std::vector<InstanceMember> MakeSortedCopy(std::vector<InstanceMember>& members)
             {
@@ -207,7 +282,7 @@ namespace Odr
                 std::vector<InstanceMember> sorted;
                 sorted.reserve(members.size());
                 for (size_t i : idx)
-                    sorted.push_back(members[i]);
+                    sorted.push_back(std::move(members[i]));
                 return sorted;
             }
         private:
@@ -220,11 +295,8 @@ namespace Odr
                     return Get(type, m);
                 return FALSE;
             }
-            void PrintPrefix() const
-            {
-                std::wcout << L"    +" << offset << L' ' << ToString(access) << (bConst ? L" const" : L"") << (bVolatile ? L" volatile" : L"");
-            }
-            void PrintSuffix() const
+            void PrintPrefix(int   depth  ) const { std::wcout << Indent(depth) << L"    +" << offset << L' ' << ToString(access) << (bConst ? L" const" : L"") << (bVolatile ? L" volatile" : L""); }
+            void PrintSuffix(int /*depth*/) const
             {
                 if (bitSize)
                     std::wcout << L"  : " << bitSize << L" bits at bit " << bitPos;
@@ -248,13 +320,17 @@ namespace Odr
         {
             std::wstring constValue;
         public:
-            ConstantMember(std::wstring name, IDiaSymbol* pType, std::wstring constValue) : MemberInfoBase(name,pType), constValue(constValue) {}
+            ConstantMember(IDiaSession* session, std::wstring name, IDiaSymbol* pType, const std::wstring& pdbPath, std::wstring constValue)
+                : MemberInfoBase(session, name,pType,pdbPath)
+                , constValue(constValue)
+            {}
+            ConstantMember(ConstantMember&&) = default;
         private:
             friend MemberInfoBase<ConstantMember>;
 
             bool IsEqualToImpl(const ConstantMember& other) const { return constValue == other.constValue; }
-            void PrintPrefix() const { std::wcout << L"    constexpr/const static value  "; }
-            void PrintSuffix() const { std::wcout << L'\n'; }
+            void PrintPrefix(int   depth  ) const { std::wcout << Indent(depth) << L"    constexpr/const static value  "; }
+            void PrintSuffix(int /*depth*/) const { std::wcout << L'\n'; }
         };
         class StaticMember : public MemberInfoBase<StaticMember>
         {
@@ -262,11 +338,12 @@ namespace Odr
             const BOOL  isConstant;
             const BOOL  isVolatile;
         public:
-            StaticMember(std::wstring name, IDiaSymbol* pType)
-                : MemberInfoBase(name,pType)
+            StaticMember(IDiaSession* session, const std::wstring& name, IDiaSymbol* pType, const std::wstring& pdbPath)
+                : MemberInfoBase(session, name,pType,pdbPath)
                 , isConstant    (GetFromType(pType, &IDiaSymbol::get_constType))
                 , isVolatile    (GetFromType(pType, &IDiaSymbol::get_volatileType))
             {}
+            StaticMember(StaticMember&&) = default;
         private:
             friend MemberInfoBase<StaticMember>;
             bool IsEqualToImpl(const StaticMember& other) const
@@ -276,8 +353,8 @@ namespace Odr
                     return true;
                 return false;
             }
-            void PrintPrefix() const { std::wcout << L"    static " << (isConstant ? L"const " : L"") << (isVolatile ? L"volatile" : L""); };
-            void PrintSuffix() const { std::wcout << L'\n'; }
+            void PrintPrefix(int   depth  ) const { std::wcout << Indent(depth) << L"    static " << (isConstant ? L"const " : L"") << (isVolatile ? L"volatile" : L""); };
+            void PrintSuffix(int /*depth*/) const { std::wcout << L'\n'; }
             static BOOL GetFromType(IDiaSymbol* sym, HRESULT(IDiaSymbol::* m)(BOOL*))
             {
                 CComPtr<IDiaSymbol> type;
@@ -297,9 +374,10 @@ namespace Odr
         public:
             MethodInfo(CV_access_e access,       bool isVirtual,      bool isStatic, const std::wstring& name,        bool isNoExcept)
                           : access(access), isVirtual(isVirtual), isStatic(isStatic),               name(name), isNoExcept(isNoExcept) {}
-            void Print() const
+            void Print(int depth) const
             {
-                std::wcout << L"      " << ToString(access) << L": " 
+                std::wcout << Indent(depth)
+                           << L"      " << ToString(access) << L": " 
                            << (isStatic   ? L"static "  : L"") 
                            << (isVirtual  ? L"virtual " : L"")
                            << name                          << L" "
@@ -334,12 +412,19 @@ namespace Odr
 
         class BaseInfo : private ToStringBase
         {
-            const std::wstring name;
-            const CV_access_e  access;    // private/protected/public
-            const bool         isVirtual;
+            const std::wstring       name;
+            const CV_access_e        access;    // private/protected/public
+            const bool               isVirtual;
+            std::unique_ptr<UdtInfo> nestedUdt; // populated only for anonymous-namespace bases
         public:
-            BaseInfo(const std::wstring& name, CV_access_e access, bool isVirtual) : name(name), access(access), isVirtual(isVirtual) {}
-            void Print() const { std::wcout << L' ' << ToString(access) << L" " << (isVirtual ? L"virtual " : L"") << name; }
+            BaseInfo(IDiaSession* session, const std::wstring& name, CV_access_e access, bool isVirtual, IDiaSymbol* baseType, const std::wstring& pdbPath)
+                : name(name)
+                , access(access)
+                , isVirtual(isVirtual)
+                , nestedUdt(resolveNestedUdt(session, baseType, pdbPath))
+            {}
+            BaseInfo(BaseInfo&&) = default;
+            void Print(int depth) const { std::wcout << Indent(depth) << L' ' << ToString(access) << L" " << (isVirtual ? L"virtual " : L"") << name; }
 
             friend bool operator==(const BaseInfo& a, const BaseInfo& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const BaseInfo& a, const BaseInfo& b) { return !a.IsEqualTo(b); }
@@ -349,7 +434,28 @@ namespace Odr
                 if (     name != other.name     ) return false;
                 if (   access != other.access   ) return false;
                 if (isVirtual != other.isVirtual) return false;
+
+                if     ( nestedUdt ||  other.nestedUdt) {
+                    if (!nestedUdt || !other.nestedUdt)
+                        return false;
+                    if (*nestedUdt != *other.nestedUdt)
+                        return false;
+                }
                 return true;
+            }
+        private:
+            static std::unique_ptr<UdtInfo> resolveNestedUdt(IDiaSession* session, IDiaSymbol* type, const std::wstring& pdbPath)
+            {
+                if (!type)
+                    return nullptr;
+
+                CComBSTR n;
+                type->get_name(&n);
+                std::wstring name = BstrToWstr(n);
+                if (name.find(L"`anonymous-namespace'") == std::wstring::npos)
+                    return nullptr;
+
+                return std::make_unique<UdtInfo>(session, type, pdbPath, name);
             }
         };
 
@@ -357,60 +463,64 @@ namespace Odr
         const std::wstring                 name;
         const ULONGLONG                    size;      // total size in bytes
         const UdtKind                      udtKind;   // UdtStruct / UdtClass / UdtUnion
-        const std::tuple<
+              std::tuple<
               std::vector<InstanceMember>,            // data members in offset order
               std::vector<ConstantMember>,            // constexpr/const static values
               std::vector<StaticMember >>             // static/constinit/consteval values
                                            members;
-        const std::vector<BaseInfo>        bases;     // base class names+access in order
+              std::vector<BaseInfo>        bases;     // base class names+access in order
         const std::pair<std::vector<MethodInfo>,
                         std::vector<MethodInfo>> methodsAndCtors; // method and ctor names
     public:
-        UdtInfo(IDiaSymbol* sym, const std::wstring& pdbPath, const std::wstring& name) 
+        UdtInfo(IDiaSession* session, IDiaSymbol* sym, const std::wstring& pdbPath, const std::wstring& name)
             : pdbPath(pdbPath)
             , name   (name)
             , size(                        Get(sym, &IDiaSymbol::get_length))
             , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
-            , members(              GetMembers(sym))
-            , bases(               GetBaseInfo(sym))
+            , members(     GetMembers(session, sym, pdbPath))
+            , bases(      GetBaseInfo(session, sym, pdbPath))
             , methodsAndCtors(      GetMethods(sym, name))
         {}
-        void Print() const
+        UdtInfo(UdtInfo&&) = default;
+        void Print(int depth) const
         {
-            std::wcout << L"  [" << pdbPath << L"]\n";
-            std::wcout << L"    kind=" << UdtKindToString() << L"  size=" << size << L'\n';
+            std::wstring indent = Indent(depth);
+            if (depth == 0)
+                std::wcout << indent << L"  [" << pdbPath << L"]\n";
+
+            std::wcout <<indent << L"    kind=" << UdtKindToString() << L"  size=" << size << L'\n';
             if (!bases.empty())
             {
-                std::wcout << L"    bases:";
+                std::wcout << indent << L"    bases:";
                 for(auto i=0; i<bases.size(); ++i)
                 {
                     if (i != 0) std::wcout << L',';
-                    bases[i].Print();
+                    bases[i].Print(depth);
                 }
                 std::wcout << L'\n';
             }
-            for (auto& i : std::get<0>(members)) i.Print();
-            for (auto& c : std::get<1>(members)) c.Print();
-            for (auto& s : std::get<2>(members)) s.Print();
+            for (auto& i : std::get<0>(members)) i.Print(depth);
+            for (auto& c : std::get<1>(members)) c.Print(depth);
+            for (auto& s : std::get<2>(members)) s.Print(depth);
 
             const auto& ctors = std::get<1>(methodsAndCtors);
             if (ctors.size() > 0)
             {
                 if (ctors.size() == 1)
-                    std::wcout << L"    1 ctor:\n";
+                    std::wcout << indent << L"    1 ctor:\n";
                 else
-                    std::wcout << L"    " << ctors.size() << L" ctors:\n";
-                for (auto& c : ctors) c.Print();
+                    std::wcout << indent << L"    " << ctors.size() << L" ctors:\n";
+                for (auto& c : ctors) c.Print(depth);
 
             }
             const auto& methods = std::get<0>(methodsAndCtors);
             if (methods.size() > 0)
             {
                 if (methods.size() == 1)
-                    std::wcout << L"    1 method:\n";
+                    std::wcout << indent << L"    1 method:\n";
                 else 
-                    std::wcout << L"    " << methods.size() << L" methods:\n";
-                for(auto& m : methods) m.Print();
+                    std::wcout << indent << L"    " << methods.size() << L" methods:\n";
+                for(auto& m : methods) m.Print(depth);
             }
         }
         void PrintPdbPath() const { std::wcout << L"  [" << pdbPath << L"] (same as above)\n"; }
@@ -441,7 +551,11 @@ namespace Odr
             if (       std ::get<0>(members) != std::get<0>(other.members)        ) return false;
             if (        std::get<1>(members) != std::get<1>(other.members)        ) return false;
             if (        std::get<2>(members) != std::get<2>(other.members)        ) return false;
-         // if (std::get<1>(methodsAndCtors) != std::get<1>(other.methodsAndCtors)) return false; // all ctors may or may not be emitted: C++20 modules have them, TUs may not. Not an ODR violation
+            if (std::get<1>(methodsAndCtors) != std::get<1>(other.methodsAndCtors)) return false;
+            
+            // the previous line was commented out with this comment:  // all ctors may or may not be emitted: C++20 modules have them, TUs may not. Not an ODR violation
+            // This might be wrong. Will try ignore noexcept when compiler-generated
+
             if (std::get<0>(methodsAndCtors) != std::get<0>(other.methodsAndCtors)) return false;
             return true;
         }
@@ -457,7 +571,7 @@ namespace Odr
             }
         }
 
-        static std::tuple<std::vector<InstanceMember>, std::vector<ConstantMember>, std::vector<StaticMember>> GetMembers(IDiaSymbol* sym)
+        static std::tuple<std::vector<InstanceMember>, std::vector<ConstantMember>, std::vector<StaticMember>> GetMembers(IDiaSession* session, IDiaSymbol* sym, const std::wstring& pdbPath)
         {
             std::vector<InstanceMember> members;
             std::vector<ConstantMember> constants;
@@ -479,21 +593,20 @@ namespace Odr
                     child->get_dataKind(&dataKind);
                     if (DataIsMember == static_cast<DataKind>(dataKind))
                     {
-                        members.push_back(InstanceMember::Make(child));
+                        members.push_back(InstanceMember::Make(session, child, pdbPath));
                     }
                     else if (DataIsStaticMember == static_cast<DataKind>(dataKind))
                     {
-                        statics.push_back(StaticMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)), child));
-
+                        statics.push_back(StaticMember(session, BstrToWstr(Get(child, &IDiaSymbol::get_name)), child, pdbPath));
                     } else {
                         // add other DataKind types
                         continue; // here only so I can put a breakpoint on it
                     }
                 }
             }
-            return {InstanceMember::MakeSortedCopy(members), constants, statics};
+            return {std::move(InstanceMember::MakeSortedCopy(members)), std::move(constants), std::move(statics)};
         }
-        static std::vector<ConstantMember> GetConstantMembers(IDiaSymbol* sym)
+        static std::vector<ConstantMember> GetConstantMembers(IDiaSession* session, IDiaSymbol* sym, const std::wstring& pdbPath)
         {
             std::vector<ConstantMember> members;
 
@@ -512,15 +625,17 @@ namespace Odr
                     child->get_dataKind(&dataKind);
                     if (DataIsConstant == static_cast<DataKind>(dataKind))
                     {   // only constant members
-                        members.push_back(ConstantMember(BstrToWstr(Get(child, &IDiaSymbol::get_name)),
+                        members.push_back(ConstantMember(session,
+                                                         BstrToWstr(Get(child, &IDiaSymbol::get_name)),
                                                                     Get(child, &IDiaSymbol::get_type ),
+                                                                    pdbPath,
                                                                     Get(child, &IDiaSymbol::get_value)));
                     }
                 }
             }
             return members;
         }
-        static std::vector<BaseInfo> GetBaseInfo(IDiaSymbol* sym)
+        static std::vector<BaseInfo> GetBaseInfo(IDiaSession* session, IDiaSymbol* sym, const std::wstring& pdbPath)
         {
             std::vector<BaseInfo> baseInfos;
 
@@ -538,9 +653,12 @@ namespace Odr
                     CComPtr<IDiaSymbol> baseType;
                     if (SUCCEEDED(base->get_type(&baseType)))
                     {
-                        baseInfos.push_back(BaseInfo(BstrToWstr(Get(baseType, &IDiaSymbol::get_name)),
-                            static_cast<CV_access_e>(Get(base, &IDiaSymbol::get_access)),
-                                                  (!!Get(base, &IDiaSymbol::get_virtualBaseClass))));
+                        baseInfos.emplace_back(BaseInfo(session,
+                                                        BstrToWstr(Get(baseType, &IDiaSymbol::get_name)),
+                                          static_cast<CV_access_e>(Get(base,     &IDiaSymbol::get_access)),
+                                                                (!!Get(base,     &IDiaSymbol::get_virtualBaseClass)),
+                                                                       baseType,
+                                                                       pdbPath));
                     }
                 }
             }

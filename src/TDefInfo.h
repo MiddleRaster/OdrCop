@@ -18,7 +18,7 @@ namespace Odr
         const std::wstring underlyingType;
     public:
         TDefInfo(const std::wstring& name, IDiaSymbol* sym, const std::wstring& pdbPath) : name(name), pdbPath(pdbPath), underlyingType(GetUnderlyingType(sym)) {}
-        void Print() const
+        void Print(int /*depth*/) const
         {
             std::wcout << L"  [" << pdbPath << L"]\n";
             std::wcout << L"    kind=typedef\n";
