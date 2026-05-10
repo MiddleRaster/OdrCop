@@ -55,6 +55,12 @@ jobs:
         Write-Host "mspdbcore path: $($mspdb.FullName)"
         Write-Host "mspdbcore version: $($mspdb.VersionInfo.FileVersion)"
 
+    - name: List installed MSVC toolsets
+      shell: pwsh
+      run: |
+        Get-ChildItem "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\" |
+          Select-Object Name
+
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
