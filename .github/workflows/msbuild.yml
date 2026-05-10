@@ -36,6 +36,8 @@ jobs:
         $dll = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\DIA SDK\bin\amd64\msdia140.dll"
         Write-Host "Registering: $dll"
         & regsvr32 /s $dll
+        $ver = (Get-Item $dll).VersionInfo
+        Write-Host "DIA version: $($ver.FileMajorPart).$($ver.FileMinorPart).$($ver.FileBuildPart).$($ver.FilePrivatePart)"
 
     - name: Verify DIA registration
       shell: cmd
