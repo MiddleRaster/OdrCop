@@ -44,10 +44,22 @@ jobs:
       run: |
         reg query HKCR\CLSID\{e6756135-1e65-4d17-8576-610761398c3c} /s
 
-    - name: Add MSBuild (VS2026) to PATH
-      uses: microsoft/setup-msbuild@v2
-      with:
-        vs-version: '[18.0,18.1)'
+    - name: Manually locate MSBuild 18.x
+      shell: pwsh
+      run: |
+        $vs = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" `
+                  -all -prerelease -products * `
+                  -requires Microsoft.Component.MSBuild `
+                  -property installationPath
+
+        if (-not $vs) {
+          Write-Error "VS2026 installation not found by vswhere"
+          exit 1
+        }
+
+        $msbuild = Join-Path $vs "MSBuild\Current\Bin"
+        Write-Host "Using MSBuild from: $msbuild"
+        $msbuild | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Verify MSBuild path
       shell: pwsh
