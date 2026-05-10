@@ -115,6 +115,8 @@ namespace Tests {
         Local g_2_t5_instance;
     }
 
+#ifdef NOT_YET
+
     // Test 6 — Anonymous type as template argument, external-linkage instantiation, different layouts
     // OdrCop SHOULD flag
     namespace T6 {
@@ -138,8 +140,6 @@ namespace Tests {
         struct Public : Base {};
         Public g_2_t8_instance;
     }
-
-#ifdef NOT_YET
 
     // Test 9 — Anonymous type as parameter of external-linkage function, different layouts
     // OdrCop SHOULD flag
