@@ -90,14 +90,12 @@ namespace Tests {
         Public g_2_t2_instance;
     }
 
-#ifdef NOT_YET
-
     // Test 3 — Anonymous type inside external-linkage struct, identical layouts
     // OdrCop should NOT flag
     namespace T3 {
         namespace { struct Helper { int x; }; }
         struct Public { Helper h; };
-        Public t3_instance;
+        Public g_2_t3_instance;
     }
 
     // Test 4 — Anonymous type unused by external-linkage struct
@@ -105,8 +103,8 @@ namespace Tests {
     namespace T4 {
         namespace { struct Helper { int x; void f(int); }; }
         struct Public { int a; };
-        Helper t4_helper_instance;
-        Public t4_public_instance;
+        Helper g_2_t4_helper_instance;
+        Public g_2_t4_public_instance;
     }
 
     // Test 5 — Anonymous type used only inside inline function
@@ -114,7 +112,7 @@ namespace Tests {
     namespace T5 {
         namespace { struct Local { double y; }; }
         inline int f() { Local l{ 1.0 }; return (int)l.y; }
-        Local t5_instance;
+        Local g_2_t5_instance;
     }
 
     // Test 6 — Anonymous type as template argument, external-linkage instantiation, different layouts
@@ -122,7 +120,7 @@ namespace Tests {
     namespace T6 {
         namespace { struct Tag { double y; }; }
         template<typename T> struct Wrapper { T t; };
-        Wrapper<Tag> w;
+        Wrapper<Tag> g_2_w;
     }
 
     // Test 7 — Anonymous type as base class of external-linkage struct, different layouts
@@ -130,7 +128,7 @@ namespace Tests {
     namespace T7 {
         namespace { struct Base { double y; }; }
         struct Public : Base {};
-        Public t7_instance;
+        Public g_2_t7_instance;
     }
 
     // Test 8 — Anonymous type as base class of external-linkage struct, identical layouts
@@ -138,14 +136,16 @@ namespace Tests {
     namespace T8 {
         namespace { struct Base { int x; }; }
         struct Public : Base {};
-        Public t8_instance;
+        Public g_2_t8_instance;
     }
+
+#ifdef NOT_YET
 
     // Test 9 — Anonymous type as parameter of external-linkage function, different layouts
     // OdrCop SHOULD flag
     namespace T9 {
         namespace { struct Arg { double y; }; }
-        Arg t9_instance;
+        Arg g_2_t9_instance;
         void f(Arg a);
     }
 
@@ -153,7 +153,7 @@ namespace Tests {
     // OdrCop SHOULD flag
     namespace T10 {
         namespace { struct Result { double y; }; }
-        Result t10_instance;
+        Result g_2_t10_instance;
         Result f();
     }
 
@@ -161,7 +161,7 @@ namespace Tests {
     // OdrCop should NOT flag
     namespace T11 {
         namespace { namespace { struct Empty { double y; }; } }
-        Empty t11_instance;
+        Empty g_2_t11_instance;
     }
 
     // Test 12 — TBCI pattern: anonymous Empty as template argument, different layouts
@@ -169,9 +169,11 @@ namespace Tests {
     namespace T12 {
         namespace { struct Empty { int payload; }; }
         template<typename T> struct ClassUnderTest { T t; };
-        ClassUnderTest<Empty> cut;
+        ClassUnderTest<Empty> g_2_cut;
     }
+
 #endif
+
 } // namespace Tests
 /*
 ### ** Expected OdrCop Results**
