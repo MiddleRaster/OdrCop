@@ -60,8 +60,8 @@ jobs:
     - name: Show mspdbcore version
       shell: pwsh
       run: |
-        $mspdbPath = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\*\bin\Hostx64\x64\mspdbcore.dll"
-        $mspdb = Get-Item $mspdbPath | Select-Object -First 1
+        $mspdbPath = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\mspdbcore.dll"
+        $mspdb = Get-Item $mspdbPath
         Write-Host "mspdbcore path: $($mspdb.FullName)"
         Write-Host "mspdbcore version: $($mspdb.VersionInfo.FileVersion)"
 
@@ -70,6 +70,16 @@ jobs:
       run: |
         Get-ChildItem "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\" |
           Select-Object Name
+
+    - name: Show resolved VCToolsVersion
+      shell: pwsh
+      run: |
+        msbuild ${{env.SOLUTION_FILE_PATH}} `
+          /p:Configuration=${{env.BUILD_CONFIGURATION}} `
+          /p:PlatformToolset=v145 `
+          /p:VCToolsVersion=14.50.35717 `
+          /v:diag | Select-String "VCToolsVersion"
+
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
