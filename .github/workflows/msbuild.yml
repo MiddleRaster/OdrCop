@@ -65,7 +65,7 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /restore /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:PlatformToolset=v145 ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /restore /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:PlatformToolset=v145 -p:VCToolsVersion=14.50.35717 ${{env.SOLUTION_FILE_PATH}}
 
     - name: Run tests (console test EXE)
       shell: cmd
