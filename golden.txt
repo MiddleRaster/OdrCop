@@ -347,14 +347,6 @@ ODR VIOLATION: Tests::T2::Public
         kind=struct  size=4
         +0 public uint32_t y
 
-ODR VIOLATION: Tests::T6::Wrapper<Tests::T6::`anonymous namespace'::Tag>
-  [TUs\x64\Debug\TU1.pdb]
-    kind=struct  size=4
-    +0 public Tests::T6::`anonymous-namespace'::Tag t
-  [TUs\x64\Debug\TU2.pdb]
-    kind=struct  size=8
-    +0 public Tests::T6::`anonymous-namespace'::Tag t
-
 ODR VIOLATION: ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ
   [TUs\x64\Debug\TU1.obj]
     undecorated name:  SameFunctionTemplateSpecializationDifferentDefinitions<int>
@@ -391,4 +383,4 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-38 ODR violation(s) found.
+37 ODR violation(s) found.

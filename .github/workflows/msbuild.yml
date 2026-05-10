@@ -52,49 +52,11 @@ jobs:
         Write-Host "Using MSBuild from: $msbuild"
         $msbuild | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - name: List Visual Studio installations
-      shell: pwsh
-      run: |
-        & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -all -prerelease -products * -format json
-
-    - name: Show mspdbcore version
-      shell: pwsh
-      run: |
-        $mspdbPath = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\mspdbcore.dll"
-        $mspdb = Get-Item $mspdbPath
-        Write-Host "mspdbcore path: $($mspdb.FullName)"
-        Write-Host "mspdbcore version: $($mspdb.VersionInfo.FileVersion)"
-
-    - name: List installed MSVC toolsets
-      shell: pwsh
-      run: |
-        Get-ChildItem "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\" |
-          Select-Object Name
-
-    - name: Show resolved VCToolsVersion
-      shell: pwsh
-      run: |
-        msbuild ${{env.SOLUTION_FILE_PATH}} `
-          /p:Configuration=${{env.BUILD_CONFIGURATION}} `
-          /p:PlatformToolset=v145 `
-          /p:VCToolsVersion=14.50.35717 `
-          /v:diag | Select-String "VCToolsVersion"
-
-
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /restore /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:PlatformToolset=v145 -p:VCToolsVersion=14.50.35717 ${{env.SOLUTION_FILE_PATH}}
-
-    - name: DiaDump T6 Wrapper from TU1 and TU2
-      shell: cmd
-      working-directory: ${{ github.workspace }}
-      run: |
-        echo === TU1 ===
-        x64\Debug\DiaDump.exe TUs\x64\Debug\TU1.pdb "Tests::T6::Wrapper<Tests::T6::`anonymous namespace'::Tag>"
-        echo === TU2 ===
-        x64\Debug\DiaDump.exe TUs\x64\Debug\TU2.pdb "Tests::T6::Wrapper<Tests::T6::`anonymous namespace'::Tag>"
 
     - name: Run tests (console test EXE)
       shell: cmd
