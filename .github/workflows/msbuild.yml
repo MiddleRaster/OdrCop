@@ -44,6 +44,21 @@ jobs:
       run: |
         reg query HKCR\CLSID\{e6756135-1e65-4d17-8576-610761398c3c} /s
 
+    - name: Add MSBuild (VS2026) to PATH
+      uses: microsoft/setup-msbuild@v2
+      with:
+        vs-version: '[18.0,18.1)'
+
+    - name: Verify MSBuild path
+      shell: pwsh
+      run: |
+        Get-Command msbuild.exe | Format-List *
+
+    - name: List Visual Studio installations
+      shell: pwsh
+      run: |
+        & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -all -prerelease -products * -format json
+
     - name: Show mspdbcore version
       shell: pwsh
       run: |
