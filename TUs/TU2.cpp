@@ -115,8 +115,6 @@ namespace Tests {
         Local g_2_t5_instance;
     }
 
-#ifdef NOT_YET
-
     // Test 6 — Anonymous type as template argument, external-linkage instantiation, different layouts
     // OdrCop SHOULD flag
     namespace T6 {
@@ -124,6 +122,8 @@ namespace Tests {
         template<typename T> struct Wrapper { T t; };
         Wrapper<Tag> g_2_w;
     }
+
+#ifdef NOT_YET
 
     // Test 7 — Anonymous type as base class of external-linkage struct, different layouts
     // OdrCop SHOULD flag
