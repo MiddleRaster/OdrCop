@@ -47,14 +47,13 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.3
     
-    - name: Show compiler and mspdbcore versions
+    - name: Show mspdbcore version
       shell: pwsh
       run: |
-        $cl = & cl.exe 2>&1 | Select-Object -First 1
-        Write-Host "cl.exe: $cl"
         $mspdbPath = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\*\bin\Hostx64\x64\mspdbcore.dll"
         $mspdb = Get-Item $mspdbPath | Select-Object -First 1
-        Write-Host "mspdbcore: $($mspdb.VersionInfo.FileVersion)"
+        Write-Host "mspdbcore path: $($mspdb.FullName)"
+        Write-Host "mspdbcore version: $($mspdb.VersionInfo.FileVersion)"
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
