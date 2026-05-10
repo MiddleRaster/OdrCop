@@ -87,6 +87,15 @@ jobs:
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /restore /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:PlatformToolset=v145 -p:VCToolsVersion=14.50.35717 ${{env.SOLUTION_FILE_PATH}}
 
+    - name: DiaDump T6 Wrapper from TU1 and TU2
+      shell: cmd
+      working-directory: ${{ github.workspace }}
+      run: |
+        echo === TU1 ===
+        x64\Debug\DiaDump.exe TUs\x64\Debug\TU1.pdb "Tests::T6::Wrapper<Tests::T6::`anonymous namespace'::Tag>"
+        echo === TU2 ===
+        x64\Debug\DiaDump.exe TUs\x64\Debug\TU2.pdb "Tests::T6::Wrapper<Tests::T6::`anonymous namespace'::Tag>"
+
     - name: Run tests (console test EXE)
       shell: cmd
       run: |
