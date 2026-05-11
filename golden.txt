@@ -375,6 +375,16 @@ ODR VIOLATION: ?FunctionsMustBeBitwiseIdentical@@YAHXZ
     function body length: 9
     bytes at the first mismatch are: 40 57 b8 02 00 00 00 5f c3 
 
+ODR VIOLATION: ?function9@T9@Tests@@YAXUArg@?A0x????????@12@@Z
+  [TUs\x64\Debug\TU1.obj]
+    undecorated name:  Tests::T9::function9
+    function body length: 7
+    bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
+  [TUs\x64\Debug\TU2.obj]
+    undecorated name:  Tests::T9::function9
+    function body length: 8
+    bytes at the first mismatch are: 48 89 4c 24 08 57 5f c3 
+
 ODR VIOLATION: SameEnumButDifferentValues
   [TUs\x64\Debug\TU1.pdb]
     kind=enum
@@ -391,4 +401,4 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-38 ODR violation(s) found.
+39 ODR violation(s) found.

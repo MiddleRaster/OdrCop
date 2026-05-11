@@ -141,15 +141,17 @@ namespace Tests {
         Public g_1_t8_instance;
     }
 
-#ifdef NOT_YET
-
     // Test 9 — Anonymous type as parameter of external-linkage function, different layouts
     // OdrCop SHOULD flag
     namespace T9 {
         namespace { struct Arg { int x; }; }
         Arg g_1_t9_instance;
-        void f(Arg a);
+        void function9(Arg a) { (void)a; }
     }
+    auto* g_1_addressOfFunctionWithAnonymousNamespaceArg = &T9::function9;   // forces codegen
+
+
+#ifdef NOT_YET
 
     // Test 10 — Anonymous type as return type of external-linkage function, different layouts
     // OdrCop SHOULD flag

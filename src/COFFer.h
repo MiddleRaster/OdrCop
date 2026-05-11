@@ -270,6 +270,7 @@ namespace Odr
                     const BYTE* funcBytes = coff.base + textSec->PointerToRawData + resolvedOff;
                     std::wstring   decoratedName(decorated.begin(), decorated.end());
                     std::wstring undecoratedName(proc->name, proc->name + std::strlen((const char*)proc->name));
+                    std::wstring  normalizedName(NormalizeAnonNsCookies(decoratedName));
 
                     if (excludeStdlib == true)
                     {   // return values are not included in undecoratedName so this check is sufficient
@@ -277,7 +278,7 @@ namespace Odr
                             continue;
                     }
 
-                    funcMap[decoratedName].push_back(FuncInfo(objPath, decoratedName, undecoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len)));
+                    funcMap[normalizedName].push_back(FuncInfo(objPath, normalizedName, undecoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len)));
                 }
             }
         }
@@ -308,10 +309,14 @@ namespace Odr
             while (i < coffHdr->NumberOfSymbols)
             {
                 const IMAGE_SYMBOL& sym = symTab[i];
-                if (sym.StorageClass == IMAGE_SYM_CLASS_EXTERNAL && sym.SectionNumber > 0)
+                if (sym.SectionNumber > 0)
                 {
                     std::string name = GetSymbolName(sym, stringTable);
-                    sectionSyms[sym.SectionNumber].push_back({sym.Value, std::move(name)});
+                    if ((sym.StorageClass == IMAGE_SYM_CLASS_EXTERNAL) || // normal external-linkage functions
+                        (sym.StorageClass == IMAGE_SYM_CLASS_STATIC && name.find("?A0x") != std::string::npos)) // internal-linkage AND anonymous
+                    {
+                        sectionSyms[sym.SectionNumber].push_back({ sym.Value, std::move(name) });
+                    }
                 }
 
                 i += 1+sym.NumberOfAuxSymbols; // critical
@@ -324,5 +329,18 @@ namespace Odr
             return sectionSyms;
         }
         const IMAGE_SYMBOL* SymbolTable() const { return reinterpret_cast<const IMAGE_SYMBOL*>(base + coffHdr->PointerToSymbolTable); }
+        static std::wstring NormalizeAnonNsCookies(const std::wstring& decorated)
+        {
+            std::wstring result = decorated;
+            std::wstring::size_type pos = 0;
+            while ((pos = result.find(L"?A0x", pos)) != std::wstring::npos)
+            {
+                auto end = result.find(L'@', pos);
+                if (end != std::wstring::npos)
+                    result.replace(pos, end - pos, L"?A0x????????");
+                pos += 12; // length of L"?A0x????????"
+            }
+            return result;
+        }
     };
 }

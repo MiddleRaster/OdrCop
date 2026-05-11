@@ -62,7 +62,7 @@ namespace Odr
 
                                     if (excludeStdlib == true)
                                     if (name && name[0] != L'\0')
-                                    if (std::wstring(name).starts_with(L"std::"))
+                                    if (QualifiedName(sym).starts_with(L"std::"))
                                         continue;
 
                                     enum SymTagEnum tag = static_cast<enum SymTagEnum>(Get(sym, &IDiaSymbol::get_symTag));
