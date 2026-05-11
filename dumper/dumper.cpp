@@ -484,7 +484,27 @@ void OutputEvenUnnamed(IDiaSession* session, IDiaSymbol* child, const wchar_t* /
     PrintPropsAndRecurse(session, L"", name.m_str, child, visited);
 }
 
-template<typename DoIt> HRESULT ForEachSymbol(const std::filesystem::path& path, const wchar_t* desiredItem, DoIt doIt)
+void DoNotDumpRemainder(IDiaSession* /*session*/, std::set<DWORD>& /*visited*/) {}
+void      DumpRemainder(IDiaSession*   session,   std::set<DWORD>&   visited)
+{
+    for (DWORD i=1; i<*visited.rbegin() /* this finds the maximum Symbol ID */; ++i)
+    {
+        if (!visited.contains(i))
+        {
+            CComPtr<IDiaSymbol> sym;
+            if (SUCCEEDED(session->symbolById(i, &sym)) && sym)
+            {
+                CComBSTR missingItemName;
+                if (S_OK != sym->get_name(&missingItemName))
+                    missingItemName = L"unnamed item";
+
+                PrintPropsAndRecurse(session, L"", missingItemName.m_str, sym, visited);
+            }
+        }
+    }
+}
+
+template<typename DoIt, typename Remainder> HRESULT ForEachSymbol(const std::filesystem::path& path, const wchar_t* desiredItem, DoIt doIt, Remainder remainder)
 {
     CoInitialize(nullptr);
 
@@ -517,21 +537,7 @@ template<typename DoIt> HRESULT ForEachSymbol(const std::filesystem::path& path,
                             }
 
                             // now dump everything not in visited, if any
-                            for (DWORD i=1;  i<*visited.rbegin() /* this finds the maximum Symbol ID */; ++i)
-                            {
-                                if (!visited.contains(i)) {
-
-                                    CComPtr<IDiaSymbol> sym;
-                                    if (SUCCEEDED(session->symbolById(i, &sym)) && sym)
-                                    {
-                                        CComBSTR missingItemName;
-                                        if (S_OK != sym->get_name(&missingItemName))
-                                            missingItemName = L"unnamed item";
-
-                                        PrintPropsAndRecurse(session, L"", missingItemName.m_str, sym, visited);
-                                    }
-                                }
-                            }
+                            remainder(session, visited);
                         }
                     } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                 }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';
@@ -561,10 +567,10 @@ int wmain(int argc, wchar_t** argv)
 
     if (argc == 2) {   // dump all IDiaSymbol names in .pdb file
         std::wcout << L"Dumping all types in " << root << L'\n';
-        ForEachSymbol(root, nullptr, OutputEvenUnnamed);
+        ForEachSymbol(root, nullptr, OutputEvenUnnamed,  DumpRemainder);
     } else {
         std::wcout << L"Dumping " << argv[2] << L" and sub-elements in " << root << L'\n';
-        ForEachSymbol(root, argv[2], OutputSpecificItem);
+        ForEachSymbol(root, argv[2], OutputSpecificItem, DoNotDumpRemainder);
     }
 
     return 0;
