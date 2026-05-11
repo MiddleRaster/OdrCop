@@ -125,8 +125,6 @@ namespace Tests {
     }
 #endif
 
-#ifdef NOT_YET
-
     // Test 7 — Anonymous type as base class of external-linkage struct, different layouts
     // OdrCop SHOULD flag
     namespace T7 {
@@ -134,6 +132,8 @@ namespace Tests {
         struct Public : Base {};
         Public g_2_t7_instance;
     }
+
+#ifdef NOT_YET
 
     // Test 8 — Anonymous type as base class of external-linkage struct, identical layouts
     // OdrCop should NOT flag
