@@ -133,8 +133,6 @@ namespace Tests {
         Public g_1_t7_instance;
     }
 
-#ifdef NOT_YET
-
     // Test 8 — Anonymous type as base class of external-linkage struct, identical layouts
     // OdrCop should NOT flag
     namespace T8 {
@@ -142,6 +140,8 @@ namespace Tests {
         struct Public : Base {};
         Public g_1_t8_instance;
     }
+
+#ifdef NOT_YET
 
     // Test 9 — Anonymous type as parameter of external-linkage function, different layouts
     // OdrCop SHOULD flag
