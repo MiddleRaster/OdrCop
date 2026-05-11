@@ -512,8 +512,24 @@ template<typename DoIt> HRESULT ForEachSymbol(const std::filesystem::path& path,
 
                                 doIt(session, child, desiredItem, visited);
                             }
-                        }
 
+                            // now dump everything not in visited, if any
+                            for (DWORD i=1;  i<*visited.rbegin() /* this finds the maximum Symbol ID */; ++i)
+                            {
+                                if (!visited.contains(i)) {
+
+                                    CComPtr<IDiaSymbol> sym;
+                                    if (SUCCEEDED(session->symbolById(i, &sym)) && sym)
+                                    {
+                                        CComBSTR missingItemName;
+                                        if (S_OK != sym->get_name(&missingItemName))
+                                            missingItemName = L"unnamed item";
+
+                                        PrintPropsAndRecurse(session, L"", missingItemName.m_str, sym, visited);
+                                    }
+                                }
+                            }
+                        }
                     } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                 }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';
             }         else std::wcerr << L"loadDataFromPdb failed: " << path << L" with 0x" << std::hex << hr << std::dec << L'\n';
