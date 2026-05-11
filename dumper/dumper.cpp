@@ -409,7 +409,10 @@ void PrintPropsAndRecurse(IDiaSession* session, std::wstring tab, const std::wst
 {
     auto [_, symIndexId] = Get(item, &IDiaSymbol::get_symIndexId);
     if (!visited.insert(symIndexId).second)
+    {
+        std::wcout << tab << L"  symIndexId: " << symIndexId << " already seen above.\n";
         return; // seen already, don't recurse
+    }
 
     // If this is a cv-qualified alias of another type, recurse on the unmodifed type first, and don't print props for this one (it's just the cv-qualifed duplicate)
     DWORD unmodifiedTypeId = 0;
