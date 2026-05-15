@@ -426,7 +426,9 @@ namespace Odr
             BaseInfo(BaseInfo&&) = default;
             void Print(int depth) const
             {
-                std::wcout << Indent(depth) << ToString(access) << L" " << (isVirtual ? L"virtual " : L"") << name;
+                std::wcout << Indent(depth) << ToString(access) << L" " << (isVirtual ? L"virtual " : L"") << name << L'\n';
+                if (nestedUdt)
+                    nestedUdt->Print(depth);
             }
 
             friend bool operator==(const BaseInfo& a, const BaseInfo& b) { return  a.IsEqualTo(b); }
@@ -494,15 +496,9 @@ namespace Odr
             std::wcout <<indent << L"    kind=" << UdtKindToString() << L"  size=" << size << L'\n';
             if (!bases.empty())
             {
-                std::wcout << indent << L"    bases:";
-                if (bases.size() > 0)
-                    std::wcout << L'\n';
+                std::wcout << indent << L"    bases:\n";
                 for(auto i=0; i<bases.size(); ++i)
-                {
-                    if (i != 0) std::wcout << L'\n';
                     bases[i].Print(depth+2);
-                }
-                std::wcout << L'\n';
             }
             for (auto& i : std::get<0>(members)) i.Print(depth);
             for (auto& c : std::get<1>(members)) c.Print(depth);

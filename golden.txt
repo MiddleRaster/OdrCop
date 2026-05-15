@@ -363,10 +363,14 @@ ODR VIOLATION: Tests::T7::Public
     kind=struct  size=4
     bases:
         public Tests::T7::`anonymous-namespace'::Base
+            kind=struct  size=4
+            +0 public int32_t x
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
     bases:
         public Tests::T7::`anonymous-namespace'::Base
+            kind=struct  size=8
+            +0 public double y
 
 ODR VIOLATION: ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ
   [TUs\x64\Debug\TU1.obj]
