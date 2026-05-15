@@ -3,6 +3,8 @@
 #include <windows.h>
 #include <dia2.h>
 #include <atlbase.h>
+#include <DbgHelp.h>
+#pragma comment(lib, "dbghelp.lib")
 
 #include <map>
 #include <string>
@@ -26,22 +28,29 @@ namespace Odr
     class FuncInfo
     {
         const std::wstring compiland;
-        const std::wstring   decoratedName;
-        const std::wstring undecoratedName;
+        const std::wstring decorated;
+        const std::wstring unmangled;
         const ULONGLONG bodyLength;
         const std::vector<BYTE> body;
     public:
-        FuncInfo(const std::wstring& compiland, const std::wstring& decoratedName, const std::wstring& undecoratedName, ULONGLONG bodyLength, const std::vector<BYTE>& body)
+        FuncInfo(const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body)
             : compiland(compiland)
-            ,   decoratedName(  decoratedName)
-            , undecoratedName(undecoratedName)
+            , decorated(decorated)
+            , unmangled(
+                [&]() -> std::wstring
+                    {
+                        std::vector<wchar_t> buffer(65534);
+                        if (0 != UnDecorateSymbolNameW(decorated.c_str(), buffer.data(), 65534, UNDNAME_COMPLETE))
+                            return std::wstring(buffer.data());
+                        return std::wstring(decorated); // my give up
+                    }())
             , bodyLength(bodyLength)
             , body(body)
         {}
         void Print(int /*depth*/) const
         {
             std::wcout << L"  [" << compiland << L"]\n";
-            std::wcout << L"    undecorated name:  " << undecoratedName << L'\n';
+            std::wcout << L"    unmangled name:  "      << unmangled  << L'\n';
             std::wcout << L"    function body length: " << bodyLength << L'\n';
             // actual bytes are printed in PrintMismatch, below
         }
@@ -100,10 +109,10 @@ namespace Odr
     private:
         bool IsEqualTo(const FuncInfo& other) const
         {
-         // if (compiland            != other.compiland      ) return false; // compilands must be different for ODR violations
-            if (  decoratedName      != other.  decoratedName) return false;
-            if (undecoratedName      != other.undecoratedName) return false;
-            if (MismatchIndex(other) != -1                   ) return false;
+         // if (compiland != other.compiland) return false; // compilands must be different for ODR violations
+            if (decorated != other.decorated) return false;
+            if (unmangled != other.unmangled) return false;
+            if (MismatchIndex(other) !=   -1) return false;
             return true;
         }
     };
@@ -278,7 +287,7 @@ namespace Odr
                             continue;
                     }
 
-                    funcMap[normalizedName].push_back(FuncInfo(objPath, normalizedName, undecoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len)));
+                    funcMap[normalizedName].push_back(FuncInfo(objPath, decoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len)));
                 }
             }
         }

@@ -374,31 +374,31 @@ ODR VIOLATION: Tests::T7::Public
 
 ODR VIOLATION: ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ
   [TUs\x64\Debug\TU1.obj]
-    undecorated name:  SameFunctionTemplateSpecializationDifferentDefinitions<int>
+    unmangled name:  int __cdecl SameFunctionTemplateSpecializationDifferentDefinitions<int>(void)
     function body length: 9
     bytes at the first mismatch are: 40 57 b8 01 00 00 00 5f c3 
   [TUs\x64\Debug\TU2.obj]
-    undecorated name:  SameFunctionTemplateSpecializationDifferentDefinitions<int>
+    unmangled name:  int __cdecl SameFunctionTemplateSpecializationDifferentDefinitions<int>(void)
     function body length: 9
     bytes at the first mismatch are: 40 57 b8 02 00 00 00 5f c3 
 
 ODR VIOLATION: ?FunctionsMustBeBitwiseIdentical@@YAHXZ
   [TUs\x64\Debug\TU1.obj]
-    undecorated name:  FunctionsMustBeBitwiseIdentical
+    unmangled name:  int __cdecl FunctionsMustBeBitwiseIdentical(void)
     function body length: 9
     bytes at the first mismatch are: 40 57 b8 01 00 00 00 5f c3 
   [TUs\x64\Debug\TU2.obj]
-    undecorated name:  FunctionsMustBeBitwiseIdentical
+    unmangled name:  int __cdecl FunctionsMustBeBitwiseIdentical(void)
     function body length: 9
     bytes at the first mismatch are: 40 57 b8 02 00 00 00 5f c3 
 
 ODR VIOLATION: ?function9@T9@Tests@@YAXUArg@?A0x????????@12@@Z
   [TUs\x64\Debug\TU1.obj]
-    undecorated name:  Tests::T9::function9
+    unmangled name:  void __cdecl Tests::T9::function9(struct Tests::T9::`anonymous namespace'::Arg)
     function body length: 7
     bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
   [TUs\x64\Debug\TU2.obj]
-    undecorated name:  Tests::T9::function9
+    unmangled name:  void __cdecl Tests::T9::function9(struct Tests::T9::`anonymous namespace'::Arg)
     function body length: 8
     bytes at the first mismatch are: 48 89 4c 24 08 57 5f c3 
 
