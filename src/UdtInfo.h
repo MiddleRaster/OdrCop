@@ -424,7 +424,10 @@ namespace Odr
                 , nestedUdt(resolveNestedUdt(session, baseType, pdbPath))
             {}
             BaseInfo(BaseInfo&&) = default;
-            void Print(int depth) const { std::wcout << Indent(depth) << L' ' << ToString(access) << L" " << (isVirtual ? L"virtual " : L"") << name; }
+            void Print(int depth) const
+            {
+                std::wcout << Indent(depth) << ToString(access) << L" " << (isVirtual ? L"virtual " : L"") << name;
+            }
 
             friend bool operator==(const BaseInfo& a, const BaseInfo& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const BaseInfo& a, const BaseInfo& b) { return !a.IsEqualTo(b); }
@@ -492,10 +495,12 @@ namespace Odr
             if (!bases.empty())
             {
                 std::wcout << indent << L"    bases:";
+                if (bases.size() > 0)
+                    std::wcout << L'\n';
                 for(auto i=0; i<bases.size(); ++i)
                 {
-                    if (i != 0) std::wcout << L',';
-                    bases[i].Print(depth);
+                    if (i != 0) std::wcout << L'\n';
+                    bases[i].Print(depth+2);
                 }
                 std::wcout << L'\n';
             }

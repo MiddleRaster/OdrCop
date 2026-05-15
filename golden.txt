@@ -6,7 +6,8 @@ Loading: "TUs\\x64\\Debug\\TU2.pdb"
 ODR VIOLATION: BaseClassVirtualOrNot
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=8
-    bases: public virtual Base1
+    bases:
+        public virtual Base1
     3 ctors:
       public: void BaseClassVirtualOrNot(struct BaseClassVirtualOrNot *) noexcept 
       public: void BaseClassVirtualOrNot(const struct BaseClassVirtualOrNot & const) noexcept 
@@ -17,23 +18,30 @@ ODR VIOLATION: BaseClassVirtualOrNot
   [TUs\x64\Debug\TU1.pdb] (same as above)
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
-    bases: public Base1
+    bases:
+        public Base1
 
 ODR VIOLATION: BaseClassesInDifferentOrder
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    bases: public Base1, public Base2
+    bases:
+        public Base1
+        public Base2
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
-    bases: public Base2, public Base1
+    bases:
+        public Base2
+        public Base1
 
 ODR VIOLATION: DifferentAccessSpecifiersOnBaseClass
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    bases: public Base1
+    bases:
+        public Base1
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
-    bases: private Base1
+    bases:
+        private Base1
 
 ODR VIOLATION: DifferentAccessSpecifiersOnMethod
   [TUs\x64\Debug\TU1.pdb]
@@ -48,17 +56,20 @@ ODR VIOLATION: DifferentAccessSpecifiersOnMethod
 ODR VIOLATION: DifferentBaseClass
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    bases: public Base1
+    bases:
+        public Base1
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
 
 ODR VIOLATION: DifferentBases
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
-    bases: public Base1
+    bases:
+        public Base1
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=1
-    bases: public Base2
+    bases:
+        public Base2
 
 ODR VIOLATION: DifferentConstDataMember
   [TUs\x64\Debug\TU1.pdb]
@@ -350,10 +361,12 @@ ODR VIOLATION: Tests::T2::Public
 ODR VIOLATION: Tests::T7::Public
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
-    bases: public Tests::T7::`anonymous-namespace'::Base
+    bases:
+        public Tests::T7::`anonymous-namespace'::Base
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
-    bases: public Tests::T7::`anonymous-namespace'::Base
+    bases:
+        public Tests::T7::`anonymous-namespace'::Base
 
 ODR VIOLATION: ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHXZ
   [TUs\x64\Debug\TU1.obj]

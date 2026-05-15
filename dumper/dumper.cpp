@@ -504,6 +504,36 @@ void      DumpRemainder(IDiaSession*   session,   std::set<DWORD>&   visited)
     }
 }
 
+void DumpByTag(IDiaSession* session, IDiaSymbol* global, enum SymTagEnum symtag)
+{
+    std::wcout << L"Dumping by tag: " << (DWORD)symtag << L'\n';
+
+    std::set<DWORD> visited;
+
+    CComPtr<IDiaEnumSymbols> types;
+    if (SUCCEEDED(global->findChildren(symtag, nullptr, nsNone, &types)))
+    {
+        while (true)
+        {
+            CComPtr<IDiaSymbol> type;
+            ULONG fetched = 0;
+            if (S_OK != types->Next(1, &type, &fetched))
+                break;
+
+            if (fetched)
+            {
+                CComBSTR name;
+                type->get_name(&name);
+                if (!name)
+                    name = L"unnamed item";
+
+                std::wcout << L"  Printing properties for SymIndexId: " << Get(type, &IDiaSymbol::get_symIndexId).second << L" and SymTagEnum type: " << (DWORD)symtag << L'\n';
+                PrintPropsAndRecurse(session, L"    ", name.m_str, type, visited);
+            }
+        }
+    }
+}
+
 template<typename DoIt, typename Remainder> HRESULT ForEachSymbol(const std::filesystem::path& path, const wchar_t* desiredItem, DoIt doIt, Remainder remainder)
 {
     CoInitialize(nullptr);
@@ -538,6 +568,53 @@ template<typename DoIt, typename Remainder> HRESULT ForEachSymbol(const std::fil
 
                             // now dump everything not in visited, if any
                             remainder(session, visited);
+
+                            DumpByTag(session, global, SymTagNull);
+                            DumpByTag(session, global, SymTagExe);
+                            DumpByTag(session, global, SymTagCompiland);
+                            DumpByTag(session, global, SymTagCompilandDetails);
+                            DumpByTag(session, global, SymTagCompilandEnv);
+                            DumpByTag(session, global, SymTagFunction);
+                            DumpByTag(session, global, SymTagBlock);
+                            DumpByTag(session, global, SymTagData);
+                            DumpByTag(session, global, SymTagAnnotation);
+                            DumpByTag(session, global, SymTagLabel);
+                            DumpByTag(session, global, SymTagPublicSymbol);
+                            DumpByTag(session, global, SymTagUDT);
+                            DumpByTag(session, global, SymTagEnum);
+                            DumpByTag(session, global, SymTagFunctionType);
+                            DumpByTag(session, global, SymTagPointerType);
+                            DumpByTag(session, global, SymTagArrayType);
+                            DumpByTag(session, global, SymTagBaseType);
+                            DumpByTag(session, global, SymTagTypedef);
+                            DumpByTag(session, global, SymTagBaseClass);
+                            DumpByTag(session, global, SymTagFriend);
+                            DumpByTag(session, global, SymTagFunctionArgType);
+                            DumpByTag(session, global, SymTagFuncDebugStart);
+                            DumpByTag(session, global, SymTagFuncDebugEnd);
+                            DumpByTag(session, global, SymTagUsingNamespace);
+                            DumpByTag(session, global, SymTagVTableShape);
+                            DumpByTag(session, global, SymTagVTable);
+                            DumpByTag(session, global, SymTagCustom);
+                            DumpByTag(session, global, SymTagThunk);
+                            DumpByTag(session, global, SymTagCustomType);
+                            DumpByTag(session, global, SymTagManagedType);
+                            DumpByTag(session, global, SymTagDimension);
+                            DumpByTag(session, global, SymTagCallSite);
+                            DumpByTag(session, global, SymTagInlineSite);
+                            DumpByTag(session, global, SymTagBaseInterface);
+                            DumpByTag(session, global, SymTagVectorType);
+                            DumpByTag(session, global, SymTagMatrixType);
+                            DumpByTag(session, global, SymTagHLSLType);
+                            DumpByTag(session, global, SymTagCaller);
+                            DumpByTag(session, global, SymTagCallee);
+                            DumpByTag(session, global, SymTagExport);
+                            DumpByTag(session, global, SymTagHeapAllocationSite);
+                            DumpByTag(session, global, SymTagCoffGroup);
+                            DumpByTag(session, global, SymTagInlinee);
+                            DumpByTag(session, global, SymTagTaggedUnionCase);
+                            DumpByTag(session, global, SymTagMax);
+
                         }
                     } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                 }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';
