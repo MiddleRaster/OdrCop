@@ -15,6 +15,7 @@
 #include <iomanip>
 
 #include "cvinfo.h"
+#include "UdtInfo.h"
 
 inline auto MyMin(auto a, auto b) // stupid windows.h macro gets in the way
 {
@@ -30,28 +31,80 @@ namespace Odr
         const std::wstring compiland;
         const std::wstring decorated;
         const std::wstring unmangled;
-        const ULONGLONG bodyLength;
+        const ULONGLONG    bodyLength;
         const std::vector<BYTE> body;
+        const std::vector<std::pair<std::wstring,UdtInfo>> args;
     public:
-        FuncInfo(const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body)
+        FuncInfo(const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body, const std::map<std::wstring,std::vector<UdtInfo>>& anonMap)
             : compiland(compiland)
             , decorated(decorated)
-            , unmangled(
-                [&]() -> std::wstring
-                    {
-                        std::vector<wchar_t> buffer(65534);
-                        if (0 != UnDecorateSymbolNameW(decorated.c_str(), buffer.data(), 65534, UNDNAME_COMPLETE))
-                            return std::wstring(buffer.data());
-                        return std::wstring(decorated); // my give up
-                    }())
+            , unmangled([&]() -> std::wstring
+                        {
+                            std::vector<wchar_t> buffer(65534);
+                            if (0 != UnDecorateSymbolNameW(decorated.c_str(), buffer.data(), 65534, UNDNAME_COMPLETE))
+                                return std::wstring(buffer.data());
+                            return std::wstring(decorated); // my give up
+                        }())
             , bodyLength(bodyLength)
             , body(body)
+            , args([&](){
+                            std::vector<std::pair<std::wstring,UdtInfo>> theArgs;
+
+                            // given an undecorated name, piece it apart, looking for arguments to the function.
+                            // find last '('
+                            auto pos = unmangled.rfind(L'(');
+                            if (pos != std::wstring::npos)
+                            {
+                                auto argsAsOneString = unmangled.substr(pos+1, unmangled.length()-pos-2);
+
+                                do { // now split by looking for a ','
+                                    std::wstring oneArg(argsAsOneString);
+                                    pos = argsAsOneString.find(L',');
+                                    if (pos != std::wstring::npos)
+                                    {
+                                        oneArg          = argsAsOneString.substr(0, pos-1);
+                                        argsAsOneString = argsAsOneString.substr(pos+1);
+                                    }
+
+                                    // trim off any "struct ", "class ", "enum ", or "union " (though we only handle structs and classes)
+                                    if (oneArg.starts_with(L"struct ")) oneArg = oneArg.substr(7);
+                                    if (oneArg.starts_with(L"class "))  oneArg = oneArg.substr(6);
+                                    if (oneArg.starts_with(L"union "))  oneArg = oneArg.substr(6);
+                                    if (oneArg.starts_with(L"enum "))   oneArg = oneArg.substr(5);
+
+                                    // one last thing:  MSVC is strangely inconsistent - it's either:
+                                    // anonymous-namespace or
+                                    // anonymous namespace.
+                                    for (;;) {
+                                        auto pos1 = oneArg.find(L"anonymous namespace");
+                                        if (pos1 == std::wstring::npos)
+                                            break;
+                                        oneArg[pos1+9] = L'-';
+                                    }
+
+                                    auto it = anonMap.find(oneArg);
+                                    if (it != anonMap.end())
+                                        theArgs.push_back({oneArg,it->second[0]}); // there should only be one per TU, but I suppose it's possible. Just grab the first.
+                                    // else give up for now. Perhaps try PdbParser.h later
+
+                                } while (pos != std::wstring::npos);
+                            }
+                            return theArgs;
+                        }())
         {}
-        void Print(int /*depth*/) const
+        void Print(int depth) const
         {
             std::wcout << L"  [" << compiland << L"]\n";
             std::wcout << L"    unmangled name:  "      << unmangled  << L'\n';
             std::wcout << L"    function body length: " << bodyLength << L'\n';
+            if (args.size() > 0) {
+                std::wcout << L"    arguments:\n";
+                for (auto& [name, udt] : args)
+                {
+                    std::wcout << L"      " << name << L'\n';
+                    udt.Print(depth+1);
+                }
+            }
             // actual bytes are printed in PrintMismatch, below
         }
         void PrintCompilandPath() const { std::wcout << L"  [" << compiland << L"] (same as above)\n"; }
@@ -109,10 +162,15 @@ namespace Odr
     private:
         bool IsEqualTo(const FuncInfo& other) const
         {
-         // if (compiland != other.compiland) return false; // compilands must be different for ODR violations
-            if (decorated != other.decorated) return false;
-            if (unmangled != other.unmangled) return false;
-            if (MismatchIndex(other) !=   -1) return false;
+         // if (compiland   != other.compiland  ) return false; // compilands must be different for ODR violations
+         // if (decorated   != other.decorated  ) return false; // we're tring to catch anonymous namespace args, which always hash to something unique. So skip.
+            if (unmangled   != other.unmangled  ) return false;
+            if (args.size() != other.args.size()) return false;
+
+            for(size_t i=0; i<args.size(); ++i)
+                if (args[i] != other.args[i])     return false;
+
+            if (MismatchIndex(other) !=   -1)     return false;
             return true;
         }
     };
@@ -216,7 +274,7 @@ namespace Odr
     public:
         const BYTE* Data(const IMAGE_SECTION_HEADER* sec) const { return base + sec->PointerToRawData; }
         const BYTE* End (const IMAGE_SECTION_HEADER* sec) const { return base + sec->PointerToRawData + sec->SizeOfRawData; }
-        static void Read(const std::wstring& pdbPath, bool excludeStdlib, std::map<std::wstring, std::vector<FuncInfo>>& funcMap)
+        static void Read(const std::wstring& pdbPath, bool excludeStdlib, std::map<std::wstring, std::vector<FuncInfo>>& funcMap, const std::map<std::wstring, std::vector<UdtInfo>>& anonMap)
         {
             auto objPath = pdbPath.substr(0, pdbPath.rfind(L'.')) + L".obj";
             DWORD size;
@@ -287,7 +345,7 @@ namespace Odr
                             continue;
                     }
 
-                    funcMap[normalizedName].push_back(FuncInfo(objPath, decoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len)));
+                    funcMap[normalizedName].push_back(FuncInfo(objPath, decoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len), anonMap));
                 }
             }
         }

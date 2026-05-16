@@ -396,11 +396,37 @@ ODR VIOLATION: ?function9@T9@Tests@@YAXUArg@?A0x????????@12@@Z
   [TUs\x64\Debug\TU1.obj]
     unmangled name:  void __cdecl Tests::T9::function9(struct Tests::T9::`anonymous namespace'::Arg)
     function body length: 7
+    arguments:
+      Tests::T9::`anonymous-namespace'::Arg
+        kind=struct  size=4
+        +0 public int32_t x
     bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
   [TUs\x64\Debug\TU2.obj]
     unmangled name:  void __cdecl Tests::T9::function9(struct Tests::T9::`anonymous namespace'::Arg)
     function body length: 8
+    arguments:
+      Tests::T9::`anonymous-namespace'::Arg
+        kind=struct  size=8
+        +0 public double y
     bytes at the first mismatch are: 48 89 4c 24 08 57 5f c3 
+
+ODR VIOLATION: ?function9@T9a@Tests@@YAXUArg@?A0x????????@12@@Z
+  [TUs\x64\Debug\TU1.obj]
+    unmangled name:  void __cdecl Tests::T9a::function9(struct Tests::T9a::`anonymous namespace'::Arg)
+    function body length: 7
+    arguments:
+      Tests::T9a::`anonymous-namespace'::Arg
+        kind=struct  size=4
+        +0 public int32_t x
+    bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
+  [TUs\x64\Debug\TU2.obj]
+    unmangled name:  void __cdecl Tests::T9a::function9(struct Tests::T9a::`anonymous namespace'::Arg)
+    function body length: 7
+    arguments:
+      Tests::T9a::`anonymous-namespace'::Arg
+        kind=struct  size=4
+        +0 public uint32_t x
+    bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
 
 ODR VIOLATION: SameEnumButDifferentValues
   [TUs\x64\Debug\TU1.pdb]
@@ -418,4 +444,4 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-39 ODR violation(s) found.
+40 ODR violation(s) found.

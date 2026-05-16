@@ -21,14 +21,15 @@ namespace Odr
         {
             const std::wstring       name;
             const std::wstring       typeName;
-            std::unique_ptr<UdtInfo> nestedUdt; // populated only for anonymous-namespace UDT members
+            std::shared_ptr<UdtInfo> nestedUdt; // populated only for anonymous-namespace UDT members
         public:
             MemberInfoBase(IDiaSession* session, const std::wstring& name, IDiaSymbol* sym, const std::wstring& pdbPath)
                 : name(name)
                 , typeName (resolveTypeName (Get(sym, &IDiaSymbol::get_type)))
                 , nestedUdt(resolveNestedUdt(session, Get(sym, &IDiaSymbol::get_type), L"   I'm nested: " + pdbPath))
             {}
-            MemberInfoBase(MemberInfoBase&&) = default;
+            MemberInfoBase(      MemberInfoBase&&) = default;
+            MemberInfoBase(const MemberInfoBase &) = default;
             bool IsEqualTo(const Derived& other) const
             {
                 if (name     != other.name    ) return false;
@@ -61,7 +62,7 @@ namespace Odr
             friend bool operator==(const Derived& a, const Derived& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const Derived& a, const Derived& b) { return !a.IsEqualTo(b); }
         private:
-            static std::unique_ptr<UdtInfo> resolveNestedUdt(IDiaSession* session, IDiaSymbol* type, const std::wstring& pdbPath)
+            static std::shared_ptr<UdtInfo> resolveNestedUdt(IDiaSession* session, IDiaSymbol* type, const std::wstring& pdbPath)
             {
                 if (!type || !session)
                     return nullptr;
@@ -76,7 +77,7 @@ namespace Odr
 
                 // Check if this is already the defining symbol
                 if (!Get(type, &IDiaSymbol::get_exportIsForwarder))
-                    return std::make_unique<UdtInfo>(session, type, pdbPath, name);
+                    return std::make_shared<UdtInfo>(session, type, pdbPath, name);
 
                 // It's a forwarder — search the lexical parent scope for the defining symbol
                 //CComPtr<IDiaSymbol> lexParent;
@@ -104,7 +105,7 @@ namespace Odr
                         break;
 
                     if (!Get(candidate, &IDiaSymbol::get_exportIsForwarder))
-                        return std::make_unique<UdtInfo>(session, candidate, pdbPath, name);
+                        return std::make_shared<UdtInfo>(session, candidate, pdbPath, name);
                 }
                 return nullptr;
             }
@@ -260,7 +261,8 @@ namespace Odr
                 , access   (access)
             {}
         public:
-            InstanceMember(InstanceMember&&) = default;
+            InstanceMember(      InstanceMember&&) = default;
+            InstanceMember(const InstanceMember &) = default;
             static InstanceMember Make(IDiaSession* session, IDiaSymbol* child, const std::wstring& pdbPath)
             {
                 auto name          =               BstrToWstr(Get(child, &IDiaSymbol::get_name));
@@ -324,7 +326,8 @@ namespace Odr
                 : MemberInfoBase(session, name,pType,pdbPath)
                 , constValue(constValue)
             {}
-            ConstantMember(ConstantMember&&) = default;
+            ConstantMember(      ConstantMember&&) = default;
+            ConstantMember(const ConstantMember &) = default;
         private:
             friend MemberInfoBase<ConstantMember>;
 
@@ -343,7 +346,8 @@ namespace Odr
                 , isConstant    (GetFromType(pType, &IDiaSymbol::get_constType))
                 , isVolatile    (GetFromType(pType, &IDiaSymbol::get_volatileType))
             {}
-            StaticMember(StaticMember&&) = default;
+            StaticMember(      StaticMember&&) = default;
+            StaticMember(const StaticMember &) = default;
         private:
             friend MemberInfoBase<StaticMember>;
             bool IsEqualToImpl(const StaticMember& other) const
@@ -415,7 +419,7 @@ namespace Odr
             const std::wstring       name;
             const CV_access_e        access;    // private/protected/public
             const bool               isVirtual;
-            std::unique_ptr<UdtInfo> nestedUdt; // populated only for anonymous-namespace bases
+            std::shared_ptr<UdtInfo> nestedUdt; // populated only for anonymous-namespace bases
         public:
             BaseInfo(IDiaSession* session, const std::wstring& name, CV_access_e access, bool isVirtual, IDiaSymbol* baseType, const std::wstring& pdbPath)
                 : name(name)
@@ -423,7 +427,8 @@ namespace Odr
                 , isVirtual(isVirtual)
                 , nestedUdt(resolveNestedUdt(session, baseType, pdbPath))
             {}
-            BaseInfo(BaseInfo&&) = default;
+            BaseInfo(      BaseInfo&&) = default;
+            BaseInfo(const BaseInfo &) = default;
             void Print(int depth) const
             {
                 std::wcout << Indent(depth) << ToString(access) << L" " << (isVirtual ? L"virtual " : L"") << name << L'\n';
@@ -449,7 +454,7 @@ namespace Odr
                 return true;
             }
         private:
-            static std::unique_ptr<UdtInfo> resolveNestedUdt(IDiaSession* session, IDiaSymbol* type, const std::wstring& pdbPath)
+            static std::shared_ptr<UdtInfo> resolveNestedUdt(IDiaSession* session, IDiaSymbol* type, const std::wstring& pdbPath)
             {
                 if (!type)
                     return nullptr;
@@ -460,7 +465,7 @@ namespace Odr
                 if (name.find(L"`anonymous-namespace'") == std::wstring::npos)
                     return nullptr;
 
-                return std::make_unique<UdtInfo>(session, type, pdbPath, name);
+                return std::make_shared<UdtInfo>(session, type, pdbPath, name);
             }
         };
 
@@ -486,7 +491,8 @@ namespace Odr
             , bases(      GetBaseInfo(session, sym, pdbPath))
             , methodsAndCtors(      GetMethods(sym, name))
         {}
-        UdtInfo(UdtInfo&&) = default;
+        UdtInfo(      UdtInfo&&) = default;
+        UdtInfo(const UdtInfo &) = default;
         void Print(int depth) const
         {
             std::wstring indent = Indent(depth);

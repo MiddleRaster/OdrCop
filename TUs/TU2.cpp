@@ -149,6 +149,12 @@ namespace Tests {
         void function9(Arg a) { (void)a; }
     }
     auto* g_2_addressOfFunctionWithAnonymousNamespaceArg = &T9::function9;   // forces codegen
+    namespace T9a {
+        namespace { struct Arg { unsigned int x; }; }
+        Arg g_2_t9a_instance;
+        void function9(Arg a) { (void)a; }
+    }
+    auto* g_2a_addressOfFunctionWithAnonymousNamespaceArg = &T9a::function9;   // forces codegen
 
 
 #ifdef NOT_YET

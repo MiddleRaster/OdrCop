@@ -32,8 +32,9 @@ namespace Odr
 
         HRESULT LoadPdb(const std::wstring& path, bool excludeStdlib)
         {
-            HRESULT hr;
+            std::map<std::wstring, std::vector<UdtInfo>> anonMap; // hang onto anonymous-namespace types per TU
 
+            HRESULT hr;
             CComPtr<IDiaDataSource> source;
             if (SUCCEEDED(hr = CoCreateInstance(__uuidof(DiaSource), nullptr, CLSCTX_INPROC_SERVER, __uuidof(IDiaDataSource), reinterpret_cast<void**>(&source))))
             {
@@ -91,13 +92,15 @@ namespace Odr
                                                 break;                             // in a function or a block but everything else the LLMs suggested failed.
 
                                             std::wstring qualifiedName = QualifiedName(sym);
-                                            // Anonymous-namespace types are TU-unique; never compare at top level
-                                            if (qualifiedName.find(L"`anonymous-namespace'") != std::wstring::npos)
-                                                break;
 
                                             UdtInfo udtInfo(session, sym, path, qualifiedName);
                                             std::wstring key = BuildUdtKey(sym, udtInfo.GetFirstMemberName());
-                                            udtMap[key].push_back(std::move(udtInfo));
+
+                                            // Anonymous-namespace types are TU-unique; never compare at top level
+                                            if (qualifiedName.find(L"`anonymous-namespace'") != std::wstring::npos)
+                                                anonMap[key].push_back(std::move(udtInfo)); // hang onto them anyway, for anonymous-namespace args to functions that are external linkage
+                                            else
+                                                 udtMap[key].push_back(std::move(udtInfo));
                                         }
                                         break;
                                     case (enum SymTagEnum)::SymTagEnum:
@@ -125,7 +128,7 @@ namespace Odr
                             }
 
                             // Functions
-                            COFF::Read(path, excludeStdlib, funcMap);
+                            COFF::Read(path, excludeStdlib, funcMap, anonMap);
 
                         } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                     }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';
