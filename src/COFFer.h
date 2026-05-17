@@ -118,17 +118,13 @@ namespace Odr
                                     }
                                     // else fall through to string
                                 }
-                                if (oneArg.starts_with(L"union "))
-                                {
-                                    // oneArg = oneArg.substr(6);
-                                    // just add it as a string for now
-                                }
 
-                                // if struct or class
-                                if (oneArg.starts_with(L"struct ") || oneArg.starts_with(L"class "))
+                                // if struct, class or union
+                                if (oneArg.starts_with(L"struct ") || oneArg.starts_with(L"class ") || oneArg.starts_with(L"union "))
                                 {
                                     if (oneArg.starts_with(L"struct ")) oneArg = oneArg.substr(7);
-                                    if (oneArg.starts_with(L"class "))  oneArg = oneArg.substr(6);
+                                    if (oneArg.starts_with(L"class " )) oneArg = oneArg.substr(6);
+                                    if (oneArg.starts_with(L"union " )) oneArg = oneArg.substr(6);
 
                                     auto it = perTU.udtMap.find(oneArg);
                                     if (it != perTU.udtMap.end())

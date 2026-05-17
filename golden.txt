@@ -325,6 +325,17 @@ ODR VIOLATION: SameTemplateDifferentDefinition<int>
     +0 public int32_t a
     +4 public int32_t b
 
+ODR VIOLATION: SameUnionNameDifferentElements
+  [TUs\x64\Debug\TU1.pdb]
+    kind=union  size=4
+    +0 public int32_t i
+    +0 public float f
+  [TUs\x64\Debug\TU2.pdb]
+    kind=union  size=8
+    +0 public int32_t i
+    +0 public float f
+    +0 public double d
+
 ODR VIOLATION: StaticFunctionOrMethod
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
@@ -451,6 +462,27 @@ ODR VIOLATION: ?FunctionUsing_SameTemplateDifferentDefinition@@YAXU?$SameTemplat
     function body length: 8
     bytes at the first mismatch are: 48 89 4c 24 08 57 5f c3 
 
+ODR VIOLATION: ?FunctionUsing_SameUnionNameDifferentElements@@YAXTSameUnionNameDifferentElements@@@Z
+  [TUs\x64\Debug\TU1.obj]
+    unmangled name:  void __cdecl FunctionUsing_SameUnionNameDifferentElements(union SameUnionNameDifferentElements)
+    argument:
+      SameUnionNameDifferentElements
+        kind=union  size=4
+        +0 public int32_t i
+        +0 public float f
+    function body length: 7
+    bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
+  [TUs\x64\Debug\TU2.obj]
+    unmangled name:  void __cdecl FunctionUsing_SameUnionNameDifferentElements(union SameUnionNameDifferentElements)
+    argument:
+      SameUnionNameDifferentElements
+        kind=union  size=8
+        +0 public int32_t i
+        +0 public float f
+        +0 public double d
+    function body length: 8
+    bytes at the first mismatch are: 48 89 4c 24 08 57 5f c3 
+
 ODR VIOLATION: ?FunctionsMustBeBitwiseIdentical@@YAHXZ
   [TUs\x64\Debug\TU1.obj]
     unmangled name:  int __cdecl FunctionsMustBeBitwiseIdentical(void)
@@ -525,4 +557,4 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-45 ODR violation(s) found.
+47 ODR violation(s) found.

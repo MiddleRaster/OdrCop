@@ -490,3 +490,13 @@ inline void FunctionUsing_SameTemplateDifferentDefinition(SameTemplateDifferentD
 //inline int InlinedBody() { return 2; }
 //#endif
 //inline void FunctionUsing_InlinedBody() { InlinedBody(); }
+
+union SameUnionNameDifferentElements
+{
+#ifdef ONE
+    int i; float f; 
+#else
+    int i; float f; double d;
+#endif
+};
+inline void FunctionUsing_SameUnionNameDifferentElements(SameUnionNameDifferentElements) {}

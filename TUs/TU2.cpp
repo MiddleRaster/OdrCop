@@ -209,3 +209,4 @@ auto* g_2_addressOf_FunctionUsing_DifferentDataMembers             = &FunctionUs
 auto* g_2_addressOf_FunctionUsing_SameEnumNameDifferentEnumerators = &FunctionUsing_SameEnumNameDifferentEnumerators;
 auto* g_2_addressOf_FunctionUsing_SameTemplateDifferentDefinition  = &FunctionUsing_SameTemplateDifferentDefinition;
 //auto* g_2_addressOf_FunctionUsing_InlinedBody                    = &FunctionUsing_InlinedBody;
+auto* g_2_addressOf_FunctionUsing_SameUnionNameDifferentElements   = &FunctionUsing_SameUnionNameDifferentElements;
