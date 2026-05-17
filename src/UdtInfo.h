@@ -12,10 +12,10 @@
 
 namespace Odr
 {
+    static std::wstring Indent(int depth) { return std::wstring(depth * 4, L' '); }
+
     class UdtInfo
     {
-        static std::wstring Indent(int depth) { return std::wstring(depth*4, L' '); }
-
         template <typename Derived>
         class MemberInfoBase
         {

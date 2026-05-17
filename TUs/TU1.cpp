@@ -204,3 +204,8 @@ namespace Tests {
 | 11   | Doubly - nested anonymous namespace, different layouts       | ❌ No         |
 | 12   | TBCI pattern : anonymous Empty as template argument          | ❌ No         |
 */
+
+auto* g_1_addressOf_FunctionUsing_DifferentDataMembers             = &FunctionUsing_DifferentDataMembers;
+auto* g_1_addressOf_FunctionUsing_SameEnumNameDifferentEnumerators = &FunctionUsing_SameEnumNameDifferentEnumerators;
+auto* g_1_addressOf_FunctionUsing_SameTemplateDifferentDefinition  = &FunctionUsing_SameTemplateDifferentDefinition;
+//auto* g_1_addressOf_FunctionUsing_InlinedBody                    = &FunctionUsing_InlinedBody;

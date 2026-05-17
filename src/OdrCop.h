@@ -32,7 +32,7 @@ namespace Odr
 
         HRESULT LoadPdb(const std::wstring& path, bool excludeStdlib)
         {
-            std::map<std::wstring, std::vector<UdtInfo>> anonMap; // hang onto anonymous-namespace types per TU
+            PerTuTypes perTU;
 
             HRESULT hr;
             CComPtr<IDiaDataSource> source;
@@ -60,11 +60,6 @@ namespace Odr
                                         continue; // this is a forward declaration; never part of ODR violations
 
                                     CComBSTR name = Get(sym, &IDiaSymbol::get_name);
-
-                                    if (excludeStdlib == true)
-                                    if (name && name[0] != L'\0')
-                                    if (QualifiedName(sym).starts_with(L"std::"))
-                                        continue;
 
                                     enum SymTagEnum tag = static_cast<enum SymTagEnum>(Get(sym, &IDiaSymbol::get_symTag));
                                     switch(tag)
@@ -96,10 +91,14 @@ namespace Odr
                                             UdtInfo udtInfo(session, sym, path, qualifiedName);
                                             std::wstring key = BuildUdtKey(sym, udtInfo.GetFirstMemberName());
 
+                                            perTU.udtMap[key].push_back(udtInfo); // hang onto even std:: UDTs, as they might be function args in the user's functions
+
+                                            if (excludeStdlib == true)
+                                                if (std::wstring(key).starts_with(L"std::"))
+                                                    break;
+
                                             // Anonymous-namespace types are TU-unique; never compare at top level
-                                            if (qualifiedName.find(L"`anonymous-namespace'") != std::wstring::npos)
-                                                anonMap[key].push_back(std::move(udtInfo)); // hang onto them anyway, for anonymous-namespace args to functions that are external linkage
-                                            else
+                                            if (qualifiedName.find(L"`anonymous-namespace'") == std::wstring::npos)
                                                  udtMap[key].push_back(std::move(udtInfo));
                                         }
                                         break;
@@ -107,18 +106,27 @@ namespace Odr
                                         if (name && name[0] != L'\0')
                                         {
                                             std::wstring key(QualifiedName(sym));
-                                            enumMap[key].push_back(EnumInfo(path, key, sym));
+                                            EnumInfo ei(path, key, sym);
+                                            perTU.enumMap[key].push_back(ei); // hang onto even std:: enums, as they might be function args 
+
+                                            if (excludeStdlib == true)
+                                                if (std::wstring(key).starts_with(L"std::"))
+                                                    break;
+
+                                            enumMap[key].push_back(ei);
                                         }
                                         break;
                                     case SymTagEnum::SymTagTypedef:
                                         if (name && name[0] != L'\0')
                                         {
                                             std::wstring key(QualifiedName(sym));
+                                            TDefInfo ti(std::wstring(name), sym, path);
+
                                             if (excludeStdlib == true)
                                                 if (std::wstring(key).starts_with(L"std::"))
                                                     break;
 
-                                            tdefMap[key].push_back(TDefInfo(std::wstring(name), sym, path));
+                                            tdefMap[key].push_back(ti);
                                         }
                                         break;
                                     default:
@@ -128,7 +136,7 @@ namespace Odr
                             }
 
                             // Functions
-                            COFF::Read(path, excludeStdlib, funcMap, anonMap);
+                            COFF::Read(path, excludeStdlib, funcMap, perTU);
 
                         } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                     }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';

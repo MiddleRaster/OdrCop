@@ -456,3 +456,37 @@ struct NamelessEnum
     };
 };
 
+
+
+
+
+
+
+inline void FunctionUsing_DifferentDataMembers(DifferentDataMembers) {}
+
+enum SameEnumNameDifferentEnumerators
+{
+#ifdef ONE
+    sendeA
+#else
+    sendeA, sendeB
+#endif
+};
+inline void FunctionUsing_SameEnumNameDifferentEnumerators(SameEnumNameDifferentEnumerators) {}
+
+template<class T> struct SameTemplateDifferentDefinition
+{
+#ifdef ONE
+    int a;
+#else
+    int a;  int b;
+#endif
+};
+inline void FunctionUsing_SameTemplateDifferentDefinition(SameTemplateDifferentDefinition<int>) {}
+
+//#ifdef ONE
+//inline int InlinedBody() { return 1; }
+//#else
+//inline int InlinedBody() { return 2; }
+//#endif
+//inline void FunctionUsing_InlinedBody() { InlinedBody(); }

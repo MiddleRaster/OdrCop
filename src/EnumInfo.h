@@ -19,11 +19,13 @@ namespace Odr
     public:
         EnumInfo(const std::wstring& pdbPath, const std::wstring& name, IDiaSymbol* sym) : pdbPath(pdbPath), name(name), values(MakeVectorOfEnumValues(sym))
         {}
-        void Print(int /*depth*/) const
+        void Print(int depth) const
         {
-            std::wcout << L"  [" << pdbPath << L"]\n";
-            std::wcout << L"    kind=enum\n";
-            std::wcout << L"    the enum values are: ";
+            std::wstring indent = Odr::Indent(depth);
+            if (depth == 0)
+                std::wcout << indent << L"  [" << pdbPath << L"]\n";
+            std::wcout     << indent << L"    kind=enum\n";
+            std::wcout     << indent << L"    the enum values are: ";
             
             for(size_t i=0; i<values.size(); ++i)
                 std::wcout << values[i].first << L"=" << values[i].second << L", ";
