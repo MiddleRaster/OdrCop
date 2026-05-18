@@ -163,6 +163,13 @@ namespace Tests {
         Result ReturnAnAnonymousType() { return {}; }
         Result g_1_t10_instance = ReturnAnAnonymousType();
     }
+    // Test 10a — Anonymous enum as return type of external-linkage function, different layouts
+    // OdrCop SHOULD flag
+    namespace T10a {
+        namespace { enum Result { Zero, One, Two }; }
+        Result ReturnAnAnonymousEnum() { return Zero; }
+        Result g_1_t10a_instance = ReturnAnAnonymousEnum();
+    }
 
 #ifdef NOT_YET
 

@@ -509,6 +509,26 @@ ODR VIOLATION: ?FunctionsMustBeBitwiseIdentical@@YAHXZ
     function body length: 9
     bytes at the first mismatch are: 40 57 b8 02 00 00 00 5f c3 
 
+ODR VIOLATION: ?ReturnAnAnonymousEnum@T10a@Tests@@YA?AW4Result@?A0x????????@12@XZ
+  [TUs\x64\Debug\TU1.obj]
+    unmangled name:  enum Tests::T10a::`anonymous namespace'::Result __cdecl Tests::T10a::ReturnAnAnonymousEnum(void)
+    return type:     Tests::T10a::`anonymous-namespace'::Result
+        kind=enum
+        the enum values are: Zero=0, One=1, Two=2, 
+    argument:
+      void
+    function body length: 6
+    bytes at the first mismatch are: 40 57 33 c0 5f c3 
+  [TUs\x64\Debug\TU2.obj]
+    unmangled name:  enum Tests::T10a::`anonymous namespace'::Result __cdecl Tests::T10a::ReturnAnAnonymousEnum(void)
+    return type:     Tests::T10a::`anonymous-namespace'::Result
+        kind=enum
+        the enum values are: Zero=0, One=1, 
+    argument:
+      void
+    function body length: 6
+    bytes at the first mismatch are: 40 57 33 c0 5f c3 
+
 ODR VIOLATION: ?ReturnAnAnonymousType@T10@Tests@@YA?AUResult@?A0x????????@12@XZ
   [TUs\x64\Debug\TU1.obj]
     unmangled name:  struct Tests::T10::`anonymous namespace'::Result __cdecl Tests::T10::ReturnAnAnonymousType(void)
@@ -585,6 +605,14 @@ ODR VIOLATION: SameEnumNameDifferentEnumerators
     kind=enum
     the enum values are: sendeA=0, sendeB=1, 
 
+ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
+  [TUs\x64\Debug\TU1.pdb]
+    kind=enum
+    the enum values are: Zero=0, One=1, Two=2, 
+  [TUs\x64\Debug\TU2.pdb]
+    kind=enum
+    the enum values are: Zero=0, One=1, 
+
 ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
   [TUs\x64\Debug\TU1.pdb]
     kind=typedef
@@ -593,4 +621,4 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-48 ODR violation(s) found.
+50 ODR violation(s) found.
