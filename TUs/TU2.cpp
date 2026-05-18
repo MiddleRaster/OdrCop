@@ -156,16 +156,15 @@ namespace Tests {
     }
     auto* g_2a_addressOfFunctionWithAnonymousNamespaceArg = &T9a::function9;   // forces codegen
 
-
-#ifdef NOT_YET
-
     // Test 10 — Anonymous type as return type of external-linkage function, different layouts
     // OdrCop SHOULD flag
     namespace T10 {
         namespace { struct Result { double y; }; }
-        Result g_2_t10_instance;
-        Result f();
+        Result ReturnAnAnonymousType() { return {}; };
+        Result g_2_t10_instance = ReturnAnAnonymousType();
     }
+
+#ifdef NOT_YET
 
     // Test 11 — Doubly-nested anonymous namespace, different layouts
     // OdrCop should NOT flag

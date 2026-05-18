@@ -35,118 +35,415 @@ namespace Odr
 
     struct NullInfo
     {
+        NullInfo() noexcept = default;
         void Print(int /*depth*/) const {}
         bool operator==(const NullInfo&) const { return true; }
     };
-    class FuncInfo
-    {
-        const std::wstring compiland;
-        const std::wstring decorated;
-        const std::wstring unmangled;
-        const ULONGLONG    bodyLength;
-        const std::vector<BYTE> body;
-        const std::vector<std::pair<std::wstring,std::variant<UdtInfo,EnumInfo,NullInfo>>> args;
-    public:
-        FuncInfo(const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body, const PerTuTypes& perTU)
-            : compiland(compiland)
-            , decorated(decorated)
-            , unmangled([&]() -> std::wstring
+class FuncInfo
+{
+    const std::wstring compiland;
+    const std::wstring decorated;
+    const std::wstring unmangled;
+    const ULONGLONG    bodyLength;
+    const std::vector<BYTE> body;
+    const std::vector<std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>> args;
+    const             std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>  returnType;
+public:
+    FuncInfo(const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body, const PerTuTypes& perTU)
+        : compiland(compiland)
+        , decorated(decorated)
+        , unmangled([&]() -> std::wstring
+                    {
+                        std::vector<wchar_t> buffer(65534);
+                        if (0 != UnDecorateSymbolNameW(decorated.c_str(), buffer.data(), 65534, UNDNAME_COMPLETE))
+                            return std::wstring(buffer.data());
+                        return std::wstring(decorated); // my give up
+                    }())
+        , bodyLength(bodyLength)
+        , body(body)
+        , args([&](){
+                        std::vector<std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>> theArgs;
+
+                        // given an undecorated name, piece it apart, looking for arguments to the function.
+                        // note: there may be extra () as part of the arg names.
+                        // So we count backwards from the last ')'.
+                        // if we find a ')', we increment a counter,
+                        // if we find a '(', we decrement the counter.
+                        // if the counter == 0, we've got it.
+
+                        std::wstring argsAsOneString;
+
+                        auto pos = unmangled.rfind(L')');
+                        if (pos != std::wstring::npos)
                         {
-                            std::vector<wchar_t> buffer(65534);
-                            if (0 != UnDecorateSymbolNameW(decorated.c_str(), buffer.data(), 65534, UNDNAME_COMPLETE))
-                                return std::wstring(buffer.data());
-                            return std::wstring(decorated); // my give up
-                        }())
-            , bodyLength(bodyLength)
-            , body(body)
-            , args([&](){
-                            std::vector<std::pair<std::wstring,std::variant<UdtInfo,EnumInfo,NullInfo>>> theArgs;
+                            int parens = 1;
+                            for(auto i=pos-1; i>0; --i)
+                            {
+                                if (unmangled[i] == L')') { ++parens; continue; }
+                                if (unmangled[i] == L'(') { --parens;
+                                    if (parens == 0)
+                                    {   // found it!
+                                        argsAsOneString = unmangled.substr(i+1, pos-i-1);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
 
-                            // given an undecorated name, piece it apart, looking for arguments to the function.
-                            // note: there may be extra () as part of the arg names. 
-                            // So we count backwards from the last );
-                            // if we find a ), we increment a counter,
-                            // if we find a (, we decrement the counter.
-                            // if the counter == 0, we've got it.
-
-                            std::wstring argsAsOneString;
-
-                            auto pos = unmangled.rfind(L')');
+                        do { // now split by scanning for ',' at depth 0 (respecting nested brackets)
+                            std::wstring oneArg;
+                            pos = std::wstring::npos;
+                            {
+                                int depth         = 0;
+                                int backtickDepth = 0;
+                                for (size_t i=0; i<argsAsOneString.size(); ++i)
+                                {
+                                    wchar_t  c = argsAsOneString[i];
+                                    if      (c == L'`')  { ++backtickDepth; }
+                                    else if (c == L'\'') { if (backtickDepth > 0) --backtickDepth; }
+                                    else if (c == L'(')  { ++depth; }
+                                    else if (c == L')')  { --depth; }
+                                    else if (c == L',' && depth == 0 && backtickDepth == 0)
+                                    {
+                                        pos = i;
+                                        break;
+                                    }
+                                }
+                            }
                             if (pos != std::wstring::npos)
                             {
-                                int parens = 1;
-                                for(auto i=pos-1; i>0; --i)
+                                oneArg          = argsAsOneString.substr(0, pos);
+                                argsAsOneString = argsAsOneString.substr(pos+1);
+                                // trim leading space from remainder
+                                if (!argsAsOneString.empty() && argsAsOneString.front() == L' ')
+                                    argsAsOneString = argsAsOneString.substr(1);
+                            }
+                            else
+                            {
+                                oneArg = argsAsOneString;
+                            }
+
+                            // MSVC is strangely inconsistent - it's either:
+                            // anonymous-namespace or
+                            // anonymous namespace.
+                            for (;;) {
+                                auto pos1 = oneArg.find(L"anonymous namespace");
+                                if (pos1 == std::wstring::npos)
+                                    break;
+                                oneArg[pos1 + 9] = L'-';
+                            }
+
+                            if (oneArg.starts_with(L"enum "))
+                            {
+                                oneArg  = oneArg.substr(5);
+                                auto it = perTU.enumMap.find(oneArg);
+                                if (it != perTU.enumMap.end())
                                 {
-                                    if (unmangled[i] == L')') { ++parens; continue; }
-                                    if (unmangled[i] == L'(') { --parens;
-                                        if (parens == 0)
-                                        {   // found it!
-                                            argsAsOneString = unmangled.substr(i+1, pos-i-1);
-                                            break;
+                                    theArgs.push_back({oneArg,{it->second[0]}}); // there should only be one per TU, but I suppose it's possible. Just grab the first.
+                                    continue;
+                                }
+                                // else fall through to string
+                            }
+
+                            // if struct, class or union
+                            if (oneArg.starts_with(L"struct ") || oneArg.starts_with(L"class ") || oneArg.starts_with(L"union "))
+                            {
+                                if (oneArg.starts_with(L"struct ")) oneArg = oneArg.substr(7);
+                                if (oneArg.starts_with(L"class " )) oneArg = oneArg.substr(6);
+                                if (oneArg.starts_with(L"union " )) oneArg = oneArg.substr(6);
+
+                                auto it = perTU.udtMap.find(oneArg);
+                                if (it != perTU.udtMap.end())
+                                {
+                                    theArgs.push_back({oneArg,{it->second[0]}}); // there should only be one per TU, but I suppose it's possible. Just grab the first.
+                                    continue;
+                                }
+                                // else give up for now. Perhaps try PdbParser.h later
+                                // fall through to string
+                            }
+
+                            // add a string
+                            theArgs.push_back({oneArg,NullInfo()});
+
+                        } while (pos != std::wstring::npos);
+                        return theArgs;
+                    }())
+        , returnType([&]() {
+
+                    // using calling convention to find split point
+
+                    struct ReturnTypeExtractor // poor man's lambda
+                    {
+                        enum class FunctionKind
+                        {
+                            Regular,
+                            Constructor,
+                            Destructor,
+                            DeducedLambda
+                        };
+
+                        static std::pair<FunctionKind, std::wstring> ExtractReturnTypeAndKind(const std::wstring& unmangled)
+                        {
+                            std::wstring ret = ExtractBareReturnType(unmangled);
+                            FunctionKind kind = ClassifyFunctionKind(unmangled, ret);
+                            return { kind, ret };
+                        }
+
+                    private:
+                        static std::wstring ExtractBareReturnType(const std::wstring& unmangled)
+                        {
+                            std::wstring ws = extract_return_type(unmangled);
+
+                            static constexpr const wchar_t* junk[] = {
+                                L" __cdecl",
+                                L" __stdcall",
+                                L" __fastcall",
+                                L" __thiscall",
+                                L" __vectorcall",
+                                L" __clrcall",
+
+                                L"static ",
+                                L"extern \"C++\" ",
+                                L"extern \"C\" ",
+                                L"extern ",
+
+                                // spaces         no spaces
+                                L"public: ",    L"public:",
+                                L"private: ",   L"private:",
+                                L"protected: ", L"protected:",
+
+                                L"virtual ",
+
+                                L" __ptr64",
+                                L" __ptr32",
+                                L" __unaligned",
+                                L" __restrict",
+                            };
+                            for (auto j : junk)
+                            {
+                                while (true)
+                                {
+                                    auto p = ws.find(j);
+                                    if (p == std::wstring::npos)
+                                        break;
+                                    ws.erase(p, wcslen(j));
+                                }
+                            }
+                            return ws;
+                        }
+
+                        static std::wstring extract_return_type(const std::wstring& unmangled)
+                        {
+                            static constexpr const wchar_t* CALLING_CONVENTIONS[] =
+                            {
+                                L"__cdecl",
+                                L"__stdcall",
+                                L"__fastcall",
+                                L"__thiscall",
+                                L"__vectorcall",
+                                L"__clrcall"
+                            };
+
+                            int depth        = 0;
+                            int backtickDepth = 0;
+
+                            for (size_t i = 0; i < unmangled.size(); ++i) {
+                                wchar_t c = unmangled[i];
+
+                                if      (c == L'`')  { ++backtickDepth; continue; }
+                                else if (c == L'\'') { if (backtickDepth > 0) { --backtickDepth; continue; } }
+                                else if (c == L'(')  { ++depth; }
+                                else if (c == L')')  { --depth; }
+
+                                if (depth == 0 && backtickDepth == 0) {
+                                    for (auto cc : CALLING_CONVENTIONS) {
+                                        size_t len = wcslen(cc);
+
+                                        if (i + len <= unmangled.size() &&
+                                            unmangled.compare(i, len, cc) == 0)
+                                        {
+                                            // Found the boundary
+                                            std::wstring ret = unmangled.substr(0, i);
+
+                                            // Trim trailing spaces
+                                            while (!ret.empty() && ret.back() == L' ')
+                                                ret.pop_back();
+
+                                            return ret;
                                         }
                                     }
                                 }
                             }
+                            return L""; // constructors, destructors, or deduced lambdas
+                        }
 
-                            do { // now split by looking for a ','
-                                std::wstring oneArg(argsAsOneString);
-                                pos = argsAsOneString.find(L',');
-                                if (pos != std::wstring::npos)
-                                {
-                                    oneArg          = argsAsOneString.substr(0, pos-1);
-                                    argsAsOneString = argsAsOneString.substr(pos+1);
-                                }
+                        static FunctionKind ClassifyFunctionKind(const std::wstring& unmangled, const std::wstring& ret)
+                        {
+                            // If return type is non-empty → Regular
+                            if (!ret.empty())
+                                return FunctionKind::Regular;
 
-                                // MSVC is strangely inconsistent - it's either:
-                                // anonymous-namespace or
-                                // anonymous namespace.
-                                for (;;) {
-                                    auto pos1 = oneArg.find(L"anonymous namespace");
-                                    if (pos1 == std::wstring::npos)
-                                        break;
-                                    oneArg[pos1 + 9] = L'-';
-                                }
+                            // Find the position just after the function-level calling convention
+                            // using the same depth-tracking logic as extract_return_type.
+                            size_t pos = std::wstring::npos;
 
-                                if (oneArg.starts_with(L"enum "))
-                                {
-                                    oneArg  = oneArg.substr(5);
-                                    auto it = perTU.enumMap.find(oneArg);
-                                    if (it != perTU.enumMap.end())
-                                    {
-                                        theArgs.push_back({oneArg,{it->second[0]}}); // there should only be one per TU, but I suppose it's possible. Just grab the first.
-                                        continue;
+                            static constexpr const wchar_t* CALLING_CONVENTIONS[] = {
+                                L"__cdecl", L"__stdcall", L"__fastcall",
+                                L"__thiscall", L"__vectorcall", L"__clrcall"
+                            };
+
+                            int depth        = 0;
+                            int backtickDepth = 0;
+
+                            for (size_t i = 0; i < unmangled.size(); ++i) {
+                                wchar_t c = unmangled[i];
+
+                                if      (c == L'`')  { ++backtickDepth; continue; }
+                                else if (c == L'\'') { if (backtickDepth > 0) { --backtickDepth; continue; } }
+                                else if (c == L'(')  { ++depth; }
+                                else if (c == L')')  { --depth; }
+
+                                if (depth == 0 && backtickDepth == 0) {
+                                    for (auto cc : CALLING_CONVENTIONS) {
+                                        size_t len = wcslen(cc);
+                                        if (i + len <= unmangled.size() &&
+                                            unmangled.compare(i, len, cc) == 0)
+                                        {
+                                            pos = i + len;
+                                            goto found;
+                                        }
                                     }
-                                    // else fall through to string
                                 }
+                            }
+                    found:
+                            if (pos == std::wstring::npos)
+                                return FunctionKind::Regular; // fallback
 
-                                // if struct, class or union
-                                if (oneArg.starts_with(L"struct ") || oneArg.starts_with(L"class ") || oneArg.starts_with(L"union "))
+                            // Skip whitespace
+                            while (pos < unmangled.size() && unmangled[pos] == L' ')
+                                pos++;
+
+                            std::wstring_view fn(unmangled.c_str() + pos,
+                                                 unmangled.size() - pos);
+
+                            // Destructor: any ::~ in the qualified name
+                            if (fn.find(L"::~") != std::wstring_view::npos)
+                                return FunctionKind::Destructor;
+
+                            // Constructor: last name component matches the one before it,
+                            // confirmed by '(' immediately following — tracked at bracket depth.
+                            {
+                                // Find all depth-0 '::' separator positions in fn.
+                                std::vector<size_t> sepPositions;
+                                int d  = 0;
+                                int bt = 0;
+                                for (size_t i = 0; i + 1 < fn.size(); ++i)
                                 {
-                                    if (oneArg.starts_with(L"struct ")) oneArg = oneArg.substr(7);
-                                    if (oneArg.starts_with(L"class " )) oneArg = oneArg.substr(6);
-                                    if (oneArg.starts_with(L"union " )) oneArg = oneArg.substr(6);
-
-                                    auto it = perTU.udtMap.find(oneArg);
-                                    if (it != perTU.udtMap.end())
+                                    wchar_t ch = fn[i];
+                                    if      (ch == L'`')  { ++bt; }
+                                    else if (ch == L'\'') { if (bt > 0) --bt; }
+                                    else if (ch == L'(')  { ++d; }
+                                    else if (ch == L')')  { --d; }
+                                    else if (ch == L':' && fn[i+1] == L':' && d == 0 && bt == 0)
                                     {
-                                        theArgs.push_back({oneArg,{it->second[0]}}); // there should only be one per TU, but I suppose it's possible. Just grab the first.
-                                        continue;
+                                        sepPositions.push_back(i);
+                                        ++i; // skip second ':'
                                     }
-                                    // else give up for now. Perhaps try PdbParser.h later
-                                    // fall through to string
                                 }
 
-                                // add a string
-                                theArgs.push_back({oneArg,NullInfo()});
+                                if (sepPositions.size() >= 1)
+                                {
+                                    size_t last = sepPositions[sepPositions.size() - 1] + 2;
 
-                            } while (pos != std::wstring::npos);
-                            return theArgs;
-                        }())
+                                    // For single '::': className is everything before the last '::'.
+                                    // For two or more: className is the second-to-last segment.
+                                    std::wstring_view className = (sepPositions.size() >= 2)
+                                        ? fn.substr(sepPositions[sepPositions.size() - 2] + 2, last - (sepPositions[sepPositions.size() - 2] + 2) - 2)
+                                        : fn.substr(0, sepPositions[0]);
+
+                                    std::wstring_view name = fn.substr(last);
+
+                                    if (name.starts_with(className) &&
+                                        name.size() > className.size() &&
+                                        name[className.size()] == L'(')
+                                        return FunctionKind::Constructor;
+                                }
+                            }
+
+                            // Empty return type but not ctor/dtor → deduced lambda
+                            return FunctionKind::DeducedLambda;
+                        }
+                    };
+
+                    auto [kind, returnAsOneString] = ReturnTypeExtractor::ExtractReturnTypeAndKind(unmangled);
+
+                    // MSVC is strangely inconsistent - it's either:
+                    // anonymous-namespace or
+                    // anonymous namespace.
+                    for (;;) {
+                        auto pos1 = returnAsOneString.find(L"anonymous namespace");
+                        if (pos1 == std::wstring::npos)
+                            break;
+                        returnAsOneString[pos1 + 9] = L'-';
+                    }
+
+                    if (kind == ReturnTypeExtractor::FunctionKind::Regular)
+                    {
+                        if (returnAsOneString.starts_with(L"enum "))
+                        {
+                            returnAsOneString = returnAsOneString.substr(5);
+                            auto it = perTU.enumMap.find(returnAsOneString);
+                            if (it != perTU.enumMap.end())
+                                return std::pair<std::wstring, std::variant<NullInfo, UdtInfo, EnumInfo>>{returnAsOneString,{it->second[0]}};
+                            // else fall through to string
+                        }
+
+                        // if struct, class or union
+                        if (returnAsOneString.starts_with(L"struct ") ||
+                            returnAsOneString.starts_with(L"class " ) ||
+                            returnAsOneString.starts_with(L"union " ) )
+                        {
+                            if (returnAsOneString.starts_with(L"struct ")) returnAsOneString = returnAsOneString.substr(7);
+                            if (returnAsOneString.starts_with(L"class " )) returnAsOneString = returnAsOneString.substr(6);
+                            if (returnAsOneString.starts_with(L"union " )) returnAsOneString = returnAsOneString.substr(6);
+
+                            auto it = perTU.udtMap.find(returnAsOneString);
+                            if (it != perTU.udtMap.end())
+                                return std::pair<std::wstring, std::variant<NullInfo, UdtInfo, EnumInfo>>{returnAsOneString,{it->second[0]}};
+                            // else give up for now. Perhaps try PdbParser.h later
+                            // fall through to string
+                        }
+                    }
+
+                    // if we get here, either we didn't find the type in our udt/enum maps,
+                    // OR it's a ctor, dtor or deduced lambda
+
+                    switch (kind)
+                    {
+                    case ReturnTypeExtractor::FunctionKind::Constructor:
+                        return std::pair<std::wstring, std::variant<NullInfo, UdtInfo, EnumInfo>>{returnAsOneString, NullInfo()}; // had better be L""
+                    case ReturnTypeExtractor::FunctionKind::Destructor:
+                        return std::pair<std::wstring, std::variant<NullInfo, UdtInfo, EnumInfo>>{returnAsOneString, NullInfo()}; // had better be L""
+                    case ReturnTypeExtractor::FunctionKind::DeducedLambda:
+                        return std::pair<std::wstring, std::variant<NullInfo, UdtInfo, EnumInfo>>{L"no type for deduced lambda", NullInfo()};
+                    case ReturnTypeExtractor::FunctionKind::Regular:
+                    default:
+                        return std::pair<std::wstring, std::variant<NullInfo, UdtInfo, EnumInfo>>{returnAsOneString, NullInfo()}; // int, void, etc.: things not found in the udtMap
+                    }
+               }())
         {}
         void Print(int depth) const
         {
             std::wcout << L"  [" << compiland << L"]\n";
-            std::wcout << L"    unmangled name:  "      << unmangled  << L'\n';
+            std::wcout << L"    unmangled name:  "  << unmangled        << L'\n';
+
+            { // first print return type
+                std::wcout << L"    return type:  ";
+                auto& [name, argItem] = returnType;
+                std::wcout << L"   " << name << L'\n';
+                std::visit([depth](auto& arg) { arg.Print(depth+1); }, argItem);
+            }
+
             if (args.size() > 0) {
                 if (args.size() == 1)
                     std::wcout << L"    argument:\n";
@@ -155,7 +452,7 @@ namespace Odr
                 for (auto& [name, argItem] : args)
                 {
                     std::wcout << L"      " << name << L'\n';
-                    std::visit([depth](auto& arg) { arg.Print(depth + 1); }, argItem);
+                    std::visit([depth](auto& arg) { arg.Print(depth+1); }, argItem);
                 }
             }
             std::wcout << L"    function body length: " << bodyLength << L'\n';
@@ -216,11 +513,11 @@ namespace Odr
     private:
         bool IsEqualTo(const FuncInfo& other) const
         {
-         // if (compiland   != other.compiland  ) return false; // compilands must be different for ODR violations
-         // if (decorated   != other.decorated  ) return false; // we're tring to catch anonymous namespace args, which always hash to something unique. So skip.
-            if (unmangled   != other.unmangled  ) return false;
+         // if ( compiland  != other.compiland  ) return false; // compilands must be different for ODR violations
+         // if ( decorated  != other.decorated  ) return false; // we're tring to catch anonymous namespace args, which always hash to something unique. So skip.
+            if ( unmangled  != other.unmangled  ) return false;
+            if (returnType  != other.returnType ) return false;
             if (args.size() != other.args.size()) return false;
-
             for(size_t i=0; i<args.size(); ++i)
                 if (args[i] != other.args[i])     return false;
 
