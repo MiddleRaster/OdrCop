@@ -31,6 +31,7 @@ namespace Odr
     {
         std::map<std::wstring, std::vector<UdtInfo >>  udtMap; // UDTs
         std::map<std::wstring, std::vector<EnumInfo>> enumMap; // enums
+        std::map<std::wstring, std::vector<TDefInfo>> tdefMap; // enums
     };
 
     struct NullInfo
@@ -39,7 +40,7 @@ namespace Odr
         void Print(int /*depth*/) const {}
         bool operator==(const NullInfo&) const { return true; }
     };
-class FuncInfo
+class FuncInfo : public AnonInfo
 {
     const std::wstring compiland;
     const std::wstring decorated;
@@ -49,8 +50,9 @@ class FuncInfo
     const std::vector<std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>> args;
     const             std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>  returnType;
 public:
-    FuncInfo(const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body, const PerTuTypes& perTU)
-        : compiland(compiland)
+    FuncInfo(bool b, const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body, const PerTuTypes& perTU)
+        : AnonInfo(b)
+        , compiland(compiland)
         , decorated(decorated)
         , unmangled([&]() -> std::wstring
                     {
@@ -507,6 +509,12 @@ public:
             }
             return -1;
         }
+        template <typename Fn> void CollectSubItems(Fn&& fn) const
+        {
+            for (auto& [name, arg] : args)
+                std::visit([&](const auto& x) { fn(name, x); }, arg);
+            std::visit([&](const auto& x) { fn(returnType.first, x); }, returnType.second);
+        }
 
         friend bool operator==(const FuncInfo& a, const FuncInfo& b) { return  a.IsEqualTo(b); }
         friend bool operator!=(const FuncInfo& a, const FuncInfo& b) { return !a.IsEqualTo(b); }
@@ -696,7 +704,8 @@ public:
                             continue;
                     }
 
-                    funcMap[normalizedName].push_back(FuncInfo(objPath, decoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len), perTU));
+                    bool b = undecoratedName.find(L"`anonymous-namespace'") != std::wstring::npos;
+                    funcMap[normalizedName].push_back(FuncInfo(b, objPath, decoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len), perTU));
                 }
             }
         }

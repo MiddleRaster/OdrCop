@@ -41,5 +41,8 @@
     <ClInclude Include="TDefInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AnonInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

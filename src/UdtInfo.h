@@ -9,12 +9,13 @@
 #include <algorithm>
 
 #include "DiaGetters.h"
+#include "AnonInfo.h"
 
 namespace Odr
 {
     static std::wstring Indent(int depth) { return std::wstring(depth * 4, L' '); }
 
-    class UdtInfo
+    class UdtInfo : public AnonInfo
     {
         template <typename Derived>
         class MemberInfoBase
@@ -58,6 +59,11 @@ namespace Odr
                     nestedUdt->Print(depth+1);
             }
             std::wstring GetName() const { return name; }
+            template <typename Fn> void CollectSubItems(Fn&& fn) const
+            {
+                if (nestedUdt)
+                    fn(nestedUdt->GetName(), *nestedUdt);
+            }
 
             friend bool operator==(const Derived& a, const Derived& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const Derived& a, const Derived& b) { return !a.IsEqualTo(b); }
@@ -77,7 +83,7 @@ namespace Odr
 
                 // Check if this is already the defining symbol
                 if (!Get(type, &IDiaSymbol::get_exportIsForwarder))
-                    return std::make_shared<UdtInfo>(session, type, pdbPath, name);
+                    return std::make_shared<UdtInfo>(false, session, type, pdbPath, name);
 
                 // It's a forwarder — search the lexical parent scope for the defining symbol
                 //CComPtr<IDiaSymbol> lexParent;
@@ -105,7 +111,7 @@ namespace Odr
                         break;
 
                     if (!Get(candidate, &IDiaSymbol::get_exportIsForwarder))
-                        return std::make_shared<UdtInfo>(session, candidate, pdbPath, name);
+                        return std::make_shared<UdtInfo>(false, session, candidate, pdbPath, name);
                 }
                 return nullptr;
             }
@@ -400,6 +406,8 @@ namespace Odr
                     result.push_back(methods[i]);   // copy-constructs, no assignment needed
                 return result;
             }
+            template <typename Fn> void CollectSubItems(Fn&&) const {}
+
             friend bool operator==(const MethodInfo& a, const MethodInfo& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const MethodInfo& a, const MethodInfo& b) { return !a.IsEqualTo(b); }
         private:
@@ -435,6 +443,11 @@ namespace Odr
                 if (nestedUdt)
                     nestedUdt->Print(depth);
             }
+            template <typename Fn> void CollectSubItems(Fn&& fn) const
+            {
+                if (nestedUdt)
+                    fn(nestedUdt->GetName(), *nestedUdt);
+            }
 
             friend bool operator==(const BaseInfo& a, const BaseInfo& b) { return  a.IsEqualTo(b); }
             friend bool operator!=(const BaseInfo& a, const BaseInfo& b) { return !a.IsEqualTo(b); }
@@ -465,7 +478,7 @@ namespace Odr
                 if (name.find(L"`anonymous-namespace'") == std::wstring::npos)
                     return nullptr;
 
-                return std::make_shared<UdtInfo>(session, type, pdbPath, name);
+                return std::make_shared<UdtInfo>(false, session, type, pdbPath, name);
             }
         };
 
@@ -482,13 +495,14 @@ namespace Odr
         const std::pair<std::vector<MethodInfo>,
                         std::vector<MethodInfo>> methodsAndCtors; // method and ctor names
     public:
-        UdtInfo(IDiaSession* session, IDiaSymbol* sym, const std::wstring& pdbPath, const std::wstring& name)
-            : pdbPath(pdbPath)
+        UdtInfo(bool b, IDiaSession* session, IDiaSymbol* sym, const std::wstring& pdbPath, const std::wstring& name)
+            : AnonInfo(b)
+            , pdbPath(pdbPath)
             , name   (name)
-            , size(                        Get(sym, &IDiaSymbol::get_length))
+            , size   (                     Get(sym, &IDiaSymbol::get_length))
             , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
             , members(     GetMembers(session, sym, pdbPath))
-            , bases(      GetBaseInfo(session, sym, pdbPath))
+            , bases  (    GetBaseInfo(session, sym, pdbPath))
             , methodsAndCtors(      GetMethods(sym, name))
         {}
         UdtInfo(      UdtInfo&&) = default;
@@ -544,6 +558,17 @@ namespace Odr
                 return smallest;
             }
             return L"";
+        }
+
+        std::wstring GetName() const { return name; }
+        template <typename Fn> void CollectSubItems(Fn&& fn) const
+        {
+            for(auto& b : bases                       ) b.CollectSubItems(fn);
+            for(auto& m : std::get<0>(members)        ) m.CollectSubItems(fn);
+            for(auto& m : std::get<1>(members)        ) m.CollectSubItems(fn);
+            for(auto& m : std::get<2>(members)        ) m.CollectSubItems(fn);
+            for(auto& m : std::get<0>(methodsAndCtors)) m.CollectSubItems(fn);
+            for(auto& c : std::get<1>(methodsAndCtors)) c.CollectSubItems(fn);
         }
 
         friend bool operator==(const UdtInfo& a, const UdtInfo& b) { return  a.IsEqualTo(b); }

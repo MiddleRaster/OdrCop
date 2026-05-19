@@ -158,6 +158,7 @@
     <ClCompile Include="src.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnonInfo.h" />
     <ClInclude Include="COFFer.h" />
     <ClInclude Include="cvinfo.h" />
     <ClInclude Include="DiaGetters.h" />

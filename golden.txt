@@ -605,14 +605,6 @@ ODR VIOLATION: SameEnumNameDifferentEnumerators
     kind=enum
     the enum values are: sendeA=0, sendeB=1, 
 
-ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
-  [TUs\x64\Debug\TU1.pdb]
-    kind=enum
-    the enum values are: Zero=0, One=1, Two=2, 
-  [TUs\x64\Debug\TU2.pdb]
-    kind=enum
-    the enum values are: Zero=0, One=1, 
-
 ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
   [TUs\x64\Debug\TU1.pdb]
     kind=typedef
@@ -621,4 +613,36 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
 
-50 ODR violation(s) found.
+ODR VIOLATION: Tests::T10::`anonymous-namespace'::Result
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=4
+    +0 public int32_t x
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=8
+    +0 public double y
+
+ODR VIOLATION: Tests::T9::`anonymous-namespace'::Arg
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=4
+    +0 public int32_t x
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=8
+    +0 public double y
+
+ODR VIOLATION: Tests::T9a::`anonymous-namespace'::Arg
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=4
+    +0 public int32_t x
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=4
+    +0 public uint32_t x
+
+ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
+  [TUs\x64\Debug\TU1.pdb]
+    kind=enum
+    the enum values are: Zero=0, One=1, Two=2, 
+  [TUs\x64\Debug\TU2.pdb]
+    kind=enum
+    the enum values are: Zero=0, One=1, 
+
+53 ODR violation(s) found.

@@ -8,16 +8,17 @@
 #include <vector>
 
 #include "DiaGetters.h"
+#include "AnonInfo.h"
 
 namespace Odr
 {
-    class TDefInfo
+    class TDefInfo : public AnonInfo
     {
         const std::wstring pdbPath;
         const std::wstring name;
         const std::wstring underlyingType;
     public:
-        TDefInfo(const std::wstring& name, IDiaSymbol* sym, const std::wstring& pdbPath) : name(name), pdbPath(pdbPath), underlyingType(GetUnderlyingType(sym)) {}
+        TDefInfo(bool b, const std::wstring& name, IDiaSymbol* sym, const std::wstring& pdbPath) : AnonInfo(b), name(name), pdbPath(pdbPath), underlyingType(GetUnderlyingType(sym)) {}
         void Print(int /*depth*/) const
         {
             std::wcout << L"  [" << pdbPath << L"]\n";
@@ -25,10 +26,10 @@ namespace Odr
             std::wcout << L"    underlying type: " << underlyingType << L'\n';
         }
         void PrintPdbPath() const { std::wcout << L"  [" << pdbPath << L"] (same as above)\n"; }
+        template <typename Fn> void  CollectSubItems(Fn&&) const {}
 
         friend bool operator==(const TDefInfo& a, const TDefInfo& b) { return  a.IsEqualTo(b); }
         friend bool operator!=(const TDefInfo& a, const TDefInfo& b) { return !a.IsEqualTo(b); }
-
     private:
         bool IsEqualTo(const TDefInfo& other) const
         {

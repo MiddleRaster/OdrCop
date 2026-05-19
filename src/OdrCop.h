@@ -12,6 +12,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include "AnonInfo.h"
 #include "UdtInfo.h"
 #include "EnumInfo.h"
 #include "TDefInfo.h"
@@ -78,7 +79,6 @@ namespace Odr
                                                     is not governed by the ODR at all
                                             Therefore, comparing lambda closure types across TUs is meaningless.
                                                 It will always produce false positives.
-                                                Suppressing them is not a heuristic — it is the correct interpretation of the C++ standard.
                                             */
                                             if (std::wstring(name).find(L"<lambda_") != std::wstring::npos)
                                                 break;
@@ -87,26 +87,25 @@ namespace Odr
                                                 break;                             // in a function or a block but everything else the LLMs suggested failed.
 
                                             std::wstring qualifiedName = QualifiedName(sym);
-
-                                            UdtInfo udtInfo(session, sym, path, qualifiedName);
+                                            bool b = qualifiedName.find(L"`anonymous-namespace'") != std::wstring::npos;
+                                            UdtInfo udtInfo(b, session, sym, path, qualifiedName);
                                             std::wstring key = BuildUdtKey(sym, udtInfo.GetFirstMemberName());
-
                                             perTU.udtMap[key].push_back(udtInfo); // hang onto even std:: UDTs, as they might be function args in the user's functions
 
                                             if (excludeStdlib == true)
                                                 if (std::wstring(key).starts_with(L"std::"))
                                                     break;
 
-                                            // Anonymous-namespace types are TU-unique; never compare at top level
-                                            if (qualifiedName.find(L"`anonymous-namespace'") == std::wstring::npos)
-                                                 udtMap[key].push_back(std::move(udtInfo));
+                                            udtMap[key].push_back(std::move(udtInfo));
                                         }
                                         break;
                                     case (enum SymTagEnum)::SymTagEnum:
                                         if (name && name[0] != L'\0')
                                         {
                                             std::wstring key(QualifiedName(sym));
-                                            EnumInfo ei(path, key, sym);
+
+                                            bool b = key.find(L"`anonymous-namespace'") != std::wstring::npos;
+                                            EnumInfo ei(b, path, key, sym);
                                             perTU.enumMap[key].push_back(ei); // hang onto even std:: enums, as they might be function args 
 
                                             if (excludeStdlib == true)
@@ -120,7 +119,10 @@ namespace Odr
                                         if (name && name[0] != L'\0')
                                         {
                                             std::wstring key(QualifiedName(sym));
-                                            TDefInfo ti(std::wstring(name), sym, path);
+
+                                            bool b = key.find(L"`anonymous-namespace'") != std::wstring::npos;
+                                            TDefInfo ti(b, std::wstring(name), sym, path);
+                                            perTU.tdefMap[key].push_back(ti);
 
                                             if (excludeStdlib == true)
                                                 if (std::wstring(key).starts_with(L"std::"))
@@ -146,21 +148,33 @@ namespace Odr
         }
         int ReportViolations() const
         {
+            PerTuTypes subTypeMaps;
+
             int
-            violationCount  = ReportMapViolations( udtMap, [](const auto&  d) {  d.PrintPdbPath();       }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
-            violationCount += ReportMapViolations(funcMap, [](const auto& fi) { fi.PrintCompilandPath(); }, [](const auto& f1, const auto& f2) -> int { return f1.MismatchIndex(f2); }, [](const auto& f, int m) { f.PrintMismatch(m); });
-            violationCount += ReportMapViolations(enumMap, [](const auto&   ) {                          }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
-            violationCount += ReportMapViolations(tdefMap, [](const auto&  t) {  t.PrintPdbPath();       }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
+            violationCount  = ReportMapViolations(subTypeMaps,  udtMap, [](const auto& a) { return a.excludeFromComparison; }, [](const auto& d ) {  d.PrintPdbPath();       }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
+            violationCount += ReportMapViolations(subTypeMaps, funcMap, [](const auto& a) { return a.excludeFromComparison; }, [](const auto& fi) { fi.PrintCompilandPath(); }, [](const auto& f1, const auto& f2) -> int { return f1.MismatchIndex(f2); }, [](const auto& f, int m) { f.PrintMismatch(m); });
+            violationCount += ReportMapViolations(subTypeMaps, enumMap, [](const auto& a) { return a.excludeFromComparison; }, [](const auto&   ) {                          }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
+            violationCount += ReportMapViolations(subTypeMaps, tdefMap, [](const auto& a) { return a.excludeFromComparison; }, [](const auto&  t) {  t.PrintPdbPath();       }, [](const auto&,    const auto&   ) -> int { return 0;                    }, [](const auto&,   int  ) {});
+
+            // now dump anonymous types, if and only if they were involved in ODR violations
+            PerTuTypes dummy;
+            violationCount += ReportMapViolations(dummy, subTypeMaps.udtMap , [](const auto& a) { return !a.excludeFromComparison; }, [](const auto& d) {  d.PrintPdbPath(); }, [](const auto&, const auto&) -> int { return 0; }, [](const auto&, int) {});
+            violationCount += ReportMapViolations(dummy, subTypeMaps.enumMap, [](const auto& a) { return !a.excludeFromComparison; }, [](const auto&  ) {                    }, [](const auto&, const auto&) -> int { return 0; }, [](const auto&, int) {});
+
             return violationCount;
         }
 
     private:
-        template<typename Map, typename PrintPath, typename GetMismatchIndex, typename PrintMismatch> static int ReportMapViolations(Map& map, PrintPath printPath, GetMismatchIndex&& getMismatchIndex, PrintMismatch&& printMismatch)
+        template <typename... Fns> struct Overloaded : Fns... { using Fns::operator()...; };
+        template<typename Map, typename SkipAnonymous, typename PrintPath, typename GetMismatchIndex, typename PrintMismatch> static int ReportMapViolations(PerTuTypes& subTypeMaps, Map& map, SkipAnonymous&& skipAnonymous, PrintPath printPath, GetMismatchIndex&& getMismatchIndex, PrintMismatch&& printMismatch)
         {
             int violationCount = 0;
             for (auto& [name, items] : map)
             {
                 if (items.size() < 2)
+                    continue;
+
+                if (true == skipAnonymous(items[0]))
                     continue;
 
                 if (std::all_of(items.begin() + 1, items.end(), [&](const auto& x) { return x == items[0]; }))
@@ -195,6 +209,35 @@ namespace Odr
                     }
                 }
                 std::wcout << L'\n';
+
+                /* collect subtypes, in case any of them are "anonymous namespace" (internal linkage) types,
+                   but since they are *involved* in ODR violations, they are ODR violations:
+
+                   [basic.def.odr]/13 (C++23)
+                      “If a type with internal linkage is used in the type of an entity with external linkage, 
+                      then the type shall be the same in every translation unit in which the entity is defined.”
+                */
+                auto collect = Overloaded {
+                    [&](const std::wstring& nameOfSubtype, const Odr::EnumInfo& x)
+                    {
+                        subTypeMaps.enumMap[nameOfSubtype].push_back(x);
+                    },
+                    [&](const std::wstring& nameOfSubtype, const Odr::UdtInfo & x)
+                    {
+                        subTypeMaps.udtMap[nameOfSubtype].push_back(x);
+                    },
+                    [&](const std::wstring& nameOfSubtype, const Odr::TDefInfo& x)
+                    {
+                        subTypeMaps.tdefMap[nameOfSubtype].push_back(x);
+                    },
+                    [&](const std::wstring&, const Odr::FuncInfo& ) {},
+                    [&](const std::wstring&, const Odr::NullInfo& ) {},
+                };
+
+                for(auto& item : items)
+                {
+                    item.CollectSubItems(collect);
+                }
             }
             return violationCount;
         }

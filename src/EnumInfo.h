@@ -8,16 +8,17 @@
 #include <vector>
 
 #include "DiaGetters.h"
+#include "AnonInfo.h"
 
 namespace Odr
 {
-    class EnumInfo
+    class EnumInfo : public AnonInfo
     {
         const std::wstring pdbPath;
         const std::wstring name;
         const std::vector<std::pair<std::wstring,std::wstring>> values; // eg, pairs of {A,1}, {B,2}, etc.
     public:
-        EnumInfo(const std::wstring& pdbPath, const std::wstring& name, IDiaSymbol* sym) : pdbPath(pdbPath), name(name), values(MakeVectorOfEnumValues(sym))
+        EnumInfo(bool b, const std::wstring& pdbPath, const std::wstring& name, IDiaSymbol* sym) : AnonInfo(b), pdbPath(pdbPath), name(name), values(MakeVectorOfEnumValues(sym))
         {}
         void Print(int depth) const
         {
@@ -32,10 +33,10 @@ namespace Odr
             std::wcout << L'\n';
         }
         void PrintPdbPath() const { std::wcout << L"  [" << pdbPath << L"] (same as above)\n"; }
+        template <typename Fn> void  CollectSubItems(Fn&&) const {}
 
         friend bool operator==(const EnumInfo& a, const EnumInfo& b) { return  a.IsEqualTo(b); }
         friend bool operator!=(const EnumInfo& a, const EnumInfo& b) { return !a.IsEqualTo(b); }
-
     private:
         bool IsEqualTo(const EnumInfo& other) const
         {
