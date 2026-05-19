@@ -27,7 +27,7 @@ namespace Odr
             MemberInfoBase(IDiaSession* session, const std::wstring& name, IDiaSymbol* sym, const std::wstring& pdbPath)
                 : name(name)
                 , typeName (resolveTypeName (Get(sym, &IDiaSymbol::get_type)))
-                , nestedUdt(resolveNestedUdt(session, Get(sym, &IDiaSymbol::get_type), L"   I'm nested: " + pdbPath))
+                , nestedUdt(resolveNestedUdt(session, Get(sym, &IDiaSymbol::get_type), pdbPath))
             {}
             MemberInfoBase(      MemberInfoBase&&) = default;
             MemberInfoBase(const MemberInfoBase &) = default;
@@ -83,12 +83,9 @@ namespace Odr
 
                 // Check if this is already the defining symbol
                 if (!Get(type, &IDiaSymbol::get_exportIsForwarder))
-                    return std::make_shared<UdtInfo>(false, session, type, pdbPath, name);
+                    return std::make_shared<UdtInfo>(true, session, type, pdbPath, name);
 
                 // It's a forwarder — search the lexical parent scope for the defining symbol
-                //CComPtr<IDiaSymbol> lexParent;
-                //if (FAILED(type->get_lexicalParent(&lexParent)) || !lexParent)
-                //    return nullptr;
                 DWORD lexParentId = Get(type, &IDiaSymbol::get_lexicalParentId);
                 CComPtr<IDiaSymbol> lexParent;
                 if (FAILED(session->symbolById(lexParentId, &lexParent)) || !lexParent)
@@ -111,7 +108,7 @@ namespace Odr
                         break;
 
                     if (!Get(candidate, &IDiaSymbol::get_exportIsForwarder))
-                        return std::make_shared<UdtInfo>(false, session, candidate, pdbPath, name);
+                        return std::make_shared<UdtInfo>(true, session, candidate, pdbPath, name);
                 }
                 return nullptr;
             }
@@ -478,7 +475,7 @@ namespace Odr
                 if (name.find(L"`anonymous-namespace'") == std::wstring::npos)
                     return nullptr;
 
-                return std::make_shared<UdtInfo>(false, session, type, pdbPath, name);
+                return std::make_shared<UdtInfo>(true, session, type, pdbPath, name);
             }
         };
 

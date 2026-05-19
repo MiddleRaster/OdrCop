@@ -621,6 +621,25 @@ ODR VIOLATION: Tests::T10::`anonymous-namespace'::Result
     kind=struct  size=8
     +0 public double y
 
+ODR VIOLATION: Tests::T2::`anonymous-namespace'::Helper
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=4
+    +0 public int32_t x
+    2 methods:
+      public: void * __vecDelDtor(unsigned int) noexcept 
+      public: void ~Helper() noexcept 
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=4
+    +0 public uint32_t y
+
+ODR VIOLATION: Tests::T7::`anonymous-namespace'::Base
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=4
+    +0 public int32_t x
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=8
+    +0 public double y
+
 ODR VIOLATION: Tests::T9::`anonymous-namespace'::Arg
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
@@ -645,4 +664,4 @@ ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
     kind=enum
     the enum values are: Zero=0, One=1, 
 
-53 ODR violation(s) found.
+55 ODR violation(s) found.
