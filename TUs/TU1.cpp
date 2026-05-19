@@ -171,14 +171,14 @@ namespace Tests {
         Result g_1_t10a_instance = ReturnAnAnonymousEnum();
     }
 
-#ifdef NOT_YET
-
     // Test 11 — Doubly-nested anonymous namespace, different layouts
     // OdrCop should NOT flag
     namespace T11 {
         namespace { namespace { struct Empty { int x; }; } }
         Empty g_1_t11_instance;
     }
+
+#ifdef NOT_YET
 
     // Test 12 — TBCI pattern: anonymous Empty as template argument, different layouts
     // OdrCop should NOT flag
