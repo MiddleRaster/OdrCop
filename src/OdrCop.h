@@ -87,9 +87,10 @@ namespace Odr
                                                 break;                             // in a function or a block but everything else the LLMs suggested failed.
 
                                             std::wstring qualifiedName = QualifiedName(sym);
-                                            bool b = qualifiedName.find(L"`anonymous-namespace'") != std::wstring::npos;
+                                            qualifiedName              = Odr::CanonicalizeAnonymousNamespace(qualifiedName);
+                                            bool b                     = qualifiedName.find(L"`anonymous-namespace'") != std::wstring::npos;
                                             UdtInfo udtInfo(b, session, sym, path, qualifiedName);
-                                            std::wstring key = BuildUdtKey(sym, udtInfo.GetFirstMemberName());
+                                            std::wstring key           = BuildUdtKey(sym, path, udtInfo.GetFirstMemberName());
                                             perTU.udtMap[key].push_back(udtInfo); // hang onto even std:: UDTs, as they might be function args in the user's functions
 
                                             if (excludeStdlib == true)
@@ -106,6 +107,8 @@ namespace Odr
 
                                             bool b = key.find(L"`anonymous-namespace'") != std::wstring::npos;
                                             EnumInfo ei(b, path, key, sym);
+
+                                            key = Odr::MakeAnonymousNamespaceTuSpecific(key, path);
                                             perTU.enumMap[key].push_back(ei); // hang onto even std:: enums, as they might be function args 
 
                                             if (excludeStdlib == true)
@@ -122,6 +125,8 @@ namespace Odr
 
                                             bool b = key.find(L"`anonymous-namespace'") != std::wstring::npos;
                                             TDefInfo ti(b, std::wstring(name), sym, path);
+
+                                            key = Odr::MakeAnonymousNamespaceTuSpecific(key, path);
                                             perTU.tdefMap[key].push_back(ti);
 
                                             if (excludeStdlib == true)
@@ -220,15 +225,15 @@ namespace Odr
                 auto collect = Overloaded {
                     [&](const std::wstring& nameOfSubtype, const Odr::EnumInfo& x)
                     {
-                        subTypeMaps.enumMap[nameOfSubtype].push_back(x);
+                        subTypeMaps.enumMap[Odr::MakeAnonymousNamespaceTuNonSpecific(nameOfSubtype)].push_back(x);
                     },
                     [&](const std::wstring& nameOfSubtype, const Odr::UdtInfo & x)
                     {
-                        subTypeMaps.udtMap[nameOfSubtype].push_back(x);
+                        subTypeMaps.udtMap[Odr::MakeAnonymousNamespaceTuNonSpecific(nameOfSubtype)].push_back(x);
                     },
                     [&](const std::wstring& nameOfSubtype, const Odr::TDefInfo& x)
                     {
-                        subTypeMaps.tdefMap[nameOfSubtype].push_back(x);
+                        subTypeMaps.tdefMap[Odr::MakeAnonymousNamespaceTuNonSpecific(nameOfSubtype)].push_back(x);
                     },
                     [&](const std::wstring&, const Odr::FuncInfo& ) {},
                     [&](const std::wstring&, const Odr::NullInfo& ) {},
@@ -242,10 +247,11 @@ namespace Odr
             return violationCount;
         }
 
-        static std::wstring BuildUdtKey(IDiaSymbol* sym, const std::wstring& firstMemberName)
+        static std::wstring BuildUdtKey(IDiaSymbol* sym, const std::wstring& pdbPath, const std::wstring& firstMemberName)
         {
-            CComBSTR name = Get(sym, &IDiaSymbol::get_name);
-            std::wstring key(name.m_str);
+            std::wstring key(QualifiedName(sym));
+            key = Odr::CanonicalizeAnonymousNamespace(key);
+            key = Odr::MakeAnonymousNamespaceTuSpecific(key, pdbPath);
 
             if (key.find(L"<unnamed") != std::wstring::npos)
             {
@@ -270,7 +276,7 @@ namespace Odr
 
                 The solution is to append the type and size to the end of the same, thus making them unique.
 
-                N.B.: it could still fail, if the two types were the same size. Appending the name of the first data-member would solve this last problem.
+                N.B.: it could still fail, if the two types were the same size. Appending the name of the first data-member solves this last problem.
                 */
 
                 /*
@@ -323,10 +329,8 @@ namespace Odr
                 key += L"[size=" + std::to_wstring(size)                  + L"]";
                 if (firstMemberName != L"")
                     key += L"[first=" + firstMemberName                   + L"]";
-
-                return key;
             }
-            return QualifiedName(sym);
+            return key;
         }
         static std::wstring QualifiedName(IDiaSymbol* sym)
         {

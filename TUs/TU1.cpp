@@ -178,8 +178,6 @@ namespace Tests {
         Empty g_1_t11_instance;
     }
 
-#ifdef NOT_YET
-
     // Test 12 — TBCI pattern: anonymous Empty as template argument, different layouts
     // OdrCop should NOT flag
     namespace T12 {
@@ -188,7 +186,22 @@ namespace Tests {
         ClassUnderTest<Empty> g_1_cut;
     }
 
-#endif
+    // Test 13 - a typedef of a type inside an anonymous namespace
+    // OdrCop SHOULD flag
+    namespace
+    {
+        struct SomeStructForTypedefTesting { int x1; };
+    }
+    namespace T13
+    {
+        struct AnonymousTypedefDefinition
+        {
+            typedef SomeStructForTypedefTesting SameTypedefDifferentUnderlyingType;
+        };
+    }
+    T13::AnonymousTypedefDefinition g_1_EnclosingTypedefDefinition;
+
+
 
 } // namespace Tests
 

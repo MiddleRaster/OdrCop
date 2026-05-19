@@ -363,7 +363,7 @@ ODR VIOLATION: StructVsClass
 ODR VIOLATION: Tests::T2::Public
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
-    +0 public Tests::T2::`anonymous-namespace'::Helper h
+    +0 public Tests::T2::`anonymous-namespace'[TUs\x64\Debug\TU1.pdb]::Helper h
         kind=struct  size=4
         +0 public int32_t x
         2 methods:
@@ -374,7 +374,7 @@ ODR VIOLATION: Tests::T2::Public
       public: void ~Public() noexcept 
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=4
-    +0 public Tests::T2::`anonymous-namespace'::Helper h
+    +0 public Tests::T2::`anonymous-namespace'[TUs\x64\Debug\TU2.pdb]::Helper h
         kind=struct  size=4
         +0 public uint32_t y
 
@@ -382,13 +382,13 @@ ODR VIOLATION: Tests::T7::Public
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=4
     bases:
-        public Tests::T7::`anonymous-namespace'::Base
+        public Tests::T7::`anonymous-namespace'[TUs\x64\Debug\TU1.pdb]::Base
             kind=struct  size=4
             +0 public int32_t x
   [TUs\x64\Debug\TU2.pdb]
     kind=struct  size=8
     bases:
-        public Tests::T7::`anonymous-namespace'::Base
+        public Tests::T7::`anonymous-namespace'[TUs\x64\Debug\TU2.pdb]::Base
             kind=struct  size=8
             +0 public double y
 
@@ -512,7 +512,7 @@ ODR VIOLATION: ?FunctionsMustBeBitwiseIdentical@@YAHXZ
 ODR VIOLATION: ?ReturnAnAnonymousEnum@T10a@Tests@@YA?AW4Result@?A0x????????@12@XZ
   [TUs\x64\Debug\TU1.obj]
     unmangled name:  enum Tests::T10a::`anonymous namespace'::Result __cdecl Tests::T10a::ReturnAnAnonymousEnum(void)
-    return type:     Tests::T10a::`anonymous-namespace'::Result
+    return type:     Tests::T10a::`anonymous-namespace'[TUs\x64\Debug\TU1.pdb]::Result
         kind=enum
         the enum values are: Zero=0, One=1, Two=2, 
     argument:
@@ -521,7 +521,7 @@ ODR VIOLATION: ?ReturnAnAnonymousEnum@T10a@Tests@@YA?AW4Result@?A0x????????@12@X
     bytes at the first mismatch are: 40 57 33 c0 5f c3 
   [TUs\x64\Debug\TU2.obj]
     unmangled name:  enum Tests::T10a::`anonymous namespace'::Result __cdecl Tests::T10a::ReturnAnAnonymousEnum(void)
-    return type:     Tests::T10a::`anonymous-namespace'::Result
+    return type:     Tests::T10a::`anonymous-namespace'[TUs\x64\Debug\TU2.pdb]::Result
         kind=enum
         the enum values are: Zero=0, One=1, 
     argument:
@@ -532,7 +532,7 @@ ODR VIOLATION: ?ReturnAnAnonymousEnum@T10a@Tests@@YA?AW4Result@?A0x????????@12@X
 ODR VIOLATION: ?ReturnAnAnonymousType@T10@Tests@@YA?AUResult@?A0x????????@12@XZ
   [TUs\x64\Debug\TU1.obj]
     unmangled name:  struct Tests::T10::`anonymous namespace'::Result __cdecl Tests::T10::ReturnAnAnonymousType(void)
-    return type:     Tests::T10::`anonymous-namespace'::Result
+    return type:     Tests::T10::`anonymous-namespace'[TUs\x64\Debug\TU1.pdb]::Result
         kind=struct  size=4
         +0 public int32_t x
     argument:
@@ -541,7 +541,7 @@ ODR VIOLATION: ?ReturnAnAnonymousType@T10@Tests@@YA?AUResult@?A0x????????@12@XZ
     bytes at the first mismatch are: 48 8d 04 24 48 8b f8 33 c0 b9 04 00 00 00 f3 aa 8b 04 24 48 83 
   [TUs\x64\Debug\TU2.obj]
     unmangled name:  struct Tests::T10::`anonymous namespace'::Result __cdecl Tests::T10::ReturnAnAnonymousType(void)
-    return type:     Tests::T10::`anonymous-namespace'::Result
+    return type:     Tests::T10::`anonymous-namespace'[TUs\x64\Debug\TU2.pdb]::Result
         kind=struct  size=8
         +0 public double y
     argument:
@@ -554,7 +554,7 @@ ODR VIOLATION: ?function9@T9@Tests@@YAXUArg@?A0x????????@12@@Z
     unmangled name:  void __cdecl Tests::T9::function9(struct Tests::T9::`anonymous namespace'::Arg)
     return type:     void
     argument:
-      Tests::T9::`anonymous-namespace'::Arg
+      Tests::T9::`anonymous-namespace'[TUs\x64\Debug\TU1.pdb]::Arg
         kind=struct  size=4
         +0 public int32_t x
     function body length: 7
@@ -563,7 +563,7 @@ ODR VIOLATION: ?function9@T9@Tests@@YAXUArg@?A0x????????@12@@Z
     unmangled name:  void __cdecl Tests::T9::function9(struct Tests::T9::`anonymous namespace'::Arg)
     return type:     void
     argument:
-      Tests::T9::`anonymous-namespace'::Arg
+      Tests::T9::`anonymous-namespace'[TUs\x64\Debug\TU2.pdb]::Arg
         kind=struct  size=8
         +0 public double y
     function body length: 8
@@ -574,7 +574,7 @@ ODR VIOLATION: ?function9@T9a@Tests@@YAXUArg@?A0x????????@12@@Z
     unmangled name:  void __cdecl Tests::T9a::function9(struct Tests::T9a::`anonymous namespace'::Arg)
     return type:     void
     argument:
-      Tests::T9a::`anonymous-namespace'::Arg
+      Tests::T9a::`anonymous-namespace'[TUs\x64\Debug\TU1.pdb]::Arg
         kind=struct  size=4
         +0 public int32_t x
     function body length: 7
@@ -583,7 +583,7 @@ ODR VIOLATION: ?function9@T9a@Tests@@YAXUArg@?A0x????????@12@@Z
     unmangled name:  void __cdecl Tests::T9a::function9(struct Tests::T9a::`anonymous namespace'::Arg)
     return type:     void
     argument:
-      Tests::T9a::`anonymous-namespace'::Arg
+      Tests::T9a::`anonymous-namespace'[TUs\x64\Debug\TU2.pdb]::Arg
         kind=struct  size=4
         +0 public uint32_t x
     function body length: 7
@@ -612,6 +612,14 @@ ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
   [TUs\x64\Debug\TU2.pdb]
     kind=typedef
     underlying type: SomeStructForTypedefTesting2
+
+ODR VIOLATION: Tests::T13::AnonymousTypedefDefinition::SameTypedefDifferentUnderlyingType
+  [TUs\x64\Debug\TU1.pdb]
+    kind=typedef
+    underlying type: Tests::`anonymous-namespace'[TUs\x64\Debug\TU1.pdb]::SomeStructForTypedefTesting
+  [TUs\x64\Debug\TU2.pdb]
+    kind=typedef
+    underlying type: Tests::`anonymous-namespace'[TUs\x64\Debug\TU2.pdb]::SomeStructForTypedefTesting
 
 ODR VIOLATION: Tests::T10::`anonymous-namespace'::Result
   [TUs\x64\Debug\TU1.pdb]
@@ -664,4 +672,4 @@ ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
     kind=enum
     the enum values are: Zero=0, One=1, 
 
-55 ODR violation(s) found.
+56 ODR violation(s) found.

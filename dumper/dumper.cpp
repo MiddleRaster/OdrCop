@@ -568,7 +568,7 @@ template<typename DoIt, typename Remainder> HRESULT ForEachSymbol(const std::fil
 
                             // now dump everything not in visited, if any
                             remainder(session, visited);
-
+                        /*
                             DumpByTag(session, global, SymTagNull);
                             DumpByTag(session, global, SymTagExe);
                             DumpByTag(session, global, SymTagCompiland);
@@ -614,7 +614,7 @@ template<typename DoIt, typename Remainder> HRESULT ForEachSymbol(const std::fil
                             DumpByTag(session, global, SymTagInlinee);
                             DumpByTag(session, global, SymTagTaggedUnionCase);
                             DumpByTag(session, global, SymTagMax);
-
+                        */
                         }
                     } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                 }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';
@@ -644,7 +644,7 @@ int wmain(int argc, wchar_t** argv)
 
     if (argc == 2) {   // dump all IDiaSymbol names in .pdb file
         std::wcout << L"Dumping all types in " << root << L'\n';
-        ForEachSymbol(root, nullptr, OutputEvenUnnamed,  DumpRemainder);
+        ForEachSymbol(root, nullptr, OutputEvenUnnamed,  DoNotDumpRemainder);
     } else {
         std::wcout << L"Dumping " << argv[2] << L" and sub-elements in " << root << L'\n';
         ForEachSymbol(root, argv[2], OutputSpecificItem, DoNotDumpRemainder);

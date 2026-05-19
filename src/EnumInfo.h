@@ -18,7 +18,11 @@ namespace Odr
         const std::wstring name;
         const std::vector<std::pair<std::wstring,std::wstring>> values; // eg, pairs of {A,1}, {B,2}, etc.
     public:
-        EnumInfo(bool b, const std::wstring& pdbPath, const std::wstring& name, IDiaSymbol* sym) : AnonInfo(b), pdbPath(pdbPath), name(name), values(MakeVectorOfEnumValues(sym))
+        EnumInfo(bool b, const std::wstring& pdbPath, const std::wstring& name, IDiaSymbol* sym)
+            : AnonInfo(b)
+            , pdbPath(pdbPath)
+            , name(Odr::MakeAnonymousNamespaceTuSpecific(name, pdbPath))
+            , values(MakeVectorOfEnumValues(sym))
         {}
         void Print(int depth) const
         {

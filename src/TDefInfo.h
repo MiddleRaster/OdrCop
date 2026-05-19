@@ -18,7 +18,12 @@ namespace Odr
         const std::wstring name;
         const std::wstring underlyingType;
     public:
-        TDefInfo(bool b, const std::wstring& name, IDiaSymbol* sym, const std::wstring& pdbPath) : AnonInfo(b), name(name), pdbPath(pdbPath), underlyingType(GetUnderlyingType(sym)) {}
+        TDefInfo(bool b, const std::wstring& name, IDiaSymbol* sym, const std::wstring& pdbPath)
+            : AnonInfo(b)
+            , name(name)
+            , pdbPath(pdbPath)
+            , underlyingType(Odr::MakeAnonymousNamespaceTuSpecific(GetUnderlyingType(sym), pdbPath))
+        {}
         void Print(int /*depth*/) const
         {
             std::wcout << L"  [" << pdbPath << L"]\n";

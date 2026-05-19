@@ -26,15 +26,18 @@ namespace Odr
         public:
             MemberInfoBase(IDiaSession* session, const std::wstring& name, IDiaSymbol* sym, const std::wstring& pdbPath)
                 : name(name)
-                , typeName (resolveTypeName (Get(sym, &IDiaSymbol::get_type)))
+                , typeName (Odr::MakeAnonymousNamespaceTuSpecific(resolveTypeName (Get(sym, &IDiaSymbol::get_type)), pdbPath))
                 , nestedUdt(resolveNestedUdt(session, Get(sym, &IDiaSymbol::get_type), pdbPath))
             {}
             MemberInfoBase(      MemberInfoBase&&) = default;
             MemberInfoBase(const MemberInfoBase &) = default;
             bool IsEqualTo(const Derived& other) const
             {
-                if (name     != other.name    ) return false;
-                if (typeName != other.typeName)
+                if (name != other.name) return false;
+
+                if (Odr::MakeAnonymousNamespaceTuNonSpecific(      typeName) !=
+                    Odr::MakeAnonymousNamespaceTuNonSpecific(other.typeName))
+             // if (typeName != other.typeName)
                     if (!(isAnonymous(typeName) && isAnonymous(other.typeName)))
                         return false;
 
@@ -83,7 +86,7 @@ namespace Odr
 
                 // Check if this is already the defining symbol
                 if (!Get(type, &IDiaSymbol::get_exportIsForwarder))
-                    return std::make_shared<UdtInfo>(true, session, type, pdbPath, name);
+                    return std::make_shared<UdtInfo>(true, session, type, pdbPath, Odr::MakeAnonymousNamespaceTuSpecific(name, pdbPath));
 
                 // It's a forwarder — search the lexical parent scope for the defining symbol
                 DWORD lexParentId = Get(type, &IDiaSymbol::get_lexicalParentId);
@@ -108,7 +111,7 @@ namespace Odr
                         break;
 
                     if (!Get(candidate, &IDiaSymbol::get_exportIsForwarder))
-                        return std::make_shared<UdtInfo>(true, session, candidate, pdbPath, name);
+                        return std::make_shared<UdtInfo>(true, session, candidate, pdbPath, Odr::MakeAnonymousNamespaceTuSpecific(name, pdbPath));
                 }
                 return nullptr;
             }
@@ -427,7 +430,7 @@ namespace Odr
             std::shared_ptr<UdtInfo> nestedUdt; // populated only for anonymous-namespace bases
         public:
             BaseInfo(IDiaSession* session, const std::wstring& name, CV_access_e access, bool isVirtual, IDiaSymbol* baseType, const std::wstring& pdbPath)
-                : name(name)
+                : name(Odr::MakeAnonymousNamespaceTuSpecific(name, pdbPath))
                 , access(access)
                 , isVirtual(isVirtual)
                 , nestedUdt(resolveNestedUdt(session, baseType, pdbPath))
@@ -451,7 +454,8 @@ namespace Odr
         private:
             bool IsEqualTo(const BaseInfo& other) const
             {
-                if (     name != other.name     ) return false;
+                if (Odr::MakeAnonymousNamespaceTuNonSpecific(      name) !=
+                    Odr::MakeAnonymousNamespaceTuNonSpecific(other.name)) return false;
                 if (   access != other.access   ) return false;
                 if (isVirtual != other.isVirtual) return false;
 
@@ -495,7 +499,7 @@ namespace Odr
         UdtInfo(bool b, IDiaSession* session, IDiaSymbol* sym, const std::wstring& pdbPath, const std::wstring& name)
             : AnonInfo(b)
             , pdbPath(pdbPath)
-            , name   (name)
+            , name   (Odr::MakeAnonymousNamespaceTuSpecific(name, pdbPath))
             , size   (                     Get(sym, &IDiaSymbol::get_length))
             , udtKind(static_cast<UdtKind>(Get(sym, &IDiaSymbol::get_udtKind)))
             , members(     GetMembers(session, sym, pdbPath))

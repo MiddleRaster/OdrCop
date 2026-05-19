@@ -125,15 +125,8 @@ public:
                                 oneArg = argsAsOneString;
                             }
 
-                            // MSVC is strangely inconsistent - it's either:
-                            // anonymous-namespace or
-                            // anonymous namespace.
-                            for (;;) {
-                                auto pos1 = oneArg.find(L"anonymous namespace");
-                                if (pos1 == std::wstring::npos)
-                                    break;
-                                oneArg[pos1 + 9] = L'-';
-                            }
+                            oneArg = Odr::CanonicalizeAnonymousNamespace  (oneArg);
+                            oneArg = Odr::MakeAnonymousNamespaceTuSpecific(oneArg, CompilandToPdbPath(compiland));
 
                             if (oneArg.starts_with(L"enum "))
                             {
@@ -379,15 +372,8 @@ public:
 
                     auto [kind, returnAsOneString] = ReturnTypeExtractor::ExtractReturnTypeAndKind(unmangled);
 
-                    // MSVC is strangely inconsistent - it's either:
-                    // anonymous-namespace or
-                    // anonymous namespace.
-                    for (;;) {
-                        auto pos1 = returnAsOneString.find(L"anonymous namespace");
-                        if (pos1 == std::wstring::npos)
-                            break;
-                        returnAsOneString[pos1 + 9] = L'-';
-                    }
+                    returnAsOneString = Odr::CanonicalizeAnonymousNamespace(returnAsOneString);
+                    returnAsOneString = Odr::MakeAnonymousNamespaceTuSpecific(returnAsOneString, CompilandToPdbPath(compiland));
 
                     if (kind == ReturnTypeExtractor::FunctionKind::Regular)
                     {
@@ -531,6 +517,16 @@ public:
 
             if (MismatchIndex(other) !=   -1)     return false;
             return true;
+        }
+        static std::wstring CompilandToPdbPath(std::wstring compiland)
+        {
+            auto pos = compiland.rfind(L'.');
+            if (pos != std::wstring::npos)
+            {
+                compiland = compiland.substr(0, pos);
+                compiland.append(L".pdb");
+            }
+            return compiland;
         }
     };
 
