@@ -420,8 +420,6 @@ namespace OdrCopTU34Tests
     }
     int g_4_039 = static_cast<int>(g_4_039_internal.part.y);
 
-#ifdef NOT_YET
-
     // TU34-040: Same external-linkage function pointer member type, pointee signature differs.
     // Expected ODR violation: YES.
     struct DifferentFunctionPointerMember
@@ -433,6 +431,8 @@ namespace OdrCopTU34Tests
         return x + 40L;
     }
     DifferentFunctionPointerMember g_4_040{ &CallbackForTU4 };
+
+#ifdef NOT_YET
 
     // TU34-041: Same external-linkage pointer-to-member type, member type differs.
     // Expected ODR violation: YES.

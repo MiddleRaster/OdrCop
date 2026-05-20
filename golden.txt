@@ -218,6 +218,14 @@ ODR VIOLATION: OdrCopTU34Tests::DifferentBitfieldWidth
     +0 public uint32_t a  : 4 bits at bit 0
     +0 public uint32_t b  : 4 bits at bit 4
 
+ODR VIOLATION: OdrCopTU34Tests::DifferentFunctionPointerMember
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=8
+    +0 public int32_t (*)() callback
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=8
+    +0 public long (*)() callback
+
 ODR VIOLATION: OdrCopTU34Tests::DifferentMemberAccess
   [TUs\x64\Debug\TU3.pdb]
     kind=class  size=8
@@ -1051,4 +1059,4 @@ ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
     underlying type=btInt
     the enum values are: Zero=0, One=1, 
 
-85 ODR violation(s) found.
+86 ODR violation(s) found.

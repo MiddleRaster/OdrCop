@@ -152,62 +152,71 @@ namespace Odr
                 {
                 case SymTagBaseType: 
                 {
-                    DWORD baseType = 0;
-                    ULONGLONG len = 0;
-                    type->get_baseType(&baseType);
-                    type->get_length(&len);
-                    switch (baseType) 
+                    DWORD baseType = Get(type, &IDiaSymbol::get_baseType);
+                    ULONGLONG len  = Get(type, &IDiaSymbol::get_length);
+                    switch (baseType)
                     {
-                    case btVoid:    return L"void";
-                    case btChar:    return L"char";
-                    case btWChar:   return L"wchar_t";
+                    case btVoid:  return L"void";
+                    case btChar:  return L"char";
+                    case btWChar: return L"wchar_t";
                     case btInt:
                         switch (len) 
                         {
-                        case 1:  return L"int8_t";
-                        case 2:  return L"int16_t";
-                        case 4:  return L"int32_t";
-                        case 8:  return L"int64_t";
-                        default: return L"int";
+                        case 1:   return L"int8_t";
+                        case 2:   return L"int16_t";
+                        case 4:   return L"int32_t";
+                        case 8:   return L"int64_t";
+                        default:  return L"int";
                         }
                     case btUInt:
                         switch (len) 
                         {
-                        case 1:  return L"uint8_t";
-                        case 2:  return L"uint16_t";
-                        case 4:  return L"uint32_t";
-                        case 8:  return L"uint64_t";
-                        default: return L"unsigned";
+                        case 1:   return L"uint8_t";
+                        case 2:   return L"uint16_t";
+                        case 4:   return L"uint32_t";
+                        case 8:   return L"uint64_t";
+                        default:  return L"unsigned";
                         }
-                    case btFloat:   return len == 4 ? L"float" : L"double";
-                    case btBool:    return L"bool";
-                    case btLong:    return L"long";
-                    case btULong:   return L"unsigned long";
-                    default:        return L"<basetype:" + std::to_wstring(baseType) + L">";
+                    case btFloat: return len == 4 ? L"float" : L"double";
+                    case btBool:  return L"bool";
+                    case btLong:  return L"long";
+                    case btULong: return L"unsigned long";
+
+                    case btCurrency: return L"currency";
+                    case btDate:     return L"date";
+                    case btVariant:  return L"VARIANT";
+                    case btComplex:  return L"complex";
+                    case btBit:      return L"bit";
+                    case btBSTR:     return L"BSTR";
+                    case btHresult:  return L"HRESULT";
+                    case btChar16:   return L"char16_t";
+                    case btChar32:   return L"char32_t";
+                    case btChar8:    return L"char8_t";
+                    case btVector:   return L"SVE";
+                    default:         return L"<BasicType:" + std::to_wstring(baseType) + L">";
                     }
                 }
                 case SymTagPointerType:
                 {
-                    CComPtr<IDiaSymbol> inner;
-                    BOOL isRef = FALSE;
-                    type->get_type(&inner);
-                    type->get_reference(&isRef);
-                    std::wstring inner_name = resolveTypeName(inner);
-                    return isRef ? inner_name + L"&" : inner_name + L"*";
+                    CComPtr<IDiaSymbol> inner = Get(type, &IDiaSymbol::get_type);
+                    std::wstring   inner_name = resolveTypeName(inner);
+                    if (Get(type, &IDiaSymbol::get_reference))
+                        return inner_name + L"&";
+                    if (Get(inner, &IDiaSymbol::get_symTag) == SymTagFunctionType)
+                        return inner_name; // if it's a pointer to a function, don't add another * at the end
+                    return inner_name + L"*";
                 }
                 case SymTagArrayType:
                 {
-                    CComPtr<IDiaSymbol> elem;
-                    DWORD               count = 0;
-                    type->get_type (&elem);
-                    type->get_count(&count);
+                    CComPtr<IDiaSymbol> elem  = Get(type, &IDiaSymbol::get_type);
+                    DWORD               count = Get(type, &IDiaSymbol::get_count);
                     return resolveTypeName(elem) + L"[" + std::to_wstring(count) + L"]";
                 }
                 case SymTagFunctionType:
                 {
                     CComPtr<IDiaSymbol> ret;
                     type->get_type(&ret);
-                    return resolveTypeName(ret) + L"(*)()";  // simplified
+                    return resolveTypeName(ret) + L" (*)()";  // simplified
                 }
                 case SymTagUDT:
                 case SymTagEnum:

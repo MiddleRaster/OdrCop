@@ -414,8 +414,6 @@ namespace OdrCopTU34Tests
     }
     int g_3_039 = g_3_039_internal.part.x;
 
-#ifdef NOT_YET
-
     // TU34-040: Same external-linkage function pointer member type, pointee signature differs.
     // Expected ODR violation: YES.
     struct DifferentFunctionPointerMember
@@ -427,6 +425,8 @@ namespace OdrCopTU34Tests
         return x + 40;
     }
     DifferentFunctionPointerMember g_3_040{ &CallbackForTU3 };
+
+#ifdef NOT_YET
 
     // TU34-041: Same external-linkage pointer-to-member type, member type differs.
     // Expected ODR violation: YES.
