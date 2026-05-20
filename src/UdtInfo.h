@@ -380,18 +380,29 @@ namespace Odr
             const bool         isVirtual;
             const bool         isStatic;
             const std::wstring name;
+            const bool         isConst;
+            const bool         isVolatile;
             const bool         isNoExcept;
         public:
-            MethodInfo(CV_access_e access,       bool isVirtual,      bool isStatic, const std::wstring& name,        bool isNoExcept)
-                          : access(access), isVirtual(isVirtual), isStatic(isStatic),               name(name), isNoExcept(isNoExcept) {}
+            MethodInfo(CV_access_e access, bool isVirtual, bool isStatic, const std::wstring& name, bool isConst, bool isVolatile, bool isNoExcept)
+                : access    (access)
+                , isVirtual (isVirtual)
+                , isStatic  (isStatic)
+                , name      (name)
+                , isConst   (isConst)
+                , isVolatile(isVolatile)
+                , isNoExcept(isNoExcept)
+            {}
             void Print(int depth) const
             {
                 std::wcout << Indent(depth)
                            << L"      " << ToString(access) << L": " 
-                           << (isStatic   ? L"static "  : L"") 
-                           << (isVirtual  ? L"virtual " : L"")
+                           << (isStatic   ? L"static "   : L"") 
+                           << (isVirtual  ? L"virtual "  : L"")
                            << name                          << L" "
-                           << (isNoExcept ? L"noexcept ": L"")
+                           << (isConst    ? L"const "    : L"")
+                           << (isVolatile ? L"volatile " : L"")
+                           << (isNoExcept ? L"noexcept " : L"")
                            << L'\n'; 
             }
             static std::vector<MethodInfo> MakeSortedCopy(std::vector<MethodInfo> methods)
@@ -413,11 +424,13 @@ namespace Odr
         private:
             bool IsEqualTo(const MethodInfo& other) const
             {
-                if (   access   != other.access    ) return false;
-                if (isVirtual   != other.isVirtual ) return false;
-                if ( isStatic   != other.isStatic  ) return false;
-                if (     name   != other.name      ) return false;
-                if ( isNoExcept != other.isNoExcept) return false;
+                if (    access != other.access    ) return false;
+                if ( isVirtual != other.isVirtual ) return false;
+                if (  isStatic != other.isStatic  ) return false;
+                if (      name != other.name      ) return false;
+                if (   isConst != other.isConst   ) return false;
+                if (isVolatile != other.isVolatile) return false;
+                if (isNoExcept != other.isNoExcept) return false;
                 return true;
             }
         };
@@ -726,14 +739,27 @@ namespace Odr
                     }
                     bool isNoExcept = false;
                     {
-                        CComPtr<IDiaSymbol> type;
-                        function->get_type(&type);
-                        if (type)
-                        {
+                        CComPtr<IDiaSymbol> type = Get(function, &IDiaSymbol::get_type);
+                        if (type) {
                             CComPtr<IDiaSymbol4> function4;
                             type->QueryInterface<IDiaSymbol4>(&function4);
                             if (function4)
                                 isNoExcept = !!GetN(function4, &IDiaSymbol4::get_noexcept);
+                        }
+                    }
+
+                    bool isConst=false, isVolatile=false;
+                    {
+                        CComPtr<IDiaSymbol> type = Get(function, &IDiaSymbol::get_type);
+                        if (type) {
+                            CComPtr<IDiaSymbol> objectPointerType = Get(type, &IDiaSymbol::get_objectPointerType);
+                            if (objectPointerType) {
+                                CComPtr<IDiaSymbol> pointee = Get(objectPointerType, &IDiaSymbol::get_type);
+                                if (pointee) {
+                                    isConst    = !!Get(pointee, &IDiaSymbol::get_constType);
+                                    isVolatile = !!Get(pointee, &IDiaSymbol::get_volatileType);
+                                }
+                            }
                         }
                     }
 
@@ -785,9 +811,9 @@ namespace Odr
 
                         // follow the type to see if this method is a ctor
                         if (TRUE == GetFromType(function, &IDiaSymbol::get_constructor))
-                              ctors.push_back({access, false,     isStatic, Trim::Static(methodName, true,      function), isNoExcept});
+                              ctors.push_back({access, false,     isStatic, Trim::Static(methodName, true,      function), false,   false,      isNoExcept});
                         else
-                            methods.push_back({access, isVirtual, isStatic, Trim::Static(methodName, isVirtual, function), isNoExcept}); // isVirtual and isStatic had better not both be true
+                            methods.push_back({access, isVirtual, isStatic, Trim::Static(methodName, isVirtual, function), isConst, isVolatile, isNoExcept}); // isVirtual and isStatic had better not both be true
                     }
                 }
             }

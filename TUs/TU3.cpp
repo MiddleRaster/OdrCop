@@ -63,8 +63,6 @@ namespace OdrCopTU34Tests
     };
     DifferentEnumUnderlyingType g_3_007 = DifferentEnumUnderlyingType::value;
 
-#ifdef NOT_YET
-
     // TU34-008: Same external-linkage union name, identical members.
     // Expected ODR violation: NO.
     union IdenticalUnion
@@ -199,6 +197,8 @@ namespace OdrCopTU34Tests
     };
     DifferentMethodConstness g_3_019{ 20 };
     int g_3_019_use = g_3_019.value();
+
+#ifdef NOT_YET
 
     // TU34-020: Same external-linkage class name, noexcept specification differs.
     // Expected ODR violation: YES.

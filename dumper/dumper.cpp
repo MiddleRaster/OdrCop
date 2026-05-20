@@ -644,7 +644,7 @@ int wmain(int argc, wchar_t** argv)
 
     if (argc == 2) {   // dump all IDiaSymbol names in .pdb file
         std::wcout << L"Dumping all types in " << root << L'\n';
-        ForEachSymbol(root, nullptr, OutputEvenUnnamed,  DoNotDumpRemainder);
+        ForEachSymbol(root, nullptr, OutputEvenUnnamed,       DumpRemainder);
     } else {
         std::wcout << L"Dumping " << argv[2] << L" and sub-elements in " << root << L'\n';
         ForEachSymbol(root, argv[2], OutputSpecificItem, DoNotDumpRemainder);

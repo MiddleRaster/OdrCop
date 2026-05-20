@@ -140,6 +140,52 @@ ODR VIOLATION: DifferentVolatileDataMember
     1 ctor:
       public: void DifferentVolatileDataMember() noexcept 
 
+ODR VIOLATION: OdrCopTU34Tests::DifferentBaseClass
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=8
+    bases:
+        public OdrCopTU34Tests::BaseAForDifferentBase
+    +4 public int32_t own
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=8
+    bases:
+        public OdrCopTU34Tests::BaseBForDifferentBase
+    +4 public int32_t own
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentBaseOrder
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=12
+    bases:
+        public OdrCopTU34Tests::BaseAForBaseOrder
+        public OdrCopTU34Tests::BaseBForBaseOrder
+    +8 public int32_t own
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=12
+    bases:
+        public OdrCopTU34Tests::BaseBForBaseOrder
+        public OdrCopTU34Tests::BaseAForBaseOrder
+    +8 public int32_t own
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentMemberAccess
+  [TUs\x64\Debug\TU3.pdb]
+    kind=class  size=8
+    +0 public int32_t publicValue
+    +4 private int32_t privateValue
+    1 ctor:
+      public: void DifferentMemberAccess() 
+    1 method:
+      public: int getPrivateValue() const 
+  [TUs\x64\Debug\TU3.pdb] (same as above)
+  [TUs\x64\Debug\TU4.pdb]
+    kind=class  size=8
+    +0 private int32_t publicValue
+    +4 public int32_t privateValue
+    1 ctor:
+      public: void DifferentMemberAccess() 
+    1 method:
+      public: int getPublicValue() const 
+  [TUs\x64\Debug\TU4.pdb] (same as above)
+
 ODR VIOLATION: OdrCopTU34Tests::DifferentMemberCount
   [TUs\x64\Debug\TU3.pdb]
     kind=struct  size=4
@@ -166,6 +212,134 @@ ODR VIOLATION: OdrCopTU34Tests::DifferentMemberType
   [TUs\x64\Debug\TU4.pdb]
     kind=struct  size=4
     +0 public long value
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentMethodConstness
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t data
+    1 method:
+      public: int value() const 
+  [TUs\x64\Debug\TU3.pdb] (same as above)
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public int32_t data
+    1 method:
+      public: int value() 
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentMethodVirtualness
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=16
+    +8 public int32_t data
+    3 ctors:
+      public: void DifferentMethodVirtualness(struct OdrCopTU34Tests::DifferentMethodVirtualness *) noexcept 
+      public: void DifferentMethodVirtualness(const struct OdrCopTU34Tests::DifferentMethodVirtualness & const) noexcept 
+      public: void DifferentMethodVirtualness() noexcept 
+    3 methods:
+      public: virtual int value() 
+      public: struct OdrCopTU34Tests::DifferentMethodVirtualness & const operator=(const struct OdrCopTU34Tests::DifferentMethodVirtualness & const) noexcept 
+      public: struct OdrCopTU34Tests::DifferentMethodVirtualness & const operator=(struct OdrCopTU34Tests::DifferentMethodVirtualness *) noexcept 
+  [TUs\x64\Debug\TU3.pdb] (same as above)
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public int32_t data
+    1 method:
+      public: int value() 
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentUnionMember
+  [TUs\x64\Debug\TU3.pdb]
+    kind=union  size=4
+    +0 public int32_t i
+    +0 public float f
+  [TUs\x64\Debug\TU4.pdb]
+    kind=union  size=8
+    +0 public int32_t i
+    +0 public double f
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentVirtualBase
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=8
+    bases:
+        public OdrCopTU34Tests::BaseForVirtualBase
+    +4 public int32_t own
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=24
+    bases:
+        public virtual OdrCopTU34Tests::BaseForVirtualBase
+    +8 public int32_t own
+    3 ctors:
+      public: void DifferentVirtualBase(struct OdrCopTU34Tests::DifferentVirtualBase *) noexcept 
+      public: void DifferentVirtualBase(const struct OdrCopTU34Tests::DifferentVirtualBase & const) noexcept 
+      public: void DifferentVirtualBase() 
+    2 methods:
+      public: struct OdrCopTU34Tests::DifferentVirtualBase & const operator=(const struct OdrCopTU34Tests::DifferentVirtualBase & const) noexcept 
+      public: struct OdrCopTU34Tests::DifferentVirtualBase & const operator=(struct OdrCopTU34Tests::DifferentVirtualBase *) noexcept 
+  [TUs\x64\Debug\TU4.pdb] (same as above)
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentVirtualFunctionName
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=16
+    +8 public int32_t data
+    3 ctors:
+      public: void DifferentVirtualFunctionName(struct OdrCopTU34Tests::DifferentVirtualFunctionName *) noexcept 
+      public: void DifferentVirtualFunctionName(const struct OdrCopTU34Tests::DifferentVirtualFunctionName & const) noexcept 
+      public: void DifferentVirtualFunctionName() noexcept 
+    3 methods:
+      public: virtual int alpha() 
+      public: struct OdrCopTU34Tests::DifferentVirtualFunctionName & const operator=(const struct OdrCopTU34Tests::DifferentVirtualFunctionName & const) noexcept 
+      public: struct OdrCopTU34Tests::DifferentVirtualFunctionName & const operator=(struct OdrCopTU34Tests::DifferentVirtualFunctionName *) noexcept 
+  [TUs\x64\Debug\TU3.pdb] (same as above)
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=16
+    +8 public int32_t data
+    3 ctors:
+      public: void DifferentVirtualFunctionName(struct OdrCopTU34Tests::DifferentVirtualFunctionName *) noexcept 
+      public: void DifferentVirtualFunctionName(const struct OdrCopTU34Tests::DifferentVirtualFunctionName & const) noexcept 
+      public: void DifferentVirtualFunctionName() noexcept 
+    3 methods:
+      public: virtual int beta() 
+      public: struct OdrCopTU34Tests::DifferentVirtualFunctionName & const operator=(const struct OdrCopTU34Tests::DifferentVirtualFunctionName & const) noexcept 
+      public: struct OdrCopTU34Tests::DifferentVirtualFunctionName & const operator=(struct OdrCopTU34Tests::DifferentVirtualFunctionName *) noexcept 
+  [TUs\x64\Debug\TU4.pdb] (same as above)
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentVirtualShape
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=16
+    +8 public int32_t data
+    3 ctors:
+      public: void DifferentVirtualShape(struct OdrCopTU34Tests::DifferentVirtualShape *) noexcept 
+      public: void DifferentVirtualShape(const struct OdrCopTU34Tests::DifferentVirtualShape & const) noexcept 
+      public: void DifferentVirtualShape() noexcept 
+    3 methods:
+      public: virtual int first() 
+      public: struct OdrCopTU34Tests::DifferentVirtualShape & const operator=(const struct OdrCopTU34Tests::DifferentVirtualShape & const) noexcept 
+      public: struct OdrCopTU34Tests::DifferentVirtualShape & const operator=(struct OdrCopTU34Tests::DifferentVirtualShape *) noexcept 
+  [TUs\x64\Debug\TU3.pdb] (same as above)
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=16
+    +8 public int32_t data
+    3 ctors:
+      public: void DifferentVirtualShape(struct OdrCopTU34Tests::DifferentVirtualShape *) noexcept 
+      public: void DifferentVirtualShape(const struct OdrCopTU34Tests::DifferentVirtualShape & const) noexcept 
+      public: void DifferentVirtualShape() noexcept 
+    4 methods:
+      public: virtual int first() 
+      public: virtual int second() 
+      public: struct OdrCopTU34Tests::DifferentVirtualShape & const operator=(const struct OdrCopTU34Tests::DifferentVirtualShape & const) noexcept 
+      public: struct OdrCopTU34Tests::DifferentVirtualShape & const operator=(struct OdrCopTU34Tests::DifferentVirtualShape *) noexcept 
+  [TUs\x64\Debug\TU4.pdb] (same as above)
+
+ODR VIOLATION: OdrCopTU34Tests::StructVsClassDefaultAccess
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t value
+  [TUs\x64\Debug\TU4.pdb]
+    kind=class  size=4
+    +0 private int32_t value
+    1 ctor:
+      public: void StructVsClassDefaultAccess() 
+    1 method:
+      public: int get() const 
+  [TUs\x64\Debug\TU4.pdb] (same as above)
 
 ODR VIOLATION: SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion
   [TUs\x64\Debug\TU1.pdb]
@@ -731,4 +905,4 @@ ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
     underlying type=btInt
     the enum values are: Zero=0, One=1, 
 
-61 ODR violation(s) found.
+71 ODR violation(s) found.
