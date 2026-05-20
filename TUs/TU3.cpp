@@ -372,8 +372,6 @@ namespace OdrCopTU34Tests
     int g_3_036 = SameAnonymousNamespaceFunctionNameDifferentBody(1);
     auto* g_3_036_address = &SameAnonymousNamespaceFunctionNameDifferentBody;
 
-#ifdef NOT_YET
-
     // TU34-037: Same anonymous-namespace type name at namespace scope, different layout.
     // Expected ODR violation: NO.
     namespace
@@ -415,6 +413,8 @@ namespace OdrCopTU34Tests
         InternalOnlyCarrier g_3_039_internal{ { 39 } };
     }
     int g_3_039 = g_3_039_internal.part.x;
+
+#ifdef NOT_YET
 
     // TU34-040: Same external-linkage function pointer member type, pointee signature differs.
     // Expected ODR violation: YES.

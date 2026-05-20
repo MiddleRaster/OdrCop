@@ -448,6 +448,16 @@ ODR VIOLATION: OdrCopTU34Tests::DifferentVirtualShape
       public: struct OdrCopTU34Tests::DifferentVirtualShape & const operator=(struct OdrCopTU34Tests::DifferentVirtualShape *) noexcept 
   [TUs\x64\Debug\TU4.pdb] (same as above)
 
+ODR VIOLATION: OdrCopTU34Tests::ExternalCarrierOfInternalType
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public OdrCopTU34Tests::`anonymous-namespace'[TUs\x64\Debug\TU3.pdb]::InternalPartForExternalCarrier part
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=8
+    +0 public OdrCopTU34Tests::`anonymous-namespace'[TUs\x64\Debug\TU4.pdb]::InternalPartForExternalCarrier part
+        kind=struct  size=8
+        +0 public double y
+
 ODR VIOLATION: OdrCopTU34Tests::StructVsClassDefaultAccess
   [TUs\x64\Debug\TU3.pdb]
     kind=struct  size=4
@@ -1041,4 +1051,4 @@ ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
     underlying type=btInt
     the enum values are: Zero=0, One=1, 
 
-84 ODR violation(s) found.
+85 ODR violation(s) found.
