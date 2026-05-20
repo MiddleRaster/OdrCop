@@ -700,12 +700,30 @@ public:
                             continue;
                     }
 
-                    bool b = undecoratedName.find(L"`anonymous-namespace'") != std::wstring::npos;
-                    funcMap[normalizedName].push_back(FuncInfo(b, objPath, decoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len), perTU));
+                    // Note how there is no - between anonymous and namespace; evidently MSVC does this for functions, but everthing else gets the dash
+                    bool b = undecoratedName.find(L"`anonymous namespace'") != std::wstring::npos;
+                    funcMap[MakeAnonymousNamespaceTuSpecific(b, normalizedName, pdbPath)].push_back(FuncInfo(b, objPath, decoratedName, proc->len, std::vector<BYTE>(funcBytes, funcBytes + proc->len), perTU));
                 }
             }
         }
     private:
+        static std::wstring MakeAnonymousNamespaceTuSpecific(bool isInAnonymousNamespace, std::wstring name, const std::wstring& pdbPath)
+        {   // Note: this function is similar to Odr::MakeAnonymousNamespaceTuSpecific but instead of looking for L"`anonymous-namespace'",
+            // we need to look for L"????????" instead. The rest is the same
+            if (isInAnonymousNamespace)
+            {
+                auto pos = name.find(L"????????");
+                if (pos != std::wstring::npos)
+                {
+                    auto first  = name.substr(0, pos);
+                    auto second = std::wstring(L"????????");
+                    auto third  = L"[" + pdbPath + L"]";
+                    auto fourth = name.substr(pos + second.length());
+                    name = first + second + third + fourth;
+                }
+            }
+            return name;
+        }
         static std::string GetSymbolName(const IMAGE_SYMBOL& sym, const BYTE* stringTableBase)
         {
             if (sym.N.Name.Short != 0)

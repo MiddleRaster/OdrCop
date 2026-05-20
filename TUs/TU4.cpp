@@ -364,6 +364,8 @@ namespace OdrCopTU34Tests
     int g_4_035 = SameStaticFunctionNameDifferentBody(1);
     auto* g_4_035_address = &SameStaticFunctionNameDifferentBody;
 
+#endif
+
     // TU34-036: Same anonymous-namespace function name, different body.
     // Expected ODR violation: NO.
     namespace
@@ -375,6 +377,8 @@ namespace OdrCopTU34Tests
     }
     int g_4_036 = SameAnonymousNamespaceFunctionNameDifferentBody(1);
     auto* g_4_036_address = &SameAnonymousNamespaceFunctionNameDifferentBody;
+
+#ifdef NOT_YET
 
     // TU34-037: Same anonymous-namespace type name at namespace scope, different layout.
     // Expected ODR violation: NO.
