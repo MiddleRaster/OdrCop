@@ -107,7 +107,7 @@ namespace Odr
             case btChar16:   return L"btChar16";
             case btChar32:   return L"btChar32";
             case btChar8:    return L"btChar8";
-            case btVector:   return L"btVector";
+        //  case btVector:   return L"btVector";
             default:         return L"unknown";
             };
         }
