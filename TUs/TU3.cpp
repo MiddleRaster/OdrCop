@@ -426,8 +426,6 @@ namespace OdrCopTU34Tests
     }
     DifferentFunctionPointerMember g_3_040{ &CallbackForTU3 };
 
-#ifdef NOT_YET
-
     // TU34-041: Same external-linkage pointer-to-member type, member type differs.
     // Expected ODR violation: YES.
     struct MemberPointerTarget
@@ -524,8 +522,6 @@ namespace OdrCopTU34Tests
     }
     int g_3_050 = DifferentLambdaUser(1);
     auto* g_3_050_address = &DifferentLambdaUser;
-
-#endif // NOT_YET
 }
 
 #pragma warning(pop)
