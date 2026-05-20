@@ -2,6 +2,8 @@ Loading: "TUs\\x64\\Debug\\dllmain.pdb"
 Loading: "TUs\\x64\\Debug\\RegressionTests.pdb"
 Loading: "TUs\\x64\\Debug\\TU1.pdb"
 Loading: "TUs\\x64\\Debug\\TU2.pdb"
+Loading: "TUs\\x64\\Debug\\TU3.pdb"
+Loading: "TUs\\x64\\Debug\\TU4.pdb"
 
 ODR VIOLATION: BaseClassVirtualOrNot
   [TUs\x64\Debug\TU1.pdb]
@@ -137,6 +139,33 @@ ODR VIOLATION: DifferentVolatileDataMember
     +0 public int32_t a
     1 ctor:
       public: void DifferentVolatileDataMember() noexcept 
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentMemberCount
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t only
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=8
+    +0 public int32_t only
+    +4 public int32_t extra
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentMemberOrder
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=16
+    +0 public int32_t first
+    +8 public double second
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=16
+    +0 public double second
+    +8 public int32_t first
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentMemberType
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t value
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public long value
 
 ODR VIOLATION: SameClassButDifferentMemberOrderInsideAnonmousStructAndUnion
   [TUs\x64\Debug\TU1.pdb]
@@ -436,6 +465,7 @@ ODR VIOLATION: ?FunctionUsing_SameEnumNameDifferentEnumerators@@YAXW4SameEnumNam
     argument:
       SameEnumNameDifferentEnumerators
         kind=enum
+        underlying type=btInt
         the enum values are: sendeA=0, 
     function body length: 7
     bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
@@ -445,6 +475,7 @@ ODR VIOLATION: ?FunctionUsing_SameEnumNameDifferentEnumerators@@YAXW4SameEnumNam
     argument:
       SameEnumNameDifferentEnumerators
         kind=enum
+        underlying type=btInt
         the enum values are: sendeA=0, sendeB=1, 
     function body length: 7
     bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
@@ -514,6 +545,7 @@ ODR VIOLATION: ?ReturnAnAnonymousEnum@T10a@Tests@@YA?AW4Result@?A0x????????@12@X
     unmangled name:  enum Tests::T10a::`anonymous namespace'::Result __cdecl Tests::T10a::ReturnAnAnonymousEnum(void)
     return type:     Tests::T10a::`anonymous-namespace'[TUs\x64\Debug\TU1.pdb]::Result
         kind=enum
+        underlying type=btInt
         the enum values are: Zero=0, One=1, Two=2, 
     argument:
       void
@@ -523,6 +555,7 @@ ODR VIOLATION: ?ReturnAnAnonymousEnum@T10a@Tests@@YA?AW4Result@?A0x????????@12@X
     unmangled name:  enum Tests::T10a::`anonymous namespace'::Result __cdecl Tests::T10a::ReturnAnAnonymousEnum(void)
     return type:     Tests::T10a::`anonymous-namespace'[TUs\x64\Debug\TU2.pdb]::Result
         kind=enum
+        underlying type=btInt
         the enum values are: Zero=0, One=1, 
     argument:
       void
@@ -589,20 +622,44 @@ ODR VIOLATION: ?function9@T9a@Tests@@YAXUArg@?A0x????????@12@@Z
     function body length: 7
     bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
 
+ODR VIOLATION: OdrCopTU34Tests::DifferentEnumUnderlyingType
+  [TUs\x64\Debug\TU3.pdb]
+    kind=enum
+    underlying type=btInt
+    the enum values are: value=1, 
+  [TUs\x64\Debug\TU4.pdb]
+    kind=enum
+    underlying type=btUInt
+    the enum values are: value=1, 
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentEnumeratorValues
+  [TUs\x64\Debug\TU3.pdb]
+    kind=enum
+    underlying type=btInt
+    the enum values are: zero=0, one=1, 
+  [TUs\x64\Debug\TU4.pdb]
+    kind=enum
+    underlying type=btInt
+    the enum values are: zero=0, one=2, 
+
 ODR VIOLATION: SameEnumButDifferentValues
   [TUs\x64\Debug\TU1.pdb]
     kind=enum
+    underlying type=btInt
     the enum values are: A=1, B=2, 
   [TUs\x64\Debug\TU2.pdb]
     kind=enum
+    underlying type=btInt
     the enum values are: A=1, B=3, 
 
 ODR VIOLATION: SameEnumNameDifferentEnumerators
   [TUs\x64\Debug\TU1.pdb]
     kind=enum
+    underlying type=btInt
     the enum values are: sendeA=0, 
   [TUs\x64\Debug\TU2.pdb]
     kind=enum
+    underlying type=btInt
     the enum values are: sendeA=0, sendeB=1, 
 
 ODR VIOLATION: EnclosingTypedefDefinition::SameTypedefDifferentUnderlyingType
@@ -667,9 +724,11 @@ ODR VIOLATION: Tests::T9a::`anonymous-namespace'::Arg
 ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
   [TUs\x64\Debug\TU1.pdb]
     kind=enum
+    underlying type=btInt
     the enum values are: Zero=0, One=1, Two=2, 
   [TUs\x64\Debug\TU2.pdb]
     kind=enum
+    underlying type=btInt
     the enum values are: Zero=0, One=1, 
 
-56 ODR violation(s) found.
+61 ODR violation(s) found.

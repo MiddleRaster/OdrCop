@@ -163,6 +163,8 @@
     <ClCompile Include="RegressionTests.cpp" />
     <ClCompile Include="TU1.cpp" />
     <ClCompile Include="TU2.cpp" />
+    <ClCompile Include="TU3.cpp" />
+    <ClCompile Include="TU4.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestHeader.h" />

@@ -16,12 +16,14 @@ namespace Odr
     {
         const std::wstring pdbPath;
         const std::wstring name;
+        const BasicType    underlyingType;
         const std::vector<std::pair<std::wstring,std::wstring>> values; // eg, pairs of {A,1}, {B,2}, etc.
     public:
         EnumInfo(bool b, const std::wstring& pdbPath, const std::wstring& name, IDiaSymbol* sym)
             : AnonInfo(b)
-            , pdbPath(pdbPath)
-            , name(Odr::MakeAnonymousNamespaceTuSpecific(name, pdbPath))
+            , pdbPath (pdbPath)
+            , name    (Odr::MakeAnonymousNamespaceTuSpecific(name, pdbPath))
+            , underlyingType((BasicType)Get(sym, &IDiaSymbol::get_baseType))
             , values(MakeVectorOfEnumValues(sym))
         {}
         void Print(int depth) const
@@ -30,6 +32,7 @@ namespace Odr
             if (depth == 0)
                 std::wcout << indent << L"  [" << pdbPath << L"]\n";
             std::wcout     << indent << L"    kind=enum\n";
+            std::wcout     << indent << L"    underlying type=" << GetBasicType() << L'\n';
             std::wcout     << indent << L"    the enum values are: ";
             
             for(size_t i=0; i<values.size(); ++i)
@@ -44,7 +47,8 @@ namespace Odr
     private:
         bool IsEqualTo(const EnumInfo& other) const
         {
-            if (name != other.name)                        return false;
+            if (           name != other.name            ) return false;
+            if ( underlyingType != other.underlyingType  ) return false;
             if (!std::ranges::equal(values, other.values)) return false;
             return true;
         }
@@ -78,6 +82,36 @@ namespace Odr
             }
             return values;
         }
+        std::wstring GetBasicType() const
+        {
+            switch(underlyingType)
+            { 
+            case btNoType:   return L"btNoType";
+            case btVoid:     return L"btVoid";
+            case btChar:     return L"btChar";
+            case btWChar:    return L"btWChar";
+            case btInt:      return L"btInt";
+            case btUInt:     return L"btUInt";
+            case btFloat:    return L"btFloat";
+            case btBCD:      return L"btBCD";
+            case btBool:     return L"btBool";
+            case btLong:     return L"btLong";
+            case btULong:    return L"btULong";
+            case btCurrency: return L"btCurrency";
+            case btDate:     return L"btDate";
+            case btVariant:  return L"btVariant";
+            case btComplex:  return L"btComplex";
+            case btBit:      return L"btBit";
+            case btBSTR:     return L"btBSTR";
+            case btHresult:  return L"btHresult";
+            case btChar16:   return L"btChar16";
+            case btChar32:   return L"btChar32";
+            case btChar8:    return L"btChar8";
+            case btVector:   return L"btVector";
+            default:         return L"unknown";
+            };
+        }
+
     };
 }
 
