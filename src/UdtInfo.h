@@ -192,7 +192,7 @@ namespace Odr
                     case btChar16:   return L"char16_t";
                     case btChar32:   return L"char32_t";
                     case btChar8:    return L"char8_t";
-                    case btVector:   return L"SVE";
+                 // case btVector:   return L"SVE";
                     default:         return L"<BasicType:" + std::to_wstring(baseType) + L">";
                     }
                 }
