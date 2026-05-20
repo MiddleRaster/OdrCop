@@ -140,6 +140,40 @@ ODR VIOLATION: DifferentVolatileDataMember
     1 ctor:
       public: void DifferentVolatileDataMember() noexcept 
 
+ODR VIOLATION: OdrCopTU34Tests::DifferentAnonymousStructOrder
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=24
+    +0 public int32_t tag
+    +8 public int32_t x
+    +16 public double y
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=24
+    +0 public int32_t tag
+    +8 public double y
+    +16 public int32_t x
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentAnonymousStructOrder::<unnamed-tag>[struct][size=16][first=x]
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=16
+    +0 public int32_t x
+    +8 public double y
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=16
+    +0 public double y
+    +8 public int32_t x
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentAnonymousUnionMember
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=8
+    +0 public int32_t tag
+    +4 public int32_t i
+    +4 public float f
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=16
+    +0 public int32_t tag
+    +8 public int32_t i
+    +8 public double f
+
 ODR VIOLATION: OdrCopTU34Tests::DifferentBaseClass
   [TUs\x64\Debug\TU3.pdb]
     kind=struct  size=8
@@ -165,6 +199,24 @@ ODR VIOLATION: OdrCopTU34Tests::DifferentBaseOrder
         public OdrCopTU34Tests::BaseBForBaseOrder
         public OdrCopTU34Tests::BaseAForBaseOrder
     +8 public int32_t own
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentBitfieldSignedness
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t a  : 4 bits at bit 0
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public uint32_t a  : 4 bits at bit 0
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentBitfieldWidth
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public uint32_t a  : 3 bits at bit 0
+    +0 public uint32_t b  : 5 bits at bit 3
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public uint32_t a  : 4 bits at bit 0
+    +0 public uint32_t b  : 4 bits at bit 4
 
 ODR VIOLATION: OdrCopTU34Tests::DifferentMemberAccess
   [TUs\x64\Debug\TU3.pdb]
@@ -226,6 +278,18 @@ ODR VIOLATION: OdrCopTU34Tests::DifferentMethodConstness
     1 method:
       public: int value() 
 
+ODR VIOLATION: OdrCopTU34Tests::DifferentMethodNoexcept
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t data
+    1 method:
+      public: int value() noexcept 
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public int32_t data
+    1 method:
+      public: int value() 
+
 ODR VIOLATION: OdrCopTU34Tests::DifferentMethodVirtualness
   [TUs\x64\Debug\TU3.pdb]
     kind=struct  size=16
@@ -245,6 +309,54 @@ ODR VIOLATION: OdrCopTU34Tests::DifferentMethodVirtualness
     1 method:
       public: int value() 
 
+ODR VIOLATION: OdrCopTU34Tests::DifferentNonTypeTemplateDefinition<2>
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=8
+    +0 public int32_t[2] values
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=8
+    +0 public long[2] values
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentStaticDataMember
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t payload
+    static const  int32_t value
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public int32_t payload
+    static const  long value
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentStaticMemberFunction
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t payload
+    1 method:
+      public: static int value() 
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public int32_t payload
+    1 method:
+      public: static long value() 
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentTemplateDefinition<int>
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=8
+    +0 public int32_t value
+    +4 public int32_t extra
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=8
+    +0 public int32_t value
+    +4 public long extra
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentTypedefTarget
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t value
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public long value
+
 ODR VIOLATION: OdrCopTU34Tests::DifferentUnionMember
   [TUs\x64\Debug\TU3.pdb]
     kind=union  size=4
@@ -254,6 +366,14 @@ ODR VIOLATION: OdrCopTU34Tests::DifferentUnionMember
     kind=union  size=8
     +0 public int32_t i
     +0 public double f
+
+ODR VIOLATION: OdrCopTU34Tests::DifferentUsingAliasTarget
+  [TUs\x64\Debug\TU3.pdb]
+    kind=struct  size=4
+    +0 public int32_t value
+  [TUs\x64\Debug\TU4.pdb]
+    kind=struct  size=4
+    +0 public long value
 
 ODR VIOLATION: OdrCopTU34Tests::DifferentVirtualBase
   [TUs\x64\Debug\TU3.pdb]
@@ -611,6 +731,22 @@ ODR VIOLATION: ??$SameFunctionTemplateSpecializationDifferentDefinitions@H@@YAHX
     function body length: 9
     bytes at the first mismatch are: 40 57 b8 02 00 00 00 5f c3 
 
+ODR VIOLATION: ?DifferentInlineFunctionBody@OdrCopTU34Tests@@YAHH@Z
+  [TUs\x64\Debug\TU3.obj]
+    unmangled name:  int __cdecl OdrCopTU34Tests::DifferentInlineFunctionBody(int)
+    return type:     int
+    argument:
+      int
+    function body length: 14
+    bytes at the first mismatch are: 89 4c 24 08 57 8b 44 24 10 83 c0 22 5f c3 
+  [TUs\x64\Debug\TU4.obj]
+    unmangled name:  int __cdecl OdrCopTU34Tests::DifferentInlineFunctionBody(int)
+    return type:     int
+    argument:
+      int
+    function body length: 16
+    bytes at the first mismatch are: 89 4c 24 08 57 8b 44 24 10 05 54 01 00 00 5f c3 
+
 ODR VIOLATION: ?FunctionUsing_DifferentDataMembers@@YAXUDifferentDataMembers@@@Z
   [TUs\x64\Debug\TU1.obj]
     unmangled name:  void __cdecl FunctionUsing_DifferentDataMembers(struct DifferentDataMembers)
@@ -905,4 +1041,4 @@ ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
     underlying type=btInt
     the enum values are: Zero=0, One=1, 
 
-71 ODR violation(s) found.
+84 ODR violation(s) found.

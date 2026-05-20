@@ -198,8 +198,6 @@ namespace OdrCopTU34Tests
     DifferentMethodConstness g_3_019{ 20 };
     int g_3_019_use = g_3_019.value();
 
-#ifdef NOT_YET
-
     // TU34-020: Same external-linkage class name, noexcept specification differs.
     // Expected ODR violation: YES.
     struct DifferentMethodNoexcept
@@ -348,6 +346,8 @@ namespace OdrCopTU34Tests
     }
     int g_3_034 = DifferentInlineFunctionBody(1);
     auto* g_3_034_address = &DifferentInlineFunctionBody;
+
+#ifdef NOT_YET
 
     // TU34-035: Same internal-linkage static function name, different body.
     // Expected ODR violation: NO.
