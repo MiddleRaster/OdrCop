@@ -7,6 +7,7 @@
 #include <atlbase.h>
 
 #include "magic_enum.h"
+#include "CoffDumper.h"
 
 template <typename C, typename R, typename T> std::pair<HRESULT, T> Get(IDiaSymbol* sym, R(C::* m)(T*))
 {
@@ -641,6 +642,10 @@ int wmain(int argc, wchar_t** argv)
         std::wcerr << L"Path not found: " << root.wstring() << L'\n';
         return -1;
     }
+
+    // double secret parameter:  if it's an obj file, dump that
+    if (root.extension() == L".obj")
+        return CoffDumper::Dump(root, std::wcout), 1;
 
     if (argc == 2) {   // dump all IDiaSymbol names in .pdb file
         std::wcout << L"Dumping all types in " << root << L'\n';

@@ -26,9 +26,6 @@
     <ClInclude Include="cvinfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="COFFer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="EnumInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,6 +39,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AnonInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CoffReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FunctionExtractor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

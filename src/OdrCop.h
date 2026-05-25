@@ -16,7 +16,7 @@
 #include "UdtInfo.h"
 #include "EnumInfo.h"
 #include "TDefInfo.h"
-#include "COFFer.h"
+#include "FunctionExtractor.h"
 
 namespace Odr
 {
@@ -143,7 +143,7 @@ namespace Odr
                             }
 
                             // Functions
-                            COFF::Read(path, excludeStdlib, funcMap, perTU);
+                            Odr::FunctionExtractor::Extract(path, excludeStdlib, funcMap, perTU);
 
                         } else std::wcerr <<                  L"get_globalScope failed with 0x" << std::hex << hr << std::dec << L'\n';
                     }     else std::wcerr <<                      L"openSession failed with 0x" << std::hex << hr << std::dec << L'\n';

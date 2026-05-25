@@ -23,5 +23,11 @@
     <ClInclude Include="magic_enum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CoffReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CoffDumper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
