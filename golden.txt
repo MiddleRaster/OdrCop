@@ -35,6 +35,14 @@ ODR VIOLATION: BaseClassesInDifferentOrder
         public Base2
         public Base1
 
+ODR VIOLATION: ClassForFriend
+  [TUs\x64\Debug\TU1.pdb]
+    kind=struct  size=1
+  [TUs\x64\Debug\TU2.pdb]
+    kind=struct  size=1
+    1 method:
+      public: int TheFriendFunction(struct ClassForFriend) 
+
 ODR VIOLATION: DifferentAccessSpecifiersOnBaseClass
   [TUs\x64\Debug\TU1.pdb]
     kind=struct  size=1
@@ -1174,4 +1182,4 @@ ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
     underlying type=btInt
     the enum values are: Zero=0, One=1, 
 
-97 ODR violation(s) found.
+98 ODR violation(s) found.

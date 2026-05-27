@@ -232,3 +232,5 @@ auto* g_1_addressOf_FunctionUsing_SameUnionNameDifferentElements   = &FunctionUs
 
 auto* g_1_addressOf_StaticMethodsBodiesDiffer                      = &StaticMethodsBodiesDiffer::Foo;
 auto  g_1_ret_valOf_StaticMethodsBodiesDiffer                      =  StaticMethodsBodiesDiffer::Foo();
+
+auto  g_1_ret_valOf_ClassForFriend                                 =  TheFriendFunction(ClassForFriend());

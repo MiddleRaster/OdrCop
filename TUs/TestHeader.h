@@ -103,15 +103,6 @@
         {}
     };
 
-    // Same class but different friend declarations
-    struct SameClassDifferentFriendDeclaration
-    {
-    #ifdef ONE
-        friend int Friendly();
-    #endif
-    };
-    inline int Friendly() { return 1; };
-
 #endif // cannot be seen by DIA or COFF
 
 
@@ -512,4 +503,13 @@ struct StaticMethodsBodiesDiffer
         return 2;
 #endif
     }
+};
+
+// a friend function vs. non-friend method
+struct ClassForFriend
+{
+#ifdef ONE
+    friend
+#endif
+        int TheFriendFunction(ClassForFriend) { return 2; }
 };
