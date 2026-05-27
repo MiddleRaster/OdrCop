@@ -500,3 +500,16 @@ union SameUnionNameDifferentElements
 #endif
 };
 inline void FunctionUsing_SameUnionNameDifferentElements(SameUnionNameDifferentElements) {}
+
+
+struct StaticMethodsBodiesDiffer
+{
+    static int Foo()
+    {
+#ifdef ONE
+        return 1;
+#else
+        return 2;
+#endif
+    }
+};

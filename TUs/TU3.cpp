@@ -347,8 +347,6 @@ namespace OdrCopTU34Tests
     int g_3_034 = DifferentInlineFunctionBody(1);
     auto* g_3_034_address = &DifferentInlineFunctionBody;
 
-#ifdef NOT_YET
-
     // TU34-035: Same internal-linkage static function name, different body.
     // Expected ODR violation: NO.
     static int SameStaticFunctionNameDifferentBody(int x)
@@ -357,8 +355,6 @@ namespace OdrCopTU34Tests
     }
     int g_3_035 = SameStaticFunctionNameDifferentBody(1);
     auto* g_3_035_address = &SameStaticFunctionNameDifferentBody;
-
-#endif
 
     // TU34-036: Same anonymous-namespace function name, different body.
     // Expected ODR violation: NO.

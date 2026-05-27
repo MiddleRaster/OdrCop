@@ -5,6 +5,7 @@
 
 #include <map>
 #include <variant>
+#include <fstream>
 
 #include <DbgHelp.h>
 #pragma comment(lib, "dbghelp.lib")
@@ -31,12 +32,13 @@ namespace Odr
         const std::wstring compiland;
         const std::wstring decorated;
         const std::wstring unmangled;
+        const bool         isStatic;
         const ULONGLONG    bodyLength;
         const std::vector<BYTE> body;
         const std::vector<std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>> args;
         const             std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>  returnType;
     public:
-        FuncInfo(bool b, const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body, const PerTuTypes& perTU)
+        FuncInfo(bool b, const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body, bool isStatic, const PerTuTypes& perTU)
             : AnonInfo(b)
             , compiland(compiland)
             , decorated(decorated)
@@ -47,8 +49,9 @@ namespace Odr
                                 return std::wstring(buffer.data());
                             return std::wstring(decorated); // my give up
                         }())
+            , isStatic  (isStatic)
             , bodyLength(bodyLength)
-            , body(body)
+            , body      (body)
             , args([&](){
                             std::vector<std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>> theArgs;
 
@@ -409,7 +412,7 @@ namespace Odr
         void Print(int depth) const
         {
             std::wcout << L"  [" << compiland << L"]\n";
-            std::wcout << L"    unmangled name:  "  << unmangled        << L'\n';
+            std::wcout << L"    unmangled name:  "  << (isStatic ? L"static " : L"") << unmangled << L'\n';
 
             { // first print return type
                 std::wcout << L"    return type:  ";
@@ -493,8 +496,11 @@ namespace Odr
     private:
         bool IsEqualTo(const FuncInfo& other) const
         {
-            // if ( compiland  != other.compiland  ) return false; // compilands must be different for ODR violations
-            // if ( decorated  != other.decorated  ) return false; // we're tring to catch anonymous namespace args, which always hash to something unique. So skip.
+            if (isStatic || other.isStatic)
+                return true; // never compare static free functions because they're internal-linkage, TU-specific
+
+         // if ( compiland  != other.compiland  ) return false; // compilands must be different for ODR violations
+         // if ( decorated  != other.decorated  ) return false; // we're tring to catch anonymous namespace args, which always hash to something unique. So skip.
             if ( unmangled  != other.unmangled  ) return false;
             if (returnType  != other.returnType ) return false;
             if (args.size() != other.args.size()) return false;
@@ -516,19 +522,106 @@ namespace Odr
         }
     };
 
-    struct Function
+
+    class FilesAndLinesCache
     {
-        const std::wstring decorated, undecorated;
-        const std::vector<BYTE>  body;
-        const bool hasInternalLinkage;
+        std::map<std::wstring, std::map<DWORD, std::string>> cache;
+    public:
+        bool IsStaticFreeFunction(const std::wstring& decorated, const std::wstring& filename, DWORD linenumber)
+        {
+            if (IsFreeFunction(decorated) == false)
+                return false;
+
+            if ((filename == L"") || (linenumber == 0))
+                return false; // compiler-generated; don't care if it's static or not
+
+            if (cache.find(filename) == cache.end())
+                cache[filename] = ReadLinesFromFile(filename);
+
+            auto lines = cache[filename];
+            if (lines.find(linenumber) == lines.end())
+                return false;
+            auto line  = lines[linenumber];
+
+            if (true == HasLeadingKeyword(line, "static"))
+                return true;
+
+            // try backing up one line at a time, but if we find a ; or }, we've gone too far
+            while (--linenumber > 0)
+            {
+                line = lines[linenumber];
+                if (PreviousDeclarationEnds(line))
+                    break;
+                if (true == HasLeadingKeyword(line, "static"))
+                    return true;
+            }
+
+            return false;
+        }
+    private:
+        static auto ReadLinesFromFile(const std::wstring& path)
+        {
+            std::map<DWORD, std::string> lines;
+
+            std::ifstream in(path, std::ios::binary);
+            if (in)
+            {
+                std::string line;
+                DWORD lineno = 1;
+                while (std::getline(in, line))
+                    lines[lineno++] = line;
+            }
+            return lines;
+        }
+        static bool HasLeadingKeyword(const std::string& line, const std::string& keyword)
+        {
+            size_t pos = line.find(keyword);
+            if (pos == std::string::npos)
+                return false;
+            bool  leftOk = (pos == 0)                            || std::isspace((unsigned char)line[pos-1]);
+            bool rightOk = (pos + keyword.size() == line.size()) || std::isspace((unsigned char)line[pos + keyword.size()]);
+            return leftOk && rightOk;
+        }
+        static bool PreviousDeclarationEnds(const std::string& line)
+        {
+            for (char ch : line)
+                if (ch == ';' ||    // end of statement
+                    ch == '}' ||    // end of block/namespace
+                    ch == '{' ||    // start of block (we've gone too far)
+                    ch == '>')      // end of #include<> or template argument
+                    return true;
+            return false;
+        }
+        static bool IsFreeFunction(const std::wstring& decorated)
+        {
+            size_t pos = decorated.find(L"@@");
+            if (pos == std::wstring::npos)
+                return false;
+
+            pos += 2;
+            if (pos >= decorated.size())
+                return false;
+
+            return decorated[pos] == L'Y';
+        }
     };
 
     struct FunctionExtractor
     {
+        struct Function
+        {
+            const std::wstring      decorated, undecorated;
+            const std::vector<BYTE> body;
+            const std::wstring      filename;
+            const DWORD             linenumber;
+        };
+
         static void Extract(const std::filesystem::path& pdbPath, bool excludeStdlib, std::map<std::wstring, std::vector<FuncInfo>>& funcMap, const PerTuTypes& perTU)
         {
             auto objPath = std::filesystem::path(pdbPath).replace_extension(L".obj");
-            std::vector<Odr::Function> functions = Odr::FunctionExtractor::ExtractFunctions(objPath);
+            std::vector<Function> functions = Odr::FunctionExtractor::ExtractFunctions(objPath);
+
+            FilesAndLinesCache flc;
 
             for (const auto& function : functions)
             {
@@ -537,14 +630,24 @@ namespace Odr
                         continue;
             
                 // Note how there is no - between anonymous and namespace; evidently MSVC does this for functions, but everthing else gets the dash
-                bool b = function.undecorated.find(L"`anonymous namespace'") != std::wstring::npos;
-                funcMap[MakeAnonymousNamespaceTuSpecific(b, NormalizeAnonNsCookies(function.decorated), pdbPath)].push_back(FuncInfo(b, objPath.c_str(), function.decorated, function.body.size(), function.body, perTU));
+                bool b        = function.undecorated.find(L"`anonymous namespace'") != std::wstring::npos;
+                bool isStatic = flc.IsStaticFreeFunction(function.decorated, function.filename, function.linenumber);
+                funcMap[MakeAnonymousNamespaceTuSpecific(b, NormalizeAnonNsCookies(function.decorated), pdbPath)].push_back(FuncInfo(b, objPath.c_str(), function.decorated, function.body.size(), function.body, isStatic, perTU));
             }
         }
 
     private:
         static std::vector<Function> ExtractFunctions(const std::filesystem::path& objFile)
         {
+            // Sheesh, why do I have to define this myself?
+            struct CV_Checksum_t
+            {
+                DWORD  strOffset;   // byte offset of the filename into the DEBUG_S_STRINGTABLE payload
+                BYTE   cbChecksum;  // length of the checksum data that follows
+                BYTE   kind;        // checksum algorithm: 0=none, 1=MD5, 2=SHA1, 3=SHA256
+                                    // followed by cbChecksum bytes of checksum data, then padded to 4-byte alignment
+            };
+
             CoffReader coffReader(objFile);
 
             std::vector<Function> functions;
@@ -583,7 +686,126 @@ namespace Odr
 
             // use .debug$S sections' data (with relocation fixups) to get the bodies' lengths
             const BYTE* bytes = coffReader.bytes;
-            for(SHORT i=0; i<sectionHeaders.size(); ++i)
+
+            // pre-pass: walk all .debug$S sections to build a map from sectionIndex to line records.
+            // each line record holds a code offset (absolute within the section), line number, and file checksum offset.
+            // in COFF .obj files offCon is always 0, so codeOffset from the line record is already absolute within the section.
+            using VirtualAddressType = DWORD;
+            using SectionIndexType   = SHORT;
+            struct LineRecord { const unsigned long codeOffset; CV_off32_t lineNumber; std::wstring path; };
+            struct SourceLocation { std::wstring path; CV_off32_t lineNumber; };
+            std::map<SectionIndexType, std::vector<LineRecord>> linesPerSection;
+            std::map<DWORD, std::wstring>                       fileChecksumOffsetToPath;
+
+            for(SHORT i=0; i<(SHORT)sectionHeaders.size(); ++i)
+            {
+                auto section = sectionHeaders[i];
+
+                std::string name;
+                if (section->Misc.VirtualSize == 0)
+                    name = std::string(section->Name, section->Name + 8);
+                else
+                    name = std::string(bytes + section->Misc.PhysicalAddress, bytes + section->Misc.PhysicalAddress + section->Misc.VirtualSize);
+
+                if (name == ".debug$S")
+                {
+                    std::map<VirtualAddressType,SectionIndexType> fixups;
+                    auto relocations = coffReader.relocations[i];
+                    for(auto relocation : relocations)
+                    {
+                        auto symbol = symbolTable[relocation->SymbolTableIndex];
+                        if (symbol->SectionNumber > 0)
+                            fixups[relocation->VirtualAddress] = symbol->SectionNumber-1;
+                    }
+
+                    const BYTE* raw = bytes + section->PointerToRawData;
+                    const BYTE* end = raw   + section->SizeOfRawData;
+                    if (CV_SIGNATURE_C13 == *reinterpret_cast<const DWORD*>(raw))
+                    {
+                        // single pre-pass loop: collect string table, checksum entries, and line records together
+                        const BYTE*                          stringTableBase = nullptr;
+                        std::vector<std::pair<DWORD,DWORD>>  rawChecksumEntries; // (byteOffset, strOffset)
+
+                        struct RawLineContrib { SectionIndexType secIdx; CV_off32_t offFile; const unsigned long codeOffset; CV_off32_t lineNumber; };
+                        std::vector<RawLineContrib> rawLineContribs;
+
+                        {
+                            const BYTE* p = raw + sizeof(DWORD);
+                            while (p < end)
+                            {
+                                auto* hdr = reinterpret_cast<const CV_DebugSSubsectionHeader_t*>(p);
+                                p += sizeof(CV_DebugSSubsectionHeader_t);
+
+                                if (hdr->type == DEBUG_S_STRINGTABLE)
+                                {
+                                    stringTableBase = p;
+                                }
+                                else if (hdr->type == DEBUG_S_FILECHKSMS)
+                                {
+                                    const BYTE* q          = p;
+                                    const BYTE* qEnd       = p + hdr->cbLen;
+                                    DWORD       byteOffset = 0;
+                                    while (q < qEnd)
+                                    {
+
+                                        auto* entry = reinterpret_cast<const CV_Checksum_t*>(q);
+                                        rawChecksumEntries.push_back({byteOffset, entry->strOffset});
+                                        DWORD entrySize = (sizeof(CV_Checksum_t) + entry->cbChecksum + 3u) & ~3u;
+                                        q          += entrySize;
+                                        byteOffset += entrySize;
+                                    }
+                                }
+                                else if (hdr->type == DEBUG_S_LINES)
+                                {
+                                    auto* linesHdr     = reinterpret_cast<const CV_DebugSLinesHeader_t*>(p);
+                                    DWORD segConOffset = static_cast<DWORD>(reinterpret_cast<const BYTE*>(linesHdr) + offsetof(CV_DebugSLinesHeader_t, segCon) - (bytes + section->PointerToRawData));
+
+                                    auto fit = fixups.find(segConOffset);
+                                    if (fit != fixups.end())
+                                    {
+                                        SectionIndexType secIdx  = fit->second;
+                                        const BYTE*      pBlock  = p + sizeof(CV_DebugSLinesHeader_t);
+                                        const BYTE*      pEnd    = p + hdr->cbLen;
+                                        while (pBlock < pEnd)
+                                        {
+                                            auto* fileBlock = reinterpret_cast<const CV_DebugSLinesFileBlockHeader_t*>(pBlock);
+                                            auto* lineEntry = reinterpret_cast<const CV_Line_t*>(pBlock + sizeof(CV_DebugSLinesFileBlockHeader_t));
+                                            for (CV_off32_t j=0; j<fileBlock->nLines; ++j)
+                                                rawLineContribs.push_back({secIdx, fileBlock->offFile, lineEntry[j].offset, lineEntry[j].linenumStart});
+                                            pBlock += fileBlock->cbBlock;
+                                        }
+                                    }
+                                }
+
+                                p += (hdr->cbLen + 3u) & ~3u;
+                            }
+                        }
+
+                        // resolve checksum offsets to paths now that we have the string table
+                        if (stringTableBase && fileChecksumOffsetToPath.empty())
+                        {
+                            for (auto& [byteOffset, strOffset] : rawChecksumEntries)
+                            {
+                                const char* path = reinterpret_cast<const char*>(stringTableBase + strOffset);
+                                fileChecksumOffsetToPath[byteOffset] = std::wstring(path, path + std::strlen(path));
+                            }
+                        }
+
+                        // populate linesPerSection, resolving offFile to path is deferred to main pass
+                        for (auto& [secIdx, offFile, codeOffset, lineNumber] : rawLineContribs)
+                        {
+                            std::wstring path;
+                            auto pathIt = fileChecksumOffsetToPath.find(offFile);
+                            if (pathIt != fileChecksumOffsetToPath.end())
+                                path = pathIt->second;
+                            linesPerSection[secIdx].push_back({codeOffset, lineNumber, path});
+                        }
+                    }
+                }
+            }
+
+            // main pass: same structure as before, but look up source file and line number
+            for(SHORT i=0; i<(SHORT)sectionHeaders.size(); ++i)
             {
                 auto section = sectionHeaders[i];
 
@@ -596,10 +818,8 @@ namespace Odr
                 if (name == ".debug$S")
                 {
                     // find the relocation data associated with this section, create a mapping from VirtualAddress to section, to be used to fixup the "seg" field
-                    using VirtualAddressType = DWORD;
-                    using SectionIndexType   = SHORT;
                     std::map<VirtualAddressType,SectionIndexType> fixups;
-                    auto relocations         = coffReader.relocations[i];
+                    auto relocations = coffReader.relocations[i];
                     for(auto relocation : relocations)
                     {
                         auto symbol = symbolTable[relocation->SymbolTableIndex];
@@ -651,12 +871,37 @@ namespace Odr
                                                 if (count < vectorOfOffsetAndName.size())
                                                 {
                                                     auto& [offset, decoratedName] = vectorOfOffsetAndName[count];
+
+                                                    // range-based lookup: find the first line record within [offset, offset+len).
+                                                    // offCon is always 0 in COFF .obj files, so line record codeOffsets are absolute within the section.
+                                                    std::wstring sourceFile;
+                                                    DWORD        lineNumber = 0;
+                                                    auto linesIt = linesPerSection.find(sectionIndex);
+                                                    if (linesIt != linesPerSection.end())
+                                                    {
+                                                        size_t zeroth = 0;
+                                                        for (auto& lr : linesIt->second)
+                                                        {
+                                                            if (lr.codeOffset == 0)
+                                                            {
+                                                                if (zeroth == count)
+                                                                {
+                                                                    sourceFile = lr.path;
+                                                                    lineNumber = lr.lineNumber;
+                                                                    break;
+                                                                }
+                                                                ++zeroth;
+                                                            }
+                                                        }
+                                                    }
+
                                                     auto startOfBody = bytes + coffReader.sectionHeaders[sectionIndex]->PointerToRawData + offset;
                                                     std::vector<BYTE> body(startOfBody, startOfBody + procsym32->len);
                                                     functions.push_back({decoratedName,
-                                                                         std::wstring(procsym32->name, procsym32->name + std::strlen((const char*)procsym32->name)), 
+                                                                         std::wstring(procsym32->name, procsym32->name + std::strlen((const char*)procsym32->name)),
                                                                          body,
-                                                                         rec->rectyp == S_LPROC32 || rec->rectyp == S_LPROC32_ID});
+                                                                         sourceFile,
+                                                                         lineNumber});
                                                 }
                                             }
                                         }

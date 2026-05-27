@@ -854,6 +854,22 @@ ODR VIOLATION: ?DifferentInlineFunctionBody@OdrCopTU34Tests@@YAHH@Z
     function body length: 16
     bytes at the first mismatch are: 89 4c 24 08 57 8b 44 24 10 05 54 01 00 00 5f c3 
 
+ODR VIOLATION: ?Foo@StaticMethodsBodiesDiffer@@SAHXZ
+  [TUs\x64\Debug\TU1.obj]
+    unmangled name:  public: static int __cdecl StaticMethodsBodiesDiffer::Foo(void)
+    return type:     int
+    argument:
+      void
+    function body length: 9
+    bytes at the first mismatch are: 40 57 b8 01 00 00 00 5f c3 
+  [TUs\x64\Debug\TU2.obj]
+    unmangled name:  public: static int __cdecl StaticMethodsBodiesDiffer::Foo(void)
+    return type:     int
+    argument:
+      void
+    function body length: 9
+    bytes at the first mismatch are: 40 57 b8 02 00 00 00 5f c3 
+
 ODR VIOLATION: ?FunctionUsing_DifferentDataMembers@@YAXUDifferentDataMembers@@@Z
   [TUs\x64\Debug\TU1.obj]
     unmangled name:  void __cdecl FunctionUsing_DifferentDataMembers(struct DifferentDataMembers)
@@ -1158,4 +1174,4 @@ ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
     underlying type=btInt
     the enum values are: Zero=0, One=1, 
 
-96 ODR violation(s) found.
+97 ODR violation(s) found.

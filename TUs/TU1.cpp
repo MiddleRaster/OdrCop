@@ -229,3 +229,6 @@ auto* g_1_addressOf_FunctionUsing_SameEnumNameDifferentEnumerators = &FunctionUs
 auto* g_1_addressOf_FunctionUsing_SameTemplateDifferentDefinition  = &FunctionUsing_SameTemplateDifferentDefinition;
 //auto* g_1_addressOf_FunctionUsing_InlinedBody                    = &FunctionUsing_InlinedBody;
 auto* g_1_addressOf_FunctionUsing_SameUnionNameDifferentElements   = &FunctionUsing_SameUnionNameDifferentElements;
+
+auto* g_1_addressOf_StaticMethodsBodiesDiffer                      = &StaticMethodsBodiesDiffer::Foo;
+auto  g_1_ret_valOf_StaticMethodsBodiesDiffer                      =  StaticMethodsBodiesDiffer::Foo();
