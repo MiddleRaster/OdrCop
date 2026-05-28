@@ -513,3 +513,19 @@ struct ClassForFriend
 #endif
         int TheFriendFunction(ClassForFriend) { return 2; }
 };
+
+#ifdef NOT_YET
+inline int g_aGlobal1 = 1;
+inline int g_aGlobal2 = 2;
+struct MakeSureRelocs
+{
+    int HaveBeenAppliedToBodies()
+    {
+#ifdef ONE
+        return g_aGlobal1;
+#else
+        return g_aGlobal2;
+#endif
+    }
+};
+#endif

@@ -83,8 +83,9 @@ public:
                     throw std::invalid_argument("not an .obj file");
 
                 const IMAGE_FILE_HEADER* ifh = (reinterpret_cast<const IMAGE_FILE_HEADER*>(bytes));
-                if (ifh->Machine != 0x8664)
-                    throw std::invalid_argument("not an 0x8664 .obj file");
+                if ((ifh->Machine != IMAGE_FILE_MACHINE_AMD64) &&
+                    (ifh->Machine != IMAGE_FILE_MACHINE_I386 ) )
+                    throw std::invalid_argument("not an 0x8664 or i386 .obj file");
 
                 return ifh;
             }())

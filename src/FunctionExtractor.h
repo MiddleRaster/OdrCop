@@ -619,6 +619,35 @@ namespace Odr
         static void Extract(const std::filesystem::path& pdbPath, bool excludeStdlib, std::map<std::wstring, std::vector<FuncInfo>>& funcMap, const PerTuTypes& perTU)
         {
             auto objPath = std::filesystem::path(pdbPath).replace_extension(L".obj");
+            if (!std::filesystem::exists(objPath))
+            {
+                // modules don't build like regular .cpp files:
+                // their .obj files are /not/ in the same folder.
+                // For example, the std module ends up like this:
+                //    C:\Users\Bill\source\repos\katas\cxx\8Queens\8Queens\x64\Debug\std.pdb
+                //    C:\Users\Bill\source\repos\katas\cxx\8Queens\8Queens\x64\Debug\microsoft\STL\std.ixx.obj
+
+                // non-std modules end up in the same folder, but named like this:
+                //    C:\Users\Bill\source\repos\TestProjectForClaudomatic2\TestProjectForClaudomatic2\x64\Debug\tdd20.ixx.obj
+                //    C:\Users\Bill\source\repos\TestProjectForClaudomatic2\TestProjectForClaudomatic2\x64\Debug\tdd20.pdb
+
+                objPath = std::filesystem::path(pdbPath).replace_extension(L".ixx.obj");
+            }
+            if (!std::filesystem::exists(objPath))
+            {
+                auto stem = pdbPath.stem().string();
+                if (stem != "std" && stem != "std.compat")
+                    return;
+
+                if (excludeStdlib)
+                    return;
+
+                objPath = pdbPath.parent_path() / "microsoft" / "STL" / (stem + ".ixx.obj");
+                if (!std::filesystem::exists(objPath))
+                    return;
+            }
+            std::wcout << L"Loading: " << objPath << L"\n";
+
             std::vector<Function> functions = Odr::FunctionExtractor::ExtractFunctions(objPath);
 
             FilesAndLinesCache flc;
@@ -628,6 +657,21 @@ namespace Odr
                 if (excludeStdlib == true) // return values are not included in undecoratedName so this check is sufficient
                     if (function.undecorated.starts_with(L"std::"))
                         continue;
+
+                if (function.undecorated.find(L"<lambda_") != std::wstring::npos)
+                {
+                    // as I expected, it's not that simple. Lambdas that are local to a function or assigned to a UDT's data-member can be involved in ODR violations.
+                    // But if it's not enclosed by a function or UDT, then it can't be ODR-relevant.
+                    // So filter those out immediately
+
+                    if (function.undecorated.starts_with(L"<lambda_"))
+                        continue;
+                    if (function.undecorated.starts_with(L"`<lambda_"))
+                        continue;
+
+                    // TODO:  look for procsym32's parent field, and look for enclosing UDT.
+                    // TODO:  also, do relocation fixups for bytecode
+                }
             
                 // Note how there is no - between anonymous and namespace; evidently MSVC does this for functions, but everthing else gets the dash
                 bool b        = function.undecorated.find(L"`anonymous namespace'") != std::wstring::npos;
@@ -648,282 +692,365 @@ namespace Odr
                                     // followed by cbChecksum bytes of checksum data, then padded to 4-byte alignment
             };
 
-            CoffReader coffReader(objFile);
-
             std::vector<Function> functions;
 
-            // first, from the symbol table, build up a map from sectionNumber to pair of offset and decorated name. 
-            using SectionIndex = SHORT;
-            using Offset       = DWORD;
-            std::map<SectionIndex, std::vector<std::pair<Offset,std::wstring>>> sectionIndexToOffsetFunction;
-
-            auto sectionHeaders = coffReader.sectionHeaders;
-            auto stringTable    = coffReader.startOfStringTable;
-            auto symbolTable    = coffReader.symbolTable;
-            for(size_t i=0; i<symbolTable.size(); )
+            try
             {
-                auto symbol = symbolTable[i];
+                CoffReader coffReader(objFile);
 
-                if (symbol->SectionNumber > 0)                                                                                  // not undefined, not absolute (#define)
-                if (ISFCN(symbol->Type))                                                                                        // is a function
-                if ((symbol->StorageClass & IMAGE_SYM_CLASS_EXTERNAL) || (symbol->StorageClass & IMAGE_SYM_CLASS_STATIC))       // is either external-linkage or internal-linkage
-                if (auto section = sectionHeaders[symbol->SectionNumber-1]; section->Characteristics & IMAGE_SCN_MEM_EXECUTE)   // is executable
+
+                // first, from the symbol table, build up a map from sectionNumber to pair of offset and decorated name. 
+                using SectionIndex = SHORT;
+                using Offset       = DWORD;
+                std::map<SectionIndex, std::vector<std::pair<Offset,std::wstring>>> sectionIndexToOffsetFunction;
+
+                auto sectionHeaders = coffReader.sectionHeaders;
+                auto stringTable    = coffReader.startOfStringTable;
+                auto symbolTable    = coffReader.symbolTable;
+                for(size_t i=0; i<symbolTable.size(); )
                 {
-                    std::string name;
-                    if (symbol->N.Name.Short != 0)
-                        name = std::string(symbol->N.ShortName, symbol->N.ShortName + 8);
-                    else
-                        name = std::string(stringTable + symbol->N.Name.Long);
+                    auto symbol = symbolTable[i];
 
-                    sectionIndexToOffsetFunction[symbol->SectionNumber-1].push_back({symbol->Value, std::wstring(name.begin(), name.end())});
-                }
-                i += 1 + symbol->NumberOfAuxSymbols;
-            }
-            // sort each section's vector by offset.
-            for (auto& [sec, vec] : sectionIndexToOffsetFunction)
-                std::sort(vec.begin(), vec.end());
-
-
-            // use .debug$S sections' data (with relocation fixups) to get the bodies' lengths
-            const BYTE* bytes = coffReader.bytes;
-
-            // pre-pass: walk all .debug$S sections to build a map from sectionIndex to line records.
-            // each line record holds a code offset (absolute within the section), line number, and file checksum offset.
-            // in COFF .obj files offCon is always 0, so codeOffset from the line record is already absolute within the section.
-            using VirtualAddressType = DWORD;
-            using SectionIndexType   = SHORT;
-            struct LineRecord { const unsigned long codeOffset; CV_off32_t lineNumber; std::wstring path; };
-            struct SourceLocation { std::wstring path; CV_off32_t lineNumber; };
-            std::map<SectionIndexType, std::vector<LineRecord>> linesPerSection;
-            std::map<DWORD, std::wstring>                       fileChecksumOffsetToPath;
-
-            for(SHORT i=0; i<(SHORT)sectionHeaders.size(); ++i)
-            {
-                auto section = sectionHeaders[i];
-
-                std::string name;
-                if (section->Misc.VirtualSize == 0)
-                    name = std::string(section->Name, section->Name + 8);
-                else
-                    name = std::string(bytes + section->Misc.PhysicalAddress, bytes + section->Misc.PhysicalAddress + section->Misc.VirtualSize);
-
-                if (name == ".debug$S")
-                {
-                    std::map<VirtualAddressType,SectionIndexType> fixups;
-                    auto relocations = coffReader.relocations[i];
-                    for(auto relocation : relocations)
+                    if (symbol->SectionNumber > 0)                                                                                  // not undefined, not absolute (#define)
+                    if (ISFCN(symbol->Type))                                                                                        // is a function
+                    if ((symbol->StorageClass & IMAGE_SYM_CLASS_EXTERNAL) || (symbol->StorageClass & IMAGE_SYM_CLASS_STATIC))       // is either external-linkage or internal-linkage
+                    if (auto section = sectionHeaders[symbol->SectionNumber-1]; section->Characteristics & IMAGE_SCN_MEM_EXECUTE)   // is executable
                     {
-                        auto symbol = symbolTable[relocation->SymbolTableIndex];
-                        if (symbol->SectionNumber > 0)
-                            fixups[relocation->VirtualAddress] = symbol->SectionNumber-1;
+                        std::string name;
+                        if (symbol->N.Name.Short != 0)
+                            name = std::string(symbol->N.ShortName, symbol->N.ShortName + 8);
+                        else
+                            name = std::string(stringTable + symbol->N.Name.Long);
+
+                        sectionIndexToOffsetFunction[symbol->SectionNumber-1].push_back({symbol->Value, std::wstring(name.begin(), name.end())});
                     }
+                    i += 1 + symbol->NumberOfAuxSymbols;
+                }
+                // sort each section's vector by offset.
+                for (auto& [sec, vec] : sectionIndexToOffsetFunction)
+                    std::sort(vec.begin(), vec.end());
 
-                    const BYTE* raw = bytes + section->PointerToRawData;
-                    const BYTE* end = raw   + section->SizeOfRawData;
-                    if (CV_SIGNATURE_C13 == *reinterpret_cast<const DWORD*>(raw))
+
+                // use .debug$S sections' data (with relocation fixups) to get the bodies' lengths
+                const BYTE* bytes = coffReader.bytes;
+
+                // pre-pass: walk all .debug$S sections to build a map from sectionIndex to line records.
+                // each line record holds a code offset (absolute within the section), line number, and file checksum offset.
+                // in COFF .obj files offCon is always 0, so codeOffset from the line record is already absolute within the section.
+                using VirtualAddressType = DWORD;
+                using SectionIndexType   = SHORT;
+                struct LineRecord { const unsigned long codeOffset; CV_off32_t lineNumber; std::wstring path; };
+                struct SourceLocation { std::wstring path; CV_off32_t lineNumber; };
+                std::map<SectionIndexType, std::vector<LineRecord>> linesPerSection;
+                std::map<DWORD, std::wstring>                       fileChecksumOffsetToPath;
+
+                for(SHORT i=0; i<(SHORT)sectionHeaders.size(); ++i)
+                {
+                    auto section = sectionHeaders[i];
+
+                    std::string name;
+                    if (section->Misc.VirtualSize == 0)
+                        name = std::string(section->Name, section->Name + 8);
+                    else
+                        name = std::string(bytes + section->Misc.PhysicalAddress, bytes + section->Misc.PhysicalAddress + section->Misc.VirtualSize);
+
+                    if (name == ".debug$S")
                     {
-                        // single pre-pass loop: collect string table, checksum entries, and line records together
-                        const BYTE*                          stringTableBase = nullptr;
-                        std::vector<std::pair<DWORD,DWORD>>  rawChecksumEntries; // (byteOffset, strOffset)
-
-                        struct RawLineContrib { SectionIndexType secIdx; CV_off32_t offFile; const unsigned long codeOffset; CV_off32_t lineNumber; };
-                        std::vector<RawLineContrib> rawLineContribs;
-
+                        std::map<VirtualAddressType,SectionIndexType> fixups;
+                        auto relocations = coffReader.relocations[i];
+                        for(auto relocation : relocations)
                         {
-                            const BYTE* p = raw + sizeof(DWORD);
-                            while (p < end)
+                            auto symbol = symbolTable[relocation->SymbolTableIndex];
+                            if (symbol->SectionNumber > 0)
+                                fixups[relocation->VirtualAddress] = symbol->SectionNumber-1;
+                        }
+
+                        const BYTE* raw = bytes + section->PointerToRawData;
+                        const BYTE* end = raw   + section->SizeOfRawData;
+                        if (CV_SIGNATURE_C13 == *reinterpret_cast<const DWORD*>(raw))
+                        {
+                            // single pre-pass loop: collect string table, checksum entries, and line records together
+                            const BYTE*                          stringTableBase = nullptr;
+                            std::vector<std::pair<DWORD,DWORD>>  rawChecksumEntries; // (byteOffset, strOffset)
+
+                            struct RawLineContrib { SectionIndexType secIdx; CV_off32_t offFile; const unsigned long codeOffset; CV_off32_t lineNumber; };
+                            std::vector<RawLineContrib> rawLineContribs;
+
                             {
-                                auto* hdr = reinterpret_cast<const CV_DebugSSubsectionHeader_t*>(p);
-                                p += sizeof(CV_DebugSSubsectionHeader_t);
+                                const BYTE* p = raw + sizeof(DWORD);
+                                while (p < end)
+                                {
+                                    auto* hdr = reinterpret_cast<const CV_DebugSSubsectionHeader_t*>(p);
+                                    p += sizeof(CV_DebugSSubsectionHeader_t);
 
-                                if (hdr->type == DEBUG_S_STRINGTABLE)
-                                {
-                                    stringTableBase = p;
-                                }
-                                else if (hdr->type == DEBUG_S_FILECHKSMS)
-                                {
-                                    const BYTE* q          = p;
-                                    const BYTE* qEnd       = p + hdr->cbLen;
-                                    DWORD       byteOffset = 0;
-                                    while (q < qEnd)
+                                    if (hdr->type == DEBUG_S_STRINGTABLE)
                                     {
-
-                                        auto* entry = reinterpret_cast<const CV_Checksum_t*>(q);
-                                        rawChecksumEntries.push_back({byteOffset, entry->strOffset});
-                                        DWORD entrySize = (sizeof(CV_Checksum_t) + entry->cbChecksum + 3u) & ~3u;
-                                        q          += entrySize;
-                                        byteOffset += entrySize;
+                                        stringTableBase = p;
                                     }
-                                }
-                                else if (hdr->type == DEBUG_S_LINES)
-                                {
-                                    auto* linesHdr     = reinterpret_cast<const CV_DebugSLinesHeader_t*>(p);
-                                    DWORD segConOffset = static_cast<DWORD>(reinterpret_cast<const BYTE*>(linesHdr) + offsetof(CV_DebugSLinesHeader_t, segCon) - (bytes + section->PointerToRawData));
-
-                                    auto fit = fixups.find(segConOffset);
-                                    if (fit != fixups.end())
+                                    else if (hdr->type == DEBUG_S_FILECHKSMS)
                                     {
-                                        SectionIndexType secIdx  = fit->second;
-                                        const BYTE*      pBlock  = p + sizeof(CV_DebugSLinesHeader_t);
-                                        const BYTE*      pEnd    = p + hdr->cbLen;
-                                        while (pBlock < pEnd)
+                                        const BYTE* q          = p;
+                                        const BYTE* qEnd       = p + hdr->cbLen;
+                                        DWORD       byteOffset = 0;
+                                        while (q < qEnd)
                                         {
-                                            auto* fileBlock = reinterpret_cast<const CV_DebugSLinesFileBlockHeader_t*>(pBlock);
-                                            auto* lineEntry = reinterpret_cast<const CV_Line_t*>(pBlock + sizeof(CV_DebugSLinesFileBlockHeader_t));
-                                            for (CV_off32_t j=0; j<fileBlock->nLines; ++j)
-                                                rawLineContribs.push_back({secIdx, fileBlock->offFile, lineEntry[j].offset, lineEntry[j].linenumStart});
-                                            pBlock += fileBlock->cbBlock;
+
+                                            auto* entry = reinterpret_cast<const CV_Checksum_t*>(q);
+                                            rawChecksumEntries.push_back({byteOffset, entry->strOffset});
+                                            DWORD entrySize = (sizeof(CV_Checksum_t) + entry->cbChecksum + 3u) & ~3u;
+                                            q          += entrySize;
+                                            byteOffset += entrySize;
                                         }
                                     }
-                                }
-
-                                p += (hdr->cbLen + 3u) & ~3u;
-                            }
-                        }
-
-                        // resolve checksum offsets to paths now that we have the string table
-                        if (stringTableBase && fileChecksumOffsetToPath.empty())
-                        {
-                            for (auto& [byteOffset, strOffset] : rawChecksumEntries)
-                            {
-                                const char* path = reinterpret_cast<const char*>(stringTableBase + strOffset);
-                                fileChecksumOffsetToPath[byteOffset] = std::wstring(path, path + std::strlen(path));
-                            }
-                        }
-
-                        // populate linesPerSection, resolving offFile to path is deferred to main pass
-                        for (auto& [secIdx, offFile, codeOffset, lineNumber] : rawLineContribs)
-                        {
-                            std::wstring path;
-                            auto pathIt = fileChecksumOffsetToPath.find(offFile);
-                            if (pathIt != fileChecksumOffsetToPath.end())
-                                path = pathIt->second;
-                            linesPerSection[secIdx].push_back({codeOffset, lineNumber, path});
-                        }
-                    }
-                }
-            }
-
-            // main pass: same structure as before, but look up source file and line number
-            for(SHORT i=0; i<(SHORT)sectionHeaders.size(); ++i)
-            {
-                auto section = sectionHeaders[i];
-
-                std::string name;
-                if (section->Misc.VirtualSize == 0)
-                    name = std::string(section->Name, section->Name + 8);
-                else
-                    name = std::string(bytes + section->Misc.PhysicalAddress, bytes + section->Misc.PhysicalAddress + section->Misc.VirtualSize);
-
-                if (name == ".debug$S")
-                {
-                    // find the relocation data associated with this section, create a mapping from VirtualAddress to section, to be used to fixup the "seg" field
-                    std::map<VirtualAddressType,SectionIndexType> fixups;
-                    auto relocations = coffReader.relocations[i];
-                    for(auto relocation : relocations)
-                    {
-                        auto symbol = symbolTable[relocation->SymbolTableIndex];
-                        if (symbol->SectionNumber > 0)
-                            fixups[relocation->VirtualAddress] = symbol->SectionNumber-1;
-                    }
-
-                    const BYTE* raw = bytes + section->PointerToRawData;
-                    const BYTE* end = raw   + section->SizeOfRawData;
-                    if (CV_SIGNATURE_C13 == *reinterpret_cast<const DWORD*>(raw))
-                    {
-                        raw += sizeof(DWORD);
-
-                        // we need this since PROCSYM32's seg AND offset are both set to 0 (seg gets fixed up via relocation data, offset doesn't).
-                        // We can't find the bodies by offset, so using a counter instead.
-                        std::map<SectionIndexType,size_t> countOfProcsPerSection;
-
-                        for (;;)
-                        {
-                            auto subSectionHeader = reinterpret_cast<const CV_DebugSSubsectionHeader_t*>(raw);
-                            raw += sizeof(CV_DebugSSubsectionHeader_t);
-
-                            const BYTE* payload = raw; // start of this subsection's data
-
-                            if (subSectionHeader->type == DEBUG_S_SYMBOLS)
-                            {
-                                const BYTE* record    = payload;
-                                const BYTE* recordEnd = payload + subSectionHeader->cbLen;
-                                while (record < recordEnd)
-                                {
-                                    auto* rec = reinterpret_cast<const SYMTYPE*>(record);
-                                    if (rec->rectyp == S_GPROC32    || rec->rectyp == S_LPROC32 ||
-                                        rec->rectyp == S_GPROC32_ID || rec->rectyp == S_LPROC32_ID)
+                                    else if (hdr->type == DEBUG_S_LINES)
                                     {
-                                        auto  procsym32 = reinterpret_cast<const PROCSYM32*>(record);
-                                        DWORD segOffset = static_cast<DWORD>(reinterpret_cast<const BYTE*>(procsym32) + offsetof(PROCSYM32, seg) - (coffReader.bytes + section->PointerToRawData));
+                                        auto* linesHdr     = reinterpret_cast<const CV_DebugSLinesHeader_t*>(p);
+                                        DWORD segConOffset = static_cast<DWORD>(reinterpret_cast<const BYTE*>(linesHdr) + offsetof(CV_DebugSLinesHeader_t, segCon) - (bytes + section->PointerToRawData));
 
-                                        auto it = fixups.find(segOffset);
-                                        if (it != fixups.end())
-                                        {   // found it
-                                            auto& sectionIndex = it->second;
-
-                                            // find the decorated function name in sectionIndexToOffsetFunction by the section we just found in our fixups map
-                                            auto it2 = sectionIndexToOffsetFunction.find(sectionIndex);
-                                            if (it2 != sectionIndexToOffsetFunction.end())
+                                        auto fit = fixups.find(segConOffset);
+                                        if (fit != fixups.end())
+                                        {
+                                            SectionIndexType secIdx  = fit->second;
+                                            const BYTE*      pBlock  = p + sizeof(CV_DebugSLinesHeader_t);
+                                            const BYTE*      pEnd    = p + hdr->cbLen;
+                                            while (pBlock < pEnd)
                                             {
-                                                auto& vectorOfOffsetAndName = it2->second;
-                                                size_t count = countOfProcsPerSection[sectionIndex]++;
-                                                if (count < vectorOfOffsetAndName.size())
-                                                {
-                                                    auto& [offset, decoratedName] = vectorOfOffsetAndName[count];
-
-                                                    // range-based lookup: find the first line record within [offset, offset+len).
-                                                    // offCon is always 0 in COFF .obj files, so line record codeOffsets are absolute within the section.
-                                                    std::wstring sourceFile;
-                                                    DWORD        lineNumber = 0;
-                                                    auto linesIt = linesPerSection.find(sectionIndex);
-                                                    if (linesIt != linesPerSection.end())
-                                                    {
-                                                        size_t zeroth = 0;
-                                                        for (auto& lr : linesIt->second)
-                                                        {
-                                                            if (lr.codeOffset == 0)
-                                                            {
-                                                                if (zeroth == count)
-                                                                {
-                                                                    sourceFile = lr.path;
-                                                                    lineNumber = lr.lineNumber;
-                                                                    break;
-                                                                }
-                                                                ++zeroth;
-                                                            }
-                                                        }
-                                                    }
-
-                                                    auto startOfBody = bytes + coffReader.sectionHeaders[sectionIndex]->PointerToRawData + offset;
-                                                    std::vector<BYTE> body(startOfBody, startOfBody + procsym32->len);
-                                                    functions.push_back({decoratedName,
-                                                                         std::wstring(procsym32->name, procsym32->name + std::strlen((const char*)procsym32->name)),
-                                                                         body,
-                                                                         sourceFile,
-                                                                         lineNumber});
-                                                }
+                                                auto* fileBlock = reinterpret_cast<const CV_DebugSLinesFileBlockHeader_t*>(pBlock);
+                                                auto* lineEntry = reinterpret_cast<const CV_Line_t*>(pBlock + sizeof(CV_DebugSLinesFileBlockHeader_t));
+                                                for (CV_off32_t j=0; j<fileBlock->nLines; ++j)
+                                                    rawLineContribs.push_back({secIdx, fileBlock->offFile, lineEntry[j].offset, lineEntry[j].linenumStart});
+                                                pBlock += fileBlock->cbBlock;
                                             }
                                         }
                                     }
-                                    record += sizeof(WORD) + rec->reclen;
+
+                                    p += (hdr->cbLen + 3u) & ~3u;
                                 }
                             }
 
-                            // round payload size up to 4-byte boundary
-                            auto length = (subSectionHeader->cbLen + 3u) & ~3u;
-                            raw += length;
-                            if (raw == end)
-                                break;
-                            if (raw > end)
-                                break; // uh oh, outa synch
+                            // resolve checksum offsets to paths now that we have the string table
+                            if (stringTableBase && fileChecksumOffsetToPath.empty())
+                            {
+                                for (auto& [byteOffset, strOffset] : rawChecksumEntries)
+                                {
+                                    const char* path = reinterpret_cast<const char*>(stringTableBase + strOffset);
+                                    fileChecksumOffsetToPath[byteOffset] = std::wstring(path, path + std::strlen(path));
+                                }
+                            }
+
+                            // populate linesPerSection, resolving offFile to path is deferred to main pass
+                            for (auto& [secIdx, offFile, codeOffset, lineNumber] : rawLineContribs)
+                            {
+                                std::wstring path;
+                                auto pathIt = fileChecksumOffsetToPath.find(offFile);
+                                if (pathIt != fileChecksumOffsetToPath.end())
+                                    path = pathIt->second;
+                                linesPerSection[secIdx].push_back({codeOffset, lineNumber, path});
+                            }
                         }
                     }
                 }
+
+                // main pass: same structure as before, but look up source file and line number
+                for(SHORT i=0; i<(SHORT)sectionHeaders.size(); ++i)
+                {
+                    auto section = sectionHeaders[i];
+
+                    std::string name;
+                    if (section->Misc.VirtualSize == 0)
+                        name = std::string(section->Name, section->Name + 8);
+                    else
+                        name = std::string(bytes + section->Misc.PhysicalAddress, bytes + section->Misc.PhysicalAddress + section->Misc.VirtualSize);
+
+                    if (name == ".debug$S")
+                    {
+                        // find the relocation data associated with this section, create a mapping from VirtualAddress to section, to be used to fixup the "seg" field
+                        std::map<VirtualAddressType,SectionIndexType> fixups;
+                        auto relocations = coffReader.relocations[i];
+                        for(auto relocation : relocations)
+                        {
+                            auto symbol = symbolTable[relocation->SymbolTableIndex];
+                            if (symbol->SectionNumber > 0)
+                                fixups[relocation->VirtualAddress] = symbol->SectionNumber-1;
+                        }
+
+                        const BYTE* raw = bytes + section->PointerToRawData;
+                        const BYTE* end = raw   + section->SizeOfRawData;
+                        if (CV_SIGNATURE_C13 == *reinterpret_cast<const DWORD*>(raw))
+                        {
+                            raw += sizeof(DWORD);
+
+                            // we need this since PROCSYM32's seg AND offset are both set to 0 (seg gets fixed up via relocation data, offset doesn't).
+                            // We can't find the bodies by offset, so using a counter instead.
+                            std::map<SectionIndexType,size_t> countOfProcsPerSection;
+
+                            for (;;)
+                            {
+                                auto subSectionHeader = reinterpret_cast<const CV_DebugSSubsectionHeader_t*>(raw);
+                                raw += sizeof(CV_DebugSSubsectionHeader_t);
+
+                                const BYTE* payload = raw; // start of this subsection's data
+
+                                if (subSectionHeader->type == DEBUG_S_SYMBOLS)
+                                {
+                                    const BYTE* record    = payload;
+                                    const BYTE* recordEnd = payload + subSectionHeader->cbLen;
+                                    while (record < recordEnd)
+                                    {
+                                        auto* rec = reinterpret_cast<const SYMTYPE*>(record);
+                                        if (rec->rectyp == S_GPROC32    || rec->rectyp == S_LPROC32 ||
+                                            rec->rectyp == S_GPROC32_ID || rec->rectyp == S_LPROC32_ID)
+                                        {
+                                            auto  procsym32 = reinterpret_cast<const PROCSYM32*>(record);
+                                            DWORD segOffset = static_cast<DWORD>(reinterpret_cast<const BYTE*>(procsym32) + offsetof(PROCSYM32, seg) - (coffReader.bytes + section->PointerToRawData));
+
+                                            auto it = fixups.find(segOffset);
+                                            if (it != fixups.end())
+                                            {   // found it
+                                                auto& sectionIndex = it->second;
+
+                                                // find the decorated function name in sectionIndexToOffsetFunction by the section we just found in our fixups map
+                                                auto it2 = sectionIndexToOffsetFunction.find(sectionIndex);
+                                                if (it2 != sectionIndexToOffsetFunction.end())
+                                                {
+                                                    auto& vectorOfOffsetAndName = it2->second;
+                                                    size_t count = countOfProcsPerSection[sectionIndex]++;
+                                                    if (count < vectorOfOffsetAndName.size())
+                                                    {
+                                                        auto& [offset, decoratedName] = vectorOfOffsetAndName[count];
+
+                                                        // range-based lookup: find the first line record within [offset, offset+len).
+                                                        // offCon is always 0 in COFF .obj files, so line record codeOffsets are absolute within the section.
+                                                        std::wstring sourceFile;
+                                                        DWORD        lineNumber = 0;
+                                                        auto linesIt = linesPerSection.find(sectionIndex);
+                                                        if (linesIt != linesPerSection.end())
+                                                        {
+                                                            size_t zeroth = 0;
+                                                            for (auto& lr : linesIt->second)
+                                                            {
+                                                                if (lr.codeOffset == 0)
+                                                                {
+                                                                    if (zeroth == count)
+                                                                    {
+                                                                        sourceFile = lr.path;
+                                                                        lineNumber = lr.lineNumber;
+                                                                        break;
+                                                                    }
+                                                                    ++zeroth;
+                                                                }
+                                                            }
+                                                        }
+
+                                                        // filter out extern "C" functions and compiler-generated functions, as neither of these can be ODR violations
+                                                        std::wstring undec = Undecorate(decoratedName);
+                                                        if (IsPlainCFunction(undec))
+                                                            continue; // ignore C functions entirely
+                                                        if (IsCompilerGenerated(decoratedName))
+                                                            continue; // compiler-generated can't be ODR-relevant
+
+                                                        auto startOfBody = bytes + coffReader.sectionHeaders[sectionIndex]->PointerToRawData + offset;
+                                                        std::vector<BYTE> body(startOfBody, startOfBody + procsym32->len);
+                                                        functions.push_back({decoratedName,
+                                                                             std::wstring(procsym32->name, procsym32->name + std::strlen((const char*)procsym32->name)),
+                                                                             body,
+                                                                             sourceFile,
+                                                                             lineNumber});
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        record += sizeof(WORD) + rec->reclen;
+                                    }
+                                }
+
+                                // round payload size up to 4-byte boundary
+                                auto length = (subSectionHeader->cbLen + 3u) & ~3u;
+                                raw += length;
+                                if (raw == end)
+                                    break;
+                                if (raw > end)
+                                    break; // uh oh, outa synch
+                            }
+                        }
+                    }
+                }
+            }
+            catch (const std::exception& e)
+            {
+                std::wcout << L"caught exception - " << objFile.c_str() << L": " << e.what() << L'\n';
+            }
+            catch(...)
+            {
+                std::wcout << L"unknown exception - " << objFile.c_str() << L": " << L"probably not a.obj file or doesn't exist\n";
             }
             return functions;
         }
     private:
+        static std::wstring Undecorate(const std::wstring& decorated)
+        {
+            wchar_t buffer[16384];
+            if (UnDecorateSymbolNameW(decorated.c_str(), buffer, _countof(buffer), UNDNAME_COMPLETE))
+                return buffer;
+            return decorated;
+        }
+        static bool IsPlainCFunction(const std::wstring& undec)
+        {
+            if (undec.find(L'?') != std::wstring::npos)
+                return false; // No MSVC C++ mangling marker
+
+            for (wchar_t ch : undec)
+            {   // Only [A-Za-z0-9_]
+                if(!(ch == L'_'                ||
+                    (ch >= L'0' && ch <= L'9') ||
+                    (ch >= L'A' && ch <= L'Z') ||
+                    (ch >= L'a' && ch <= L'z') ))
+                    return false;
+            }
+            return true;
+        }
+        static bool IsCompilerGenerated(const std::wstring& decorated)
+        {
+            static const std::wstring decoratedMarkers[] =
+            { // Strong compiler-generated markers in the *decorated* name
+                L"$dtor$",       // destructor helpers
+                L"$ctor$",       // constructor helpers
+                L"$fin$",        // EH finally helpers
+                L"$catch$",      // EH catch block helpers
+                L"$handlerMap",  // EH handler tables
+                L"$TSS",         // thread-safe static initialization
+                L"$TLS",         // thread-local storage helpers
+                L"$ILT",         // incremental linker thunks
+                L"$RTC",         // run-time check helpers
+            };
+            for (const auto& m : decoratedMarkers)
+            {
+                if (decorated.find(m) != std::wstring::npos)
+                    return true;
+            }
+
+            static const std::wstring undecMarkers[] =
+            { // EH / vcall / dynamic-init helpers visible in *undecorated* names
+                L"`EH",                              // EH internal helpers
+                L"`vcall'",                          // virtual call thunks
+                L"`dynamic initializer for '",       // dynamic init
+                L"`dynamic atexit destructor for '", // dynamic dtor
+            };
+            std::wstring undec = Undecorate(decorated);
+            for (const auto& m : undecMarkers)
+            {
+                if (undec.find(m) != std::wstring::npos)
+                    return true;
+            }
+
+            // Anonymous-namespace lambdas: decorated contains ?A0x########@?1
+            if (decorated.find(L"?A0x")     != std::wstring::npos &&
+                    undec.find(L"<lambda_") != std::wstring::npos)
+                return true;
+
+            return false; // Everything else is potentially ODR-relevant
+        }
+
         static std::wstring MakeAnonymousNamespaceTuSpecific(bool isInAnonymousNamespace, std::wstring name, const std::wstring& pdbPath)
         {   // Note: this function is similar to Odr::MakeAnonymousNamespaceTuSpecific but instead of looking for L"`anonymous-namespace'",
             // we need to look for L"????????" instead. The rest is the same

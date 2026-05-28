@@ -234,3 +234,5 @@ auto* g_2_addressOf_StaticMethodsBodiesDiffer                      = &StaticMeth
 auto  g_2_ret_valOf_StaticMethodsBodiesDiffer                      =  StaticMethodsBodiesDiffer::Foo();
 
 auto  g_2_ret_valOf_ClassForFriend                                 = ClassForFriend().TheFriendFunction(ClassForFriend());
+
+//auto  g_2_ret_valOf_MakeSureRelocsHaveBeenApplied_ToBodies       = MakeSureRelocs().HaveBeenAppliedToBodies();

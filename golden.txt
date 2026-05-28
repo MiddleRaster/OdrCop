@@ -1,9 +1,15 @@
 Loading: "TUs\\x64\\Debug\\dllmain.pdb"
+Loading: "TUs\\x64\\Debug\\dllmain.obj"
 Loading: "TUs\\x64\\Debug\\RegressionTests.pdb"
+Loading: "TUs\\x64\\Debug\\RegressionTests.obj"
 Loading: "TUs\\x64\\Debug\\TU1.pdb"
+Loading: "TUs\\x64\\Debug\\TU1.obj"
 Loading: "TUs\\x64\\Debug\\TU2.pdb"
+Loading: "TUs\\x64\\Debug\\TU2.obj"
 Loading: "TUs\\x64\\Debug\\TU3.pdb"
+Loading: "TUs\\x64\\Debug\\TU3.obj"
 Loading: "TUs\\x64\\Debug\\TU4.pdb"
+Loading: "TUs\\x64\\Debug\\TU4.obj"
 
 ODR VIOLATION: BaseClassVirtualOrNot
   [TUs\x64\Debug\TU1.pdb]
