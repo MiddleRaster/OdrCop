@@ -514,7 +514,6 @@ struct ClassForFriend
         int TheFriendFunction(ClassForFriend) { return 2; }
 };
 
-#ifdef NOT_YET
 inline int g_aGlobal1 = 1;
 inline int g_aGlobal2 = 2;
 struct MakeSureRelocs
@@ -528,4 +527,3 @@ struct MakeSureRelocs
 #endif
     }
 };
-#endif

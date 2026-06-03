@@ -915,7 +915,7 @@ ODR VIOLATION: ?FunctionUsing_SameEnumNameDifferentEnumerators@@YAXW4SameEnumNam
         underlying type=btInt
         the enum values are: sendeA=0, 
     function body length: 7
-    bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
+    the first few bytes are: 89 4c 24 08 57 5f c3 
   [TUs\x64\Debug\TU2.obj]
     unmangled name:  void __cdecl FunctionUsing_SameEnumNameDifferentEnumerators(enum SameEnumNameDifferentEnumerators)
     return type:     void
@@ -925,7 +925,7 @@ ODR VIOLATION: ?FunctionUsing_SameEnumNameDifferentEnumerators@@YAXW4SameEnumNam
         underlying type=btInt
         the enum values are: sendeA=0, sendeB=1, 
     function body length: 7
-    bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
+    the first few bytes are: 89 4c 24 08 57 5f c3 
 
 ODR VIOLATION: ?FunctionUsing_SameTemplateDifferentDefinition@@YAXU?$SameTemplateDifferentDefinition@H@@@Z
   [TUs\x64\Debug\TU1.obj]
@@ -987,6 +987,26 @@ ODR VIOLATION: ?FunctionsMustBeBitwiseIdentical@@YAHXZ
     function body length: 9
     bytes at the first mismatch are: 40 57 b8 02 00 00 00 5f c3 
 
+ODR VIOLATION: ?HaveBeenAppliedToBodies@MakeSureRelocs@@QEAAHXZ
+  [TUs\x64\Debug\TU1.obj]
+    unmangled name:  public: int __cdecl MakeSureRelocs::HaveBeenAppliedToBodies(void) __ptr64
+    return type:     int
+    argument:
+      void
+    reloc:
+      offset: 8 type: 4 symbol name: ?g_aGlobal1@@3HA
+    function body length: 14
+    the first few bytes are: 48 89 4c 24 08 57 8b 05 00 00 
+  [TUs\x64\Debug\TU2.obj]
+    unmangled name:  public: int __cdecl MakeSureRelocs::HaveBeenAppliedToBodies(void) __ptr64
+    return type:     int
+    argument:
+      void
+    reloc:
+      offset: 8 type: 4 symbol name: ?g_aGlobal2@@3HA
+    function body length: 14
+    the first few bytes are: 48 89 4c 24 08 57 8b 05 00 00 
+
 ODR VIOLATION: ?ReturnAnAnonymousEnum@T10a@Tests@@YA?AW4Result@?A0x????????@12@XZ
   [TUs\x64\Debug\TU1.obj]
     unmangled name:  enum Tests::T10a::`anonymous namespace'::Result __cdecl Tests::T10a::ReturnAnAnonymousEnum(void)
@@ -997,7 +1017,7 @@ ODR VIOLATION: ?ReturnAnAnonymousEnum@T10a@Tests@@YA?AW4Result@?A0x????????@12@X
     argument:
       void
     function body length: 6
-    bytes at the first mismatch are: 40 57 33 c0 5f c3 
+    the first few bytes are: 40 57 33 c0 5f c3 
   [TUs\x64\Debug\TU2.obj]
     unmangled name:  enum Tests::T10a::`anonymous namespace'::Result __cdecl Tests::T10a::ReturnAnAnonymousEnum(void)
     return type:     Tests::T10a::`anonymous-namespace'[TUs\x64\Debug\TU2.pdb]::Result
@@ -1007,7 +1027,7 @@ ODR VIOLATION: ?ReturnAnAnonymousEnum@T10a@Tests@@YA?AW4Result@?A0x????????@12@X
     argument:
       void
     function body length: 6
-    bytes at the first mismatch are: 40 57 33 c0 5f c3 
+    the first few bytes are: 40 57 33 c0 5f c3 
 
 ODR VIOLATION: ?ReturnAnAnonymousType@T10@Tests@@YA?AUResult@?A0x????????@12@XZ
   [TUs\x64\Debug\TU1.obj]
@@ -1058,7 +1078,7 @@ ODR VIOLATION: ?function9@T9a@Tests@@YAXUArg@?A0x????????@12@@Z
         kind=struct  size=4
         +0 public int32_t x
     function body length: 7
-    bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
+    the first few bytes are: 89 4c 24 08 57 5f c3 
   [TUs\x64\Debug\TU2.obj]
     unmangled name:  void __cdecl Tests::T9a::function9(struct Tests::T9a::`anonymous namespace'::Arg)
     return type:     void
@@ -1067,7 +1087,7 @@ ODR VIOLATION: ?function9@T9a@Tests@@YAXUArg@?A0x????????@12@@Z
         kind=struct  size=4
         +0 public uint32_t x
     function body length: 7
-    bytes at the first mismatch are: 89 4c 24 08 57 5f c3 
+    the first few bytes are: 89 4c 24 08 57 5f c3 
 
 ODR VIOLATION: OdrCopTU34Tests::DifferentEnumUnderlyingType
   [TUs\x64\Debug\TU3.pdb]
@@ -1188,4 +1208,4 @@ ODR VIOLATION: Tests::T10a::`anonymous-namespace'::Result
     underlying type=btInt
     the enum values are: Zero=0, One=1, 
 
-98 ODR violation(s) found.
+99 ODR violation(s) found.

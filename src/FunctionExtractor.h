@@ -12,7 +12,6 @@
 
 namespace Odr
 {
-
     struct PerTuTypes
     {
         std::map<std::wstring, std::vector<UdtInfo >>  udtMap; // UDTs
@@ -27,6 +26,14 @@ namespace Odr
         bool operator==(const NullInfo&) const { return true; }
     };
 
+    struct RelocEntry
+    {
+        const DWORD        offset;     // relative to function start
+        const WORD         type;
+        const std::wstring symName;
+        bool operator==(const RelocEntry& other) const noexcept = default;
+    };
+
     class FuncInfo : public AnonInfo
     {
         const std::wstring compiland;
@@ -34,11 +41,20 @@ namespace Odr
         const std::wstring unmangled;
         const bool         isStatic;
         const ULONGLONG    bodyLength;
-        const std::vector<BYTE> body;
+        const std::vector<BYTE>       body;
+        const std::vector<RelocEntry> relocs;
         const std::vector<std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>> args;
         const             std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>  returnType;
     public:
-        FuncInfo(bool b, const std::wstring& compiland, const std::wstring& decorated, ULONGLONG bodyLength, const std::vector<BYTE>& body, bool isStatic, const PerTuTypes& perTU)
+        FuncInfo(
+            bool b, 
+            const std::wstring& compiland, 
+            const std::wstring& decorated,
+            ULONGLONG bodyLength,
+            const std::vector<BYTE>& body,
+            const std::vector<RelocEntry>& relocs,
+            bool isStatic,
+            const PerTuTypes& perTU)
             : AnonInfo(b)
             , compiland(compiland)
             , decorated(decorated)
@@ -52,6 +68,7 @@ namespace Odr
             , isStatic  (isStatic)
             , bodyLength(bodyLength)
             , body      (body)
+            , relocs    (relocs)
             , args([&](){
                             std::vector<std::pair<std::wstring,std::variant<NullInfo,UdtInfo,EnumInfo>>> theArgs;
 
@@ -432,6 +449,16 @@ namespace Odr
                     std::visit([depth](auto& arg) { arg.Print(depth+1); }, argItem);
                 }
             }
+
+            if (relocs.size() > 0) {
+                if (relocs.size() == 1)
+                    std::wcout << L"    reloc:\n";
+                else
+                    std::wcout << L"    relocs:\n";
+                for (auto& [offset, type, symbolName] : relocs)
+                    std::wcout << L"      offset: " << offset << L" type: " << type << L" symbol name: " << symbolName << L'\n';
+            }
+
             std::wcout << L"    function body length: " << bodyLength << L'\n';
             // actual bytes are printed in PrintMismatch, below
         }
@@ -445,7 +472,10 @@ namespace Odr
                 std::wcout << std::setfill(L'0') << std::setw(2) << b << L' ';
             std::wcout << std::dec << L'\n';
     #else
-            std::wcout << L"    bytes at the first mismatch are: " << std::hex;
+            if (mismatch == -1)
+                std::wcout << L"    the first few bytes are: " << std::hex;
+            else
+                std::wcout << L"    bytes at the first mismatch are: " << std::hex;
             int i = mismatch - 10;
             if (i < 0)
                 i = 0;
@@ -506,6 +536,8 @@ namespace Odr
             if (args.size() != other.args.size()) return false;
             for(size_t i=0; i<args.size(); ++i)
                 if (args[i] != other.args[i])     return false;
+
+            if (     relocs != other.relocs     ) return false;
 
             if (MismatchIndex(other) !=   -1)     return false;
             return true;
@@ -610,10 +642,11 @@ namespace Odr
     {
         struct Function
         {
-            const std::wstring      decorated, undecorated;
-            const std::vector<BYTE> body;
-            const std::wstring      filename;
-            const DWORD             linenumber;
+            const std::wstring            decorated, undecorated;
+            const std::vector<BYTE>       body;
+            const std::vector<RelocEntry> relocs;
+            const std::wstring            filename;
+            const DWORD                   linenumber;
         };
 
         static void Extract(const std::filesystem::path& pdbPath, bool excludeStdlib, std::map<std::wstring, std::vector<FuncInfo>>& funcMap, const PerTuTypes& perTU)
@@ -676,7 +709,8 @@ namespace Odr
                 // Note how there is no - between anonymous and namespace; evidently MSVC does this for functions, but everthing else gets the dash
                 bool b        = function.undecorated.find(L"`anonymous namespace'") != std::wstring::npos;
                 bool isStatic = flc.IsStaticFreeFunction(function.decorated, function.filename, function.linenumber);
-                funcMap[MakeAnonymousNamespaceTuSpecific(b, NormalizeAnonNsCookies(function.decorated), pdbPath)].push_back(FuncInfo(b, objPath.c_str(), function.decorated, function.body.size(), function.body, isStatic, perTU));
+                funcMap[MakeAnonymousNamespaceTuSpecific(b, NormalizeAnonNsCookies(function.decorated), pdbPath)].push_back(
+                                            FuncInfo(b, objPath.c_str(), function.decorated, function.body.size(), function.body, function.relocs, isStatic, perTU));
             }
         }
 
@@ -949,11 +983,33 @@ namespace Odr
                                                         if (IsCompilerGenerated(decoratedName))
                                                             continue; // compiler-generated can't be ODR-relevant
 
+                                                        std::vector<RelocEntry> relocs;
+                                                        for (auto relocation : coffReader.relocations[sectionIndex])
+                                                        {
+                                                            if (offset <= relocation->VirtualAddress && relocation->VirtualAddress < offset + procsym32->len)
+                                                            {
+                                                                auto symbol = symbolTable[relocation->SymbolTableIndex];
+                                                                std::string nameOfSymbol;
+                                                                if (symbol->N.Name.Short != 0)
+                                                                    nameOfSymbol = std::string(symbol->N.ShortName, symbol->N.ShortName + 8);
+                                                                else
+                                                                    nameOfSymbol = std::string(stringTable + symbol->N.Name.Long);
+
+                                                                if (IsTuLocalNoise(nameOfSymbol))
+                                                                    continue;
+
+                                                                relocs.push_back({relocation->VirtualAddress-offset, 
+                                                                                  relocation->Type, 
+                                                                                  NormalizeAnonNsCookies(std::wstring(nameOfSymbol.begin(), nameOfSymbol.end()))});
+                                                            }
+                                                        }
+
                                                         auto startOfBody = bytes + coffReader.sectionHeaders[sectionIndex]->PointerToRawData + offset;
                                                         std::vector<BYTE> body(startOfBody, startOfBody + procsym32->len);
                                                         functions.push_back({decoratedName,
                                                                              std::wstring(procsym32->name, procsym32->name + std::strlen((const char*)procsym32->name)),
                                                                              body,
+                                                                             relocs,
                                                                              sourceFile,
                                                                              lineNumber});
                                                     }
@@ -987,6 +1043,31 @@ namespace Odr
             return functions;
         }
     private:
+        static bool IsTuLocalNoise(const std::string& s) noexcept
+        {
+            // filter out "static global literals"
+            if (s.starts_with("$SG") && s.size() > 3)
+            {
+                bool allDigits = true;
+                for (size_t i=3; i<s.size() && allDigits; ++i)
+                    allDigits = (s[i] >= L'0' && s[i] <= L'9');
+                if (allDigits)
+                    return true;
+            }
+
+            // filter out TU-local cookies
+            if (s.size() < 11)          return false;
+            if (!s.starts_with("__"))   return false;
+            for (int i=2; i<10; ++i)
+            {
+                auto c = s[i];
+                if (!((c >= '0' && c <= '9') ||
+                      (c >= 'a' && c <= 'f') ||
+                      (c >= 'A' && c <= 'F') ))
+                    return false;
+            }
+            return s[10] == '_';
+        }
         static std::wstring Undecorate(const std::wstring& decorated)
         {
             wchar_t buffer[16384];

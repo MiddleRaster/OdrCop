@@ -235,4 +235,4 @@ auto  g_1_ret_valOf_StaticMethodsBodiesDiffer                      =  StaticMeth
 
 auto  g_1_ret_valOf_ClassForFriend                                 =  TheFriendFunction(ClassForFriend());
 
-//auto  g_1_ret_valOf_MakeSureRelocsHaveBeenApplied_ToBodies       = MakeSureRelocs().HaveBeenAppliedToBodies();
+auto  g_1_ret_valOf_MakeSureRelocsHaveBeenApplied_ToBodies         = MakeSureRelocs().HaveBeenAppliedToBodies();
